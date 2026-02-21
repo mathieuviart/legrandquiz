@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeGrandGeoQuiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<style>
+/* Twemoji emoji images */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.05em 0 0.1em;
+  vertical-align: -0.1em;
+  display: inline-block;
+}
+/* Larger emoji for country flag display */
+.country-flag img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+}
+/* Reveal overlay flag */
+.reveal-flag img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+}
+
+:root {
+  --bg: #0d0f14;
+  --surface: #161920;
+  --surface2: #1e2230;
+  --border: #2a2f42;
+  --accent: #4fffb0;
+  --accent2: #ff4f7b;
+  --accent3: #4fc3ff;
+  --text: #e8ecf5;
+  --muted: #606880;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(79,255,176,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(79,255,176,0.03) 1px,transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+#app { position: relative; z-index: 1; width: 100%; max-width: 640px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* lang switcher */
+#lang-switcher { position:fixed; top:16px; right:16px; z-index:200; display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:99px; padding:4px; }
+.lang-btn { padding:5px 12px; border-radius:99px; border:none; background:transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.75em; font-weight:500; cursor:pointer; transition:all 0.15s; }
+.lang-btn:hover { color:var(--text); }
+.lang-btn.active { background:var(--accent); color:#000; font-weight:700; }
+
+/* typography */
+.logo { font-size:0.75em; font-weight:700; letter-spacing:0.25em; text-transform:uppercase; color:var(--accent); font-family:'DM Mono',monospace; margin-bottom:8px; }
+h1 { font-size:2.8em; font-weight:800; line-height:1; margin-bottom:6px; }
+.subtitle { color:var(--muted); font-size:0.9em; line-height:1.5; margin-bottom:28px; }
+.highlight { color:var(--accent); }
+.highlight2 { color:var(--accent2); }
+
+/* loader */
+#loader { display:flex; align-items:center; gap:10px; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.85em; }
+.dot-spin { width:10px; height:10px; border-radius:50%; background:var(--accent); animation:pulse 1s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+/* buttons */
+.btn-primary { display:inline-block; padding:14px 36px; background:var(--accent); color:#000; font-family:'Syne',sans-serif; font-weight:700; font-size:1em; border:none; border-radius:8px; cursor:pointer; letter-spacing:0.05em; transition:all 0.15s; margin-top:8px; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(79,255,176,0.3); }
+.btn-secondary { display:inline-block; padding:12px 28px; background:transparent; color:var(--text); font-family:'Syne',sans-serif; font-weight:700; font-size:0.95em; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:all 0.15s; margin-top:8px; }
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+
+/* rules */
+.rules { list-style:none; margin:16px 0 24px; display:flex; flex-direction:column; gap:8px; }
+.rules li { display:flex; align-items:flex-start; gap:10px; font-size:0.9em; color:var(--muted); line-height:1.4; }
+.rules li .ico { color:var(--accent); font-size:1em; margin-top:1px; flex-shrink:0; }
+
+/* timer */
+.timer-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.timer-label { font-family:'DM Mono',monospace; font-size:0.8em; color:var(--muted); white-space:nowrap; }
+.timer-num { font-family:'DM Mono',monospace; font-size:1.3em; font-weight:500; color:var(--accent); min-width:28px; transition:color 0.3s; }
+.timer-num.urgent { color:var(--accent2); }
+.progress-track { flex:1; height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--accent); border-radius:99px; transition:width 1s linear, background 0.3s; }
+.progress-fill.urgent { background:var(--accent2); }
+
+/* country block */
+.country-block { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin:16px 0; display:flex; align-items:center; gap:16px; }
+.country-flag { font-size:2.8em; line-height:1; }
+.country-info { flex:1; }
+.country-name { font-size:1.6em; font-weight:800; line-height:1.1; }
+.turn-label { font-family:'DM Mono',monospace; font-size:0.75em; color:var(--muted); margin-top:2px; }
+
+/* score */
+.score-strip { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.score-val { font-size:1.4em; font-weight:800; }
+.score-val span { color:var(--accent); }
+
+/* feedback */
+.feedback { min-height:24px; font-family:'DM Mono',monospace; font-size:0.85em; font-weight:500; margin-bottom:6px; }
+.feedback.ok { color:var(--accent); }
+.feedback.warn { color:var(--accent2); }
+
+/* cats grid */
+.cats-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.cat-btn { padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Syne',sans-serif; font-size:0.82em; font-weight:700; cursor:pointer; text-align:left; transition:all 0.15s; line-height:1.3; display:flex; flex-direction:column; }
+.cat-btn:hover:not(:disabled) { border-color:var(--accent3); color:var(--accent3); background:rgba(79,195,255,0.06); transform:translateY(-1px); }
+.cat-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.cat-btn-top { display:flex; align-items:flex-start; justify-content:space-between; gap:4px; width:100%; }
+.cat-icon { font-size:1.2em; display:block; margin-bottom:4px; }
+.cat-label-text { flex:1; }
+
+/* info btn */
+.cat-info-btn { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; border-radius:50%; background:rgba(79,195,255,0.12); border:1px solid rgba(79,195,255,0.3); color:var(--accent3); font-family:'DM Mono',monospace; font-size:0.65em; font-weight:700; cursor:pointer; flex-shrink:0; line-height:1; transition:all 0.15s; user-select:none; }
+.cat-info-btn:hover { background:rgba(79,195,255,0.28); border-color:var(--accent3); transform:scale(1.15); }
+
+/* tooltip */
+#cat-tooltip { position:fixed; z-index:300; max-width:280px; background:var(--surface); border:1px solid var(--accent3); border-radius:10px; padding:12px 14px; box-shadow:0 8px 32px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transform:translateY(4px) scale(0.97); transition:opacity 0.15s ease,transform 0.15s ease; }
+#cat-tooltip.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+.tt-title { font-size:0.8em; font-weight:700; color:var(--accent3); margin-bottom:6px; }
+.tt-body  { font-size:0.78em; color:var(--muted); line-height:1.5; font-family:'DM Mono',monospace; }
+
+/* cat badge */
+.cat-badge { display:inline-flex; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:0.7em; background:rgba(79,255,176,0.08); border:1px solid rgba(79,255,176,0.2); border-radius:99px; padding:3px 10px 3px 6px; margin-top:6px; color:var(--accent); }
+.badge-flag { font-size:1.2em; }
+
+/* end */
+.end-score { font-size:5em; font-weight:800; color:var(--accent); line-height:1; margin:16px 0; }
+.end-tagline { color:var(--muted); font-family:'DM Mono',monospace; font-size:0.85em; margin-bottom:28px; }
+
+/* seed box */
+.seed-box { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 16px; font-family:'DM Mono',monospace; font-size:0.7em; color:var(--muted); word-break:break-all; margin-bottom:12px; text-align:left; }
+.seed-box strong { color:var(--accent3); display:block; margin-bottom:8px; font-size:1.05em; }
+#seed-value { display:block; color:var(--text); font-size:1.1em; user-select:all; cursor:text; padding:8px; background:rgba(255,255,255,0.04); border-radius:4px; border:1px solid var(--border); }
+
+/* reveal overlay */
+#reveal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:100; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.25s ease; }
+.reveal-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:40px 48px; text-align:center; max-width:420px; width:90%; }
+.reveal-cat-label { font-family:'DM Mono',monospace; font-size:0.75em; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.reveal-cat-name  { font-size:1.1em; font-weight:700; color:var(--accent3); margin-bottom:20px; }
+.reveal-country   { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:28px; }
+.reveal-flag      { font-size:2.4em; }
+.reveal-country-name { font-size:1.5em; font-weight:800; }
+.odometer-wrap { display:flex; align-items:center; justify-content:center; gap:4px; margin-bottom:24px; min-height:80px; }
+.odo-digit-wrap { width:52px; height:74px; background:#0a0c10; border:1px solid var(--border); border-radius:8px; overflow:hidden; position:relative; box-shadow:inset 0 2px 8px rgba(0,0,0,0.6); }
+.odo-digit-wrap::before,.odo-digit-wrap::after { content:''; position:absolute; left:0; right:0; height:1px; background:rgba(79,255,176,0.15); z-index:3; }
+.odo-digit-wrap::before { top:36px; }
+.odo-digit-wrap::after  { top:37px; }
+.odo-digit-inner { position:absolute; width:100%; display:flex; flex-direction:column; align-items:center; }
+.odo-digit { width:100%; height:74px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:2.2em; font-weight:500; color:var(--accent); flex-shrink:0; user-select:none; }
+.odo-fade-top,.odo-fade-bot { position:absolute; left:0; right:0; height:24px; z-index:2; pointer-events:none; }
+.odo-fade-top { top:0;    background:linear-gradient(to bottom,#0a0c10,transparent); }
+.odo-fade-bot { bottom:0; background:linear-gradient(to top,  #0a0c10,transparent); }
+.odo-digit-wrap.done { border-color:var(--accent); box-shadow:0 0 12px rgba(79,255,176,0.25); }
+.reveal-points-label { font-family:'DM Mono',monospace; font-size:0.8em; color:var(--muted); margin-bottom:20px; letter-spacing:0.1em; }
+.reveal-skip { font-family:'DM Mono',monospace; font-size:0.75em; color:var(--muted); background:none; border:1px solid var(--border); border-radius:6px; padding:8px 20px; cursor:pointer; transition:all 0.15s; }
+.reveal-skip:hover { color:var(--text); border-color:var(--muted); }
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" onclick="setLang('ua')">UA</button>
+</div>
+
+<div id="app">
+
+  <!-- SETUP -->
+  <div id="panel-setup" class="panel">
+    <div class="logo">◈ LeGrandGeoQuiz</div>
+    <h1>Geo<span class="highlight">Quiz</span></h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
+    <div id="loader"><div class="dot-spin"></div>&nbsp;<span data-i18n="loading"></span></div>
+    <div id="setup-ready" class="hidden">
+      <ul class="rules">
+        <li><span class="ico">&#8594;</span><span data-i18n="rule1"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule2"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule3"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule4"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule5"></span></li>
+      </ul>
+      <div style="margin-bottom:16px;">
+        <label style="font-family:'DM Mono',monospace;font-size:0.75em;color:var(--muted);display:block;margin-bottom:6px;" data-i18n="seedLabel"></label>
+        <div style="display:flex;gap:8px;">
+          <input id="seed-input" type="text" data-i18n-placeholder="seedPlaceholder"
+            style="flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75em;outline:none;">
+          <button class="btn-secondary" style="margin-top:0;padding:10px 16px;font-size:0.85em;" onclick="startWithSeedInput()" data-i18n="seedLoad"></button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startGame()" data-i18n="newGame"></button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="panel-game" class="panel hidden">
+    <div class="score-strip">
+      <div class="score-val"><span data-i18n="score"></span>&nbsp;:&nbsp;<span id="total-score">0</span></div>
+      <div class="turn-label" id="turn-label"></div>
+    </div>
+    <div id="game-seed-display" style="font-family:'DM Mono',monospace;font-size:0.65em;color:var(--muted);margin-bottom:10px;word-break:break-all;"></div>
+    <div class="timer-row">
+      <span class="timer-label" data-i18n="time"></span>
+      <span class="timer-num" id="timer-num">20</span>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="country-block">
+      <div class="country-flag" id="country-flag">&#127757;</div>
+      <div class="country-info">
+        <div class="country-name" id="country-name">---</div>
+        <div class="turn-label" id="country-sub"></div>
+      </div>
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
+  </div>
+
+  <!-- END -->
+  <div id="panel-end" class="panel hidden">
+    <div class="logo" data-i18n="gameOver"></div>
+    <h1><span data-i18n="finalScore"></span><br><span class="highlight" data-i18n="final"></span></h1>
+    <div class="end-score" id="final-score">0</div>
+    <p class="end-tagline" id="end-tagline"></p>
+    <div class="seed-box" id="seed-display"></div>
+    <button class="btn-secondary" style="margin-top:0;margin-bottom:16px;width:100%;font-size:0.85em;" onclick="copySeed()" data-i18n="copySeed"></button>
+    <button class="btn-primary" onclick="location.reload()" data-i18n="playAgain"></button>
+  </div>
+
+</div>
+
+<div id="cat-tooltip">
+  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-body"  id="tt-body"></div>
+</div>
+
+<script>
+// ─── I18N ─────────────────────────────────────────────────────────────────────
+var currentLang = 'fr';
+
+var TRANSLATIONS = {
+  fr: {
+    subtitle:       'Le jeu de g\u00e9ographie strat\u00e9gique \u2014 8 pays, 8 cat\u00e9gories, le score le plus <span class="highlight2">faible</span> possible.',
+    loading:        'Chargement des donn\u00e9es...',
+    rule1:          'Chaque tour, associez le pays affich\u00e9 \u00e0 une cat\u00e9gorie.',
+    rule2:          'Votre score = la valeur du pays dans cette cat\u00e9gorie (rang, taux, nb\u2026).',
+    rule3:          'Chaque cat\u00e9gorie ne peut \u00eatre utilis\u00e9e qu\'\u003cstrong style="color:var(--text)"\u003eune seule fois\u003c/strong\u003e.',
+    rule4:          'Vous avez \u003cstrong style="color:var(--text)"\u003e20 secondes\u003c/strong\u003e par pays. Sinon\u00a0: +200 points de p\u00e9nalit\u00e9\u00a0!',
+    rule5:          'Objectif\u00a0: minimiser votre score total\u00a0!',
+    seedLabel:      '\uD83D\uDD11 JOUER AVEC UNE SEED (optionnel)',
+    seedPlaceholder:'ex: 3-12-45-..._0-5-11-...',
+    seedLoad:       'Charger',
+    newGame:        'Nouvelle partie \u2192',
+    score:          'Score',
+    time:           'Temps',
+    turn:           'Tour',
+    of:             '/',
+    gameOver:       '\u25c8 Partie termin\u00e9e',
+    finalScore:     'Score',
+    final:          'Final',
+    copySeed:       '\uD83D\uDCCB Copier la seed',
+    playAgain:      'Rejouer',
+    seedShare:      '\uD83D\uDD11 SEED \u2014 partagez cette partie\u00a0!',
+    catSelected:    'cat\u00e9gorie s\u00e9lectionn\u00e9e',
+    ptsAdded:       'points ajout\u00e9s au score',
+    noData:         '\u26a0 Donn\u00e9e non disponible',
+    timeUp:         '\u23f1 temps \u00e9coul\u00e9\u00a0!',
+    noAnswer:       'Pas de r\u00e9ponse',
+    penalty:        'p\u00e9nalit\u00e9 ajout\u00e9e au score',
+    skip:           'Passer \u2192',
+    cont:           'Continuer \u2192',
+    invalidSeed:    'Seed invalide\u00a0!',
+    invalidSeedIdx: 'Seed invalide \u2014 indices hors limites.',
+    enterSeed:      'Entrez une seed d\'abord\u00a0!',
+    taglines:       ['\uD83C\uDFC6 Score exceptionnel \u2014 ma\u00eetrise totale\u00a0!','\uD83C\uDF1F Tr\u00e8s bon score \u2014 vous connaissez votre g\u00e9o\u00a0!','\uD83D\uDC4D Score correct \u2014 quelques bons choix\u00a0!','\uD83D\uDE2C Score moyen \u2014 \u00e0 am\u00e9liorer\u00a0!','\uD83D\uDCDA Score \u00e9lev\u00e9 \u2014 r\u00e9visez votre g\u00e9o\u00a0!']
+  },
+  en: {
+    subtitle:       'The strategic geography game \u2014 8 countries, 8 categories, the <span class="highlight2">lowest</span> score possible.',
+    loading:        'Loading data...',
+    rule1:          'Each turn, match the displayed country to a category.',
+    rule2:          'Your score = the country\'s value in that category (rank, rate, count\u2026).',
+    rule3:          'Each category can only be used \u003cstrong style="color:var(--text)"\u003eonce\u003c/strong\u003e.',
+    rule4:          'You have \u003cstrong style="color:var(--text)"\u003e20 seconds\u003c/strong\u003e per country. Otherwise: +200 penalty points!',
+    rule5:          'Goal: minimize your total score!',
+    seedLabel:      '\uD83D\uDD11 PLAY WITH A SEED (optional)',
+    seedPlaceholder:'e.g. 3-12-45-..._0-5-11-...',
+    seedLoad:       'Load',
+    newGame:        'New game \u2192',
+    score:          'Score',
+    time:           'Time',
+    turn:           'Round',
+    of:             '/',
+    gameOver:       '\u25c8 Game over',
+    finalScore:     'Final',
+    final:          'Score',
+    copySeed:       '\uD83D\uDCCB Copy seed',
+    playAgain:      'Play again',
+    seedShare:      '\uD83D\uDD11 SEED \u2014 share this game!',
+    catSelected:    'selected category',
+    ptsAdded:       'points added to score',
+    noData:         '\u26a0 Data not available',
+    timeUp:         '\u23f1 time\'s up!',
+    noAnswer:       'No answer',
+    penalty:        'penalty added to score',
+    skip:           'Skip \u2192',
+    cont:           'Continue \u2192',
+    invalidSeed:    'Invalid seed!',
+    invalidSeedIdx: 'Invalid seed \u2014 indices out of bounds.',
+    enterSeed:      'Please enter a seed first!',
+    taglines:       ['\uD83C\uDFC6 Exceptional score \u2014 total mastery!','\uD83C\uDF1F Great score \u2014 you know your geography!','\uD83D\uDC4D Decent score \u2014 a few good choices!','\uD83D\uDE2C Average score \u2014 room for improvement!','\uD83D\uDCDA High score \u2014 study your geography!']
+  },
+  ua: {
+    subtitle:       '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0456\u0447\u043d\u0430 \u0433\u0435\u043e\u0433\u0440\u0430\u0444\u0456\u0447\u043d\u0430 \u0433\u0440\u0430 \u2014 8 \u043a\u0440\u0430\u0457\u043d, 8 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0439, \u044f\u043a\u043e\u043c\u043e\u0433\u0430 <span class="highlight2">\u043c\u0435\u043d\u0448\u0438\u0439</span> \u0440\u0430\u0445\u0443\u043d\u043e\u043a.',
+    loading:        '\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0435\u043d\u043d\u044f \u0434\u0430\u043d\u0438\u0445...',
+    rule1:          '\u041a\u043e\u0436\u0435\u043d \u0445\u0456\u0434 \u2014 \u043f\u043e\u0432\'\u044f\u0436\u0456\u0442\u044c \u0432\u0456\u0434\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0443 \u043a\u0440\u0430\u0457\u043d\u0443 \u0437 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0454\u044e.',
+    rule2:          '\u0412\u0430\u0448 \u0440\u0430\u0445\u0443\u043d\u043e\u043a = \u0437\u043d\u0430\u0447\u0435\u043d\u043d\u044f \u043a\u0440\u0430\u0457\u043d\u0438 \u0432 \u0446\u0456\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0457 (\u0440\u0430\u043d\u0433, \u0432\u0456\u0434\u0441\u043e\u0442\u043e\u043a, \u043a\u0456\u043b\u044c\u043a\u0456\u0441\u0442\u044c\u2026).',
+    rule3:          '\u041a\u043e\u0436\u043d\u0443 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044e \u043c\u043e\u0436\u043d\u0430 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u0442\u0438 \u043b\u0438\u0448\u0435 \u003cstrong style="color:var(--text)"\u003e\u043e\u0434\u0438\u043d \u0440\u0430\u0437\u003c/strong\u003e.',
+    rule4:          '\u0423 \u0432\u0430\u0441 \u0454 \u003cstrong style="color:var(--text)"\u003e20 \u0441\u0435\u043a\u0443\u043d\u0434\u003c/strong\u003e \u043d\u0430 \u043a\u0440\u0430\u0457\u043d\u0443. \u0406\u043d\u0430\u043a\u0448\u0435: +200 \u0448\u0442\u0440\u0430\u0444\u043d\u0438\u0445 \u043e\u0447\u043e\u043a!',
+    rule5:          '\u041c\u0435\u0442\u0430: \u043c\u0456\u043d\u0456\u043c\u0456\u0437\u0443\u0432\u0430\u0442\u0438 \u0437\u0430\u0433\u0430\u043b\u044c\u043d\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!',
+    seedLabel:      '\uD83D\uDD11 \u0413\u0420\u0410\u0422\u0418 \u0417 \u0421\u0406\u0414\u041e\u041c (\u043d\u0435\u043e\u0431\u043e\u0432\'\u044f\u0437\u043a\u043e\u0432\u043e)',
+    seedPlaceholder:'\u043d\u0430\u043f\u0440. 3-12-45-..._0-5-11-...',
+    seedLoad:       '\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438',
+    newGame:        '\u041d\u043e\u0432\u0430 \u0433\u0440\u0430 \u2192',
+    score:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
+    time:           '\u0427\u0430\u0441',
+    turn:           '\u0425\u0456\u0434',
+    of:             '/',
+    gameOver:       '\u25c8 \u0413\u0440\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u043e',
+    finalScore:     '\u0424\u0456\u043d\u0430\u043b\u044c\u043d\u0438\u0439',
+    final:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
+    copySeed:       '\uD83D\uDCCB \u041a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0441\u0456\u0434',
+    playAgain:      '\u0413\u0440\u0430\u0442\u0438 \u0437\u043d\u043e\u0432\u0443',
+    seedShare:      '\uD83D\uDD11 \u0421\u0406\u0414 \u2014 \u043f\u043e\u0434\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0446\u0456\u0454\u044e \u0433\u0440\u043e\u044e!',
+    catSelected:    '\u043e\u0431\u0440\u0430\u043d\u0430 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044f',
+    ptsAdded:       '\u043e\u0447\u043a\u0438 \u0434\u043e\u0434\u0430\u043d\u043e \u0434\u043e \u0440\u0430\u0445\u0443\u043d\u043a\u0443',
+    noData:         '\u26a0 \u0414\u0430\u043d\u0456 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0456',
+    timeUp:         '\u23f1 \u0447\u0430\u0441 \u0432\u0438\u0439\u0448\u043e\u0432!',
+    noAnswer:       '\u041d\u0435\u043c\u0430\u0454 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0456',
+    penalty:        '\u0448\u0442\u0440\u0430\u0444 \u0434\u043e\u0434\u0430\u043d\u043e \u0434\u043e \u0440\u0430\u0445\u0443\u043d\u043a\u0443',
+    skip:           '\u041f\u0440\u043e\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u2192',
+    cont:           '\u041f\u0440\u043e\u0434\u043e\u0432\u0436\u0438\u0442\u0438 \u2192',
+    invalidSeed:    '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434!',
+    invalidSeedIdx: '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434 \u2014 \u0456\u043d\u0434\u0435\u043a\u0441\u0438 \u043f\u043e\u0437\u0430 \u043c\u0435\u0436\u0430\u043c\u0438.',
+    enterSeed:      '\u0421\u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0432\u0432\u0435\u0434\u0456\u0442\u044c \u0441\u0456\u0434!',
+    taglines:       ['\uD83C\uDFC6 \u0412\u0438\u043a\u043b\u044e\u0447\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83C\uDF1F \u0427\u0443\u0434\u043e\u0432\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDC4D \u041d\u0435\u043f\u043e\u0433\u0430\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDE2C \u0421\u0435\u0440\u0435\u0434\u043d\u0456\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDCDA \u0412\u0438\u0441\u043e\u043a\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!']
+  }
+};
+
+function t(key) {
+  var lang = TRANSLATIONS[currentLang];
+  if (lang && lang[key] !== undefined) return lang[key];
+  return TRANSLATIONS['fr'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase());
+  });
+  document.documentElement.lang = (lang === 'ua') ? 'uk' : lang;
+  applyTranslations();
+  if (gameCategories.length > 0 && currentStep < 8) rerenderCategoryButtonNames();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.innerHTML = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+// ─── CATEGORIES ───────────────────────────────────────────────────────────────
+var ALL_CATEGORIES = [
+  {id:'pib',icon:'💰',fr:'PIB Total',en:'Total GDP',ua:'Загальний ВВП',desc:{fr:'Valeur totale des biens et services produits par un pays sur une année. Le rang indique la position économique globale.',en:"Total value of goods and services produced in a year. The rank indicates the country's overall economic position.",ua:'Загальна вартість товарів і послуг за рік. Ранг відображає економічне становище країни.'}},
+  {id:'nb_habitant',icon:'👥',fr:"Nb d'habitants",en:'Population',ua:'Населення',desc:{fr:"Nombre total de personnes résidant dans le pays, indicateur fondamental de la taille d'un État.",en:"Total number of people residing in the country, a fundamental indicator of a state's size.",ua:'Загальна кількість людей у країні — базовий показник розміру держави.'}},
+  {id:'depense_defense_pctg_pib',icon:'🛡️',fr:'Dépense défense % PIB',en:'Defense spending % GDP',ua:'Витрати на оборону % ВВП',desc:{fr:"Part du budget national allouée à la défense, en % du PIB. Reflète les priorités stratégiques d'un pays.",en:"Share of national budget allocated to defense, as % of GDP. Reflects a country's strategic priorities.",ua:'Частка бюджету на оборону у відсотках від ВВП. Відображає стратегічні пріоритети країни.'}},
+  {id:'indice_paix',icon:'☮️',fr:'Indice de paix',en:'Peace index',ua:'Індекс миру',desc:{fr:'Mesure le niveau de paix : conflits internes, relations avec les voisins, stabilité politique. Rang faible = plus pacifique.',en:'Measures peace and security: internal conflicts, neighbor relations, political stability. Low rank = more peaceful.',ua:'Вимірює рівень миру: конфлікти, відносини з сусідами, стабільність. Низький ранг = мирніша країна.'}},
+  {id:'densite_pop',icon:'🏙️',fr:'Densité de population',en:'Population density',ua:'Густота населення',desc:{fr:'Nombre d\'habitants par km², reflétant la concentration de la population sur le territoire.',en:'Number of inhabitants per km², reflecting the concentration of the population.',ua:'Кількість мешканців на км² — концентрація населення на території.'}},
+  {id:'age_median',icon:'📅',fr:'Âge médian',en:'Median age',ua:'Середній вік',desc:{fr:'Âge qui sépare la population en deux groupes égaux. Indique si la population est plutôt jeune ou vieillissante.',en:'Age that divides the population into two equal groups. Indicates whether the population is younger or aging.',ua:'Вік, який ділить населення навпіл. Вказує, молода чи стара країна.'}},
+  {id:'taux_mortalite',icon:'💀',fr:'Taux de mortalité',en:'Mortality rate',ua:'Рівень смертності',desc:{fr:'Nombre de décès pour 1 000 habitants, indicateur général de la santé d\'une population.',en:'Number of deaths per 1,000 inhabitants, a general health indicator.',ua:'Кількість смертей на 1 000 жителів — загальний показник здоров\'я населення.'}},
+  {id:'taux_mortalite_routiere',icon:'🚗',fr:'Mortalité routière',en:'Road mortality',ua:'Дорожня смертність',desc:{fr:'Nombre de décès liés aux accidents de la route pour 100 000 habitants.',en:'Number of road accident deaths per 100,000 inhabitants.',ua:'Кількість загиблих у ДТП на 100 000 жителів.'}},
+  {id:'taux_fecondite',icon:'🍼',fr:'Taux de fécondité',en:'Fertility rate',ua:'Рівень народжуваності',desc:{fr:'Nombre moyen d\'enfants par femme. Influence la croissance démographique.',en:'Average number of children per woman. Directly influences population growth.',ua:'Середня кількість дітей на жінку. Впливає на демографічне зростання.'}},
+  {id:'esperance_vie',icon:'❤️',fr:'Espérance de vie',en:'Life expectancy',ua:'Очікувана тривалість життя',desc:{fr:'Âge moyen auquel on s\'attend à vivre. Indicateur clé de la qualité de vie.',en:'Average age one is expected to live to. A key quality of life indicator.',ua:'Середній очікуваний вік. Ключовий показник якості життя.'}},
+  {id:'pib_habitant',icon:'💵',fr:'PIB / Habitant',en:'GDP per capita',ua:'ВВП на душу населення',desc:{fr:'Richesse économique moyenne par personne (PIB ÷ nb habitants).',en:'Average economic wealth per person (GDP ÷ population).',ua:'Середній економічний добробут на одну особу (ВВП ÷ населення).'}},
+  {id:'dette_publique_pctg_pib',icon:'📉',fr:'Dette publique % PIB',en:'Public debt % GDP',ua:'Держборг % ВВП',desc:{fr:"Niveau d'endettement d'un État par rapport à sa richesse économique annuelle, en % du PIB.",en:"Level of a state's debt relative to its annual economic wealth, as % of GDP.",ua:'Рівень заборгованості держави відносно ВВП, у відсотках.'}},
+  {id:'indice_corruption',icon:'🕵️',fr:'Indice de corruption',en:'Corruption index',ua:'Індекс корупції',desc:{fr:'Mesure le niveau perçu de corruption dans le secteur public.',en:'Measures the perceived level of corruption in the public sector.',ua:'Вимірює сприйнятий рівень корупції в державному секторі.'}},
+  {id:'nb_touriste',icon:'✈️',fr:'Arrivées touristiques',en:'Tourist arrivals',ua:'Туристичні прибуття',desc:{fr:"Nombre total de visiteurs internationaux, indicateur de l'attractivité touristique.",en:"Total number of international visitors, an indicator of tourist attractiveness.",ua:'Загальна кількість міжнародних відвідувачів — показник привабливості країни.'}},
+  {id:'niveau_mathematique',icon:'📐',fr:'Niveau mathématiques',en:'Math level',ua:'Рівень математики',desc:{fr:'Performance en mathématiques mesurée par des tests standardisés internationaux (PISA).',en:'Math performance measured by international standardized tests (PISA).',ua:'Успішність з математики за міжнародними тестами (PISA).'}},
+  {id:'empreinte_ecologique_par_habitant',icon:'🌱',fr:'Empreinte éco/hab',en:'Eco footprint/capita',ua:'Екослід на душу',desc:{fr:'Pression sur les ressources naturelles par habitant, en hectares globaux.',en:'Pressure on natural resources per inhabitant, in global hectares.',ua:'Навантаження на природні ресурси на одного жителя, у глобальних гектарах.'}},
+  {id:'empreinte_ecologique',icon:'🌍',fr:'Empreinte écologique',en:'Ecological footprint',ua:'Екологічний слід',desc:{fr:'Pression totale exercée par un pays sur les ressources naturelles, en hectares globaux.',en:"Total pressure exerted by a country on natural resources, in global hectares.",ua:'Загальне навантаження країни на природні ресурси, у глобальних гектарах.'}},
+  {id:'surface_foret_pctg_territoire',icon:'🌲',fr:'Surface forestière %',en:'Forest cover %',ua:'Лісовий покрив %',desc:{fr:'Pourcentage du territoire couvert par des forêts. Indicateur de biodiversité.',en:'Percentage of the territory covered by forests. A biodiversity indicator.',ua:'Відсоток території, вкритої лісами. Показник біорізноманіття.'}},
+  {id:'production_or',icon:'🥇',fr:"Production d'or",en:'Gold production',ua:'Виробництво золота',desc:{fr:"Quantité d'or produite, liée à l'activité minière et aux ressources naturelles.",en:'Amount of gold produced, linked to mining activity and natural resources.',ua:'Кількість видобутого золота, пов\'язана з гірничодобувною діяльністю.'}},
+  {id:'pctg_irreligieux',icon:'🔮',fr:'% Irréligieux',en:'% Non-religious',ua:'% Нерелігійних',desc:{fr:"Proportion de la population ne s'identifiant à aucune religion.",en:'Proportion of the population not identifying with any religion.',ua:'Частка населення без релігійної приналежності.'}},
+  {id:'taux_suicide',icon:'📊',fr:'Taux de suicide',en:'Suicide rate',ua:'Рівень суїциду',desc:{fr:'Nombre de suicides pour 100 000 habitants. Indicateur de santé mentale.',en:'Number of suicides per 100,000 inhabitants. A mental health indicator.',ua:'Кількість самогубств на 100 000 жителів. Показник психічного здоров\'я.'}},
+  {id:'taux_tabagisme',icon:'🚬',fr:'Taux de tabagisme',en:'Smoking rate',ua:'Рівень куріння',desc:{fr:'Pourcentage de la population qui fume régulièrement.',en:'Percentage of the population that smokes regularly.',ua:'Відсоток населення, яке регулярно курить.'}},
+  {id:'conso_alcool_par_habitant',icon:'🍺',fr:'Conso alcool/hab',en:'Alcohol consumption/capita',ua:'Споживання алкоголю',desc:{fr:"Quantité moyenne d'alcool pur consommée par personne et par an.",en:'Average amount of pure alcohol consumed per person per year.',ua:'Середня кількість чистого алкоголю на одну особу на рік.'}},
+  {id:'travail_enfant',icon:'👶',fr:'Travail des enfants',en:'Child labour',ua:'Дитяча праця',desc:{fr:"Prévalence du travail des enfants dans une activité économique. Reflète les conditions sociales.",en:'Prevalence of child labor in economic activity. Reflects social conditions.',ua:'Поширеність дитячої праці. Відображає соціально-економічні умови.'}},
+  {id:'nb_militaire',icon:'🪖',fr:'Nb de militaires',en:'Military personnel',ua:'Військовий персонал',desc:{fr:"Effectif total des forces armées. Indicateur de la capacité militaire d'un pays.",en:"Total size of a country's armed forces. A military capacity indicator.",ua:'Загальна чисельність збройних сил. Показник військового потенціалу країни.'}}
+];
+
+function catName(cat) { return cat[currentLang] || cat.fr; }
+function catDesc(cat) { return (cat.desc && cat.desc[currentLang]) ? cat.desc[currentLang] : (cat.desc ? cat.desc.fr : ''); }
+function getCountryName(c) {
+  if (currentLang === 'en') return c.country_EN || c.country_FR || c.name || '???';
+  if (currentLang === 'ua') return c.country_UA || c.country_FR || c.name || '???';
+  return c.country_FR || c.country_EN || c.name || '???';
+}
+
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+var tooltipTimeout = null;
+
+function showTooltip(catId, targetEl) {
+  var cat = ALL_CATEGORIES.find(function(c) { return c.id === catId; });
+  if (!cat) return;
+  document.getElementById('tt-title').textContent = cat.icon + ' ' + catName(cat);
+  document.getElementById('tt-body').textContent  = catDesc(cat);
+  var tip = document.getElementById('cat-tooltip');
+  var tipWidth = 280;
+  var rect = targetEl.getBoundingClientRect();
+  var left = Math.max(8, Math.min(rect.left + rect.width/2 - tipWidth/2, window.innerWidth - tipWidth - 8));
+  tip.style.width = tipWidth + 'px';
+  tip.style.left  = left + 'px';
+  tip.style.visibility = 'hidden';
+  tip.classList.add('visible');
+  var tipH = tip.offsetHeight;
+  tip.classList.remove('visible');
+  tip.style.visibility = '';
+  tip.style.top = (rect.top - 8 - tipH < 8) ? (rect.bottom + 8) + 'px' : (rect.top - 8 - tipH) + 'px';
+  clearTimeout(tooltipTimeout);
+  tip.classList.add('visible');
+}
+
+function hideTooltip() {
+  clearTimeout(tooltipTimeout);
+  tooltipTimeout = setTimeout(function() {
+    document.getElementById('cat-tooltip').classList.remove('visible');
+  }, 120);
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cat-info-btn') && !e.target.closest('#cat-tooltip')) {
+    document.getElementById('cat-tooltip').classList.remove('visible');
+  }
+});
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var countriesDB    = [];
+var gameCountries  = [];
+var gameCategories = [];
+var currentStep    = 0;
+var totalScore     = 0;
+var timerInterval  = null;
+var timeLeft       = 20;
+var usedCategories = {};
+var currentSeed    = '';
+var TIME_PER_TURN  = 20;
+var isRevealing    = false;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function initApp() {
+  try {
+    var res = await fetch('./country.json');
+    if (!res.ok) throw new Error('not found');
+    var data = await res.json();
+    countriesDB = data.Main || data.countries || data;
+  } catch(e) {
+    console.warn('country.json not found — using fallback');
+    countriesDB = getFallbackData();
+  }
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('setup-ready').classList.remove('hidden');
+  applyTranslations();
+}
+
+function getFallbackData() {
+  return [
+    {country_FR:'France',    country_EN:'France',        country_UA:'Франція',   flag:'🇫🇷',pib:17, nb_habitant:80, pib_habitant:15, taux_fecondite:100,taux_suicide:20, empreinte_ecologique:55, conso_alcool_par_habitant:12, indice_paix:67, densite_pop:30, esperance_vie:35,travail_enfant:180},
+    {country_FR:'États-Unis',country_EN:'United States', country_UA:'США',        flag:'🇺🇸',pib:1,  nb_habitant:3,  pib_habitant:8,  taux_fecondite:95, taux_suicide:55, empreinte_ecologique:5,  conso_alcool_par_habitant:25, indice_paix:128,densite_pop:145,esperance_vie:55,travail_enfant:190},
+    {country_FR:'Brésil',    country_EN:'Brazil',        country_UA:'Бразилія',  flag:'🇧🇷',pib:9,  nb_habitant:7,  pib_habitant:80, taux_fecondite:60, taux_suicide:60, empreinte_ecologique:40, conso_alcool_par_habitant:38, indice_paix:111,densite_pop:110,esperance_vie:70,travail_enfant:60},
+    {country_FR:'Japon',     country_EN:'Japan',         country_UA:'Японія',    flag:'🇯🇵',pib:4,  nb_habitant:11, pib_habitant:28, taux_fecondite:200,taux_suicide:30, empreinte_ecologique:35, conso_alcool_par_habitant:55, indice_paix:9,  densite_pop:10, esperance_vie:5, travail_enfant:195},
+    {country_FR:'Inde',      country_EN:'India',         country_UA:'Індія',     flag:'🇮🇳',pib:5,  nb_habitant:2,  pib_habitant:140,taux_fecondite:40, taux_suicide:45, empreinte_ecologique:130,conso_alcool_par_habitant:135,indice_paix:135,densite_pop:20, esperance_vie:90,travail_enfant:30},
+    {country_FR:'Norvège',   country_EN:'Norway',        country_UA:'Норвегія',  flag:'🇳🇴',pib:35, nb_habitant:120,pib_habitant:3,  taux_fecondite:130,taux_suicide:90, empreinte_ecologique:10, conso_alcool_par_habitant:70, indice_paix:17, densite_pop:180,esperance_vie:10,travail_enfant:192},
+    {country_FR:'Nigeria',   country_EN:'Nigeria',       country_UA:'Нігерія',   flag:'🇳🇬',pib:28, nb_habitant:6,  pib_habitant:150,taux_fecondite:5,  taux_suicide:120,empreinte_ecologique:100,conso_alcool_par_habitant:80, indice_paix:150,densite_pop:50, esperance_vie:140,travail_enfant:15},
+    {country_FR:'Argentine', country_EN:'Argentina',     country_UA:'Аргентина', flag:'🇦🇷',pib:22, nb_habitant:45, pib_habitant:65, taux_fecondite:80, taux_suicide:75, empreinte_ecologique:65, conso_alcool_par_habitant:45, indice_paix:74, densite_pop:155,esperance_vie:60,travail_enfant:120},
+    {country_FR:'Australie', country_EN:'Australia',     country_UA:'Австралія', flag:'🇦🇺',pib:13, nb_habitant:55, pib_habitant:12, taux_fecondite:115,taux_suicide:80, empreinte_ecologique:8,  conso_alcool_par_habitant:30, indice_paix:13, densite_pop:200,esperance_vie:15,travail_enfant:193},
+    {country_FR:'Chine',     country_EN:'China',         country_UA:'Китай',     flag:'🇨🇳',pib:2,  nb_habitant:2,  pib_habitant:72, taux_fecondite:175,taux_suicide:40, empreinte_ecologique:3,  conso_alcool_par_habitant:60, indice_paix:100,densite_pop:60, esperance_vie:50,travail_enfant:110}
+  ];
+}
+
+// ─── SEED ─────────────────────────────────────────────────────────────────────
+function shuffle(arr) { return arr.slice().sort(function() { return Math.random() - 0.5; }); }
+
+function encodeSeed(ci, ki) { return ci.join('-') + '_' + ki.join('-'); }
+
+function decodeSeed(seed) {
+  var parts = seed.split('_');
+  if (parts.length !== 2) return null;
+  var ci = parts[0].split('-').map(Number);
+  var ki = parts[1].split('-').map(Number);
+  if (ci.length !== 8 || ki.length !== 8) return null;
+  if (ci.some(isNaN) || ki.some(isNaN)) return null;
+  return {countryIndices:ci, catIndices:ki};
+}
+
+function generateSeed() {
+  var catPool = shuffle(ALL_CATEGORIES.map(function(_,i){return i;})).slice(0,8);
+  var catIds  = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
+  var eligible = countriesDB
+    .map(function(c,i){return {c:c,i:i};})
+    .filter(function(x){ return catIds.every(function(id){ return x.c[id] !== false && x.c[id] !== null && x.c[id] !== undefined; }); });
+  var countryPool;
+  if (eligible.length >= 8) {
+    countryPool = shuffle(eligible).slice(0,8);
+  } else {
+    var scored = countriesDB.map(function(c,i){
+      return {c:c,i:i,score:catIds.filter(function(id){return c[id]!==false&&c[id]!==null&&c[id]!==undefined;}).length};
+    }).sort(function(a,b){return b.score-a.score;});
+    countryPool = shuffle(scored.slice(0, Math.min(16,scored.length))).slice(0,8);
+  }
+  return encodeSeed(countryPool.map(function(x){return x.i;}), catPool);
+}
+
+function applyGameFromSeed(seed) {
+  var decoded = decodeSeed(seed);
+  if (!decoded) { alert(t('invalidSeed')); return false; }
+  var ci = decoded.countryIndices, ki = decoded.catIndices;
+  if (ci.some(function(i){return i<0||i>=countriesDB.length;}))  { alert(t('invalidSeedIdx')); return false; }
+  if (ki.some(function(i){return i<0||i>=ALL_CATEGORIES.length;})) { alert(t('invalidSeedIdx')); return false; }
+  gameCountries  = ci.map(function(i){return countriesDB[i];});
+  gameCategories = ki.map(function(i){return ALL_CATEGORIES[i];});
+  currentSeed = seed;
+  return true;
+}
+
+// ─── GAME START ───────────────────────────────────────────────────────────────
+function startGame(seedOverride) {
+  var seed = seedOverride || generateSeed();
+  if (!applyGameFromSeed(seed)) return;
+  currentSeed    = seed;
+  currentStep    = 0;
+  totalScore     = 0;
+  usedCategories = {};
+  isRevealing    = false;
+  document.getElementById('panel-setup').classList.add('hidden');
+  document.getElementById('panel-game').classList.remove('hidden');
+  document.getElementById('game-seed-display').textContent = '🔑 ' + currentSeed;
+  renderCategoryButtons();
+  showTurn();
+}
+
+function startWithSeedInput() {
+  var raw = document.getElementById('seed-input').value.trim();
+  if (!raw) { alert(t('enterSeed')); return; }
+  var match = raw.match(/(\d[\d-]*_[\d-]*\d)/);
+  startGame(match ? match[1] : raw);
+}
+
+// ─── CATEGORY BUTTONS ─────────────────────────────────────────────────────────
+function makeCatBtnHTML(cat) {
+  return '<div class="cat-btn-top">'
+       + '<span class="cat-icon">' + cat.icon + '</span>'
+       + '<span class="cat-info-btn" data-catid="' + cat.id + '">i</span>'
+       + '</div>'
+       + '<span class="cat-label-text">' + catName(cat) + '</span>';
+}
+
+function renderCategoryButtons() {
+  var grid = document.getElementById('cats-grid');
+  grid.innerHTML = '';
+  gameCategories.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.id = 'cat-' + cat.id;
+    btn.innerHTML = makeCatBtnHTML(cat);
+    btn.addEventListener('click', function(e) {
+      if (e.target.closest('.cat-info-btn')) return;
+      handleChoice(cat.id);
+    });
+    grid.appendChild(btn);
+  });
+  attachInfoListeners();
+}
+
+function rerenderCategoryButtonNames() {
+  gameCategories.forEach(function(cat) {
+    var btn = document.getElementById('cat-' + cat.id);
+    if (!btn || btn.disabled) return;
+    var el = btn.querySelector('.cat-label-text');
+    if (el) el.textContent = catName(cat);
+    var infoBtn = btn.querySelector('.cat-info-btn');
+    if (infoBtn) {
+      infoBtn.replaceWith(infoBtn.cloneNode(true));
+    }
+  });
+  attachInfoListeners();
+}
+
+function attachInfoListeners() {
+  document.querySelectorAll('.cat-info-btn').forEach(function(el) {
+    var clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    clone.addEventListener('mouseenter', function() { showTooltip(clone.dataset.catid, clone); });
+    clone.addEventListener('mouseleave', hideTooltip);
+    clone.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var tip = document.getElementById('cat-tooltip');
+      if (tip.classList.contains('visible')) hideTooltip();
+      else showTooltip(clone.dataset.catid, clone);
+    });
+  });
+}
+
+// ─── TURN DISPLAY ─────────────────────────────────────────────────────────────
+function showTurn() {
+  if (currentStep >= 8) { endGame(); return; }
+  var c    = gameCountries[currentStep];
+  var name = getCountryName(c);
+  var flag = c.flag || c.emoji || '🌍';
+
+  document.getElementById('country-flag').textContent = flag;
+  applyEmoji(document.getElementById('country-flag'));
+  document.getElementById('country-name').textContent = name;
+  document.getElementById('country-sub').textContent  = c.country_code ? '[' + c.country_code + ']' : '';
+  document.getElementById('turn-label').textContent   = t('turn') + ' ' + (currentStep+1) + ' ' + t('of') + ' 8';
+  document.getElementById('total-score').textContent  = totalScore;
+
+  gameCategories.forEach(function(cat) {
+    var btn = document.getElementById('cat-' + cat.id);
+    if (!btn) return;
+    if (usedCategories[cat.id]) {
+      btn.disabled = true;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = makeCatBtnHTML(cat);
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      // re-bind click
+      var newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      (function(catId) {
+        newBtn.addEventListener('click', function(e) {
+          if (e.target.closest('.cat-info-btn')) return;
+          handleChoice(catId);
+        });
+      })(cat.id);
+    }
+  });
+
+  applyEmoji(document.getElementById('cats-grid'));
+  attachInfoListeners();
+  clearFeedback();
+  startTimer();
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIME_PER_TURN;
+  updateTimerUI();
+  timerInterval = setInterval(function() {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) { clearInterval(timerInterval); autoPick(); }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  var numEl  = document.getElementById('timer-num');
+  var fillEl = document.getElementById('progress-fill');
+  numEl.textContent   = timeLeft;
+  fillEl.style.width  = (timeLeft / TIME_PER_TURN * 100) + '%';
+  var urgent = timeLeft <= 8;
+  numEl.classList.toggle('urgent',  urgent);
+  fillEl.classList.toggle('urgent', urgent);
+}
+
+// ─── AUTO PICK ────────────────────────────────────────────────────────────────
+function autoPick() {
+  if (isRevealing) return;
+  isRevealing = true;
+  clearInterval(timerInterval);
+  disableAllCatButtons();
+  var PENALTY = 200;
+  totalScore += PENALTY;
+  document.getElementById('total-score').textContent = totalScore;
+
+  var country = gameCountries[currentStep];
+  var cName   = getCountryName(country);
+  var flag    = country.flag || country.emoji || '🌍';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'reveal-overlay';
+  overlay.innerHTML =
+    '<div class="reveal-card" style="border-color:var(--accent2);">'
+    + '<div class="reveal-cat-label" style="color:var(--accent2);">' + t('timeUp') + '</div>'
+    + '<div class="reveal-cat-name" style="color:var(--accent2);">' + t('noAnswer') + '</div>'
+    + '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>'
+    + '<span class="reveal-country-name">' + cName + '</span></div>'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:4em;font-weight:700;color:var(--accent2);margin:16px 0;animation:penaltyPop 0.4s cubic-bezier(0.34,1.56,0.64,1);">+' + PENALTY + '</div>'
+    + '<div class="reveal-points-label" style="color:var(--accent2);">' + t('penalty') + '</div>'
+    + '<button class="reveal-skip" id="reveal-skip-btn" style="border-color:var(--accent2);color:var(--accent2);">' + t('cont') + '</button>'
+    + '</div>';
+  var s = document.createElement('style');
+  s.textContent = '@keyframes penaltyPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}';
+  overlay.appendChild(s);
+  document.body.appendChild(overlay);
+
+  var overlayClosed = false;
+  function closeOverlay() {
+    if (overlayClosed) return;
+    overlayClosed = true;
+    overlay.style.transition = 'opacity 0.3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { isRevealing = false; overlay.remove(); currentStep++; showTurn(); }, 300);
+  }
+  applyEmoji(overlay);
+  document.getElementById('reveal-skip-btn').onclick = closeOverlay;
+  setTimeout(closeOverlay, 2800);
+}
+
+// ─── HANDLE CHOICE ────────────────────────────────────────────────────────────
+function handleChoice(catId) {
+  if (isRevealing) return;
+  clearInterval(timerInterval);
+  var btn = document.getElementById('cat-' + catId);
+  if (!btn || btn.disabled) return;
+
+  var country = gameCountries[currentStep];
+  var rawVal  = country[catId];
+  var points  = (rawVal === false || rawVal === null || rawVal === undefined) ? false : Number(rawVal);
+  var cName   = getCountryName(country);
+  var flag    = country.flag || country.emoji || '🌍';
+  var catObj  = gameCategories.find(function(c) { return c.id === catId; });
+
+  usedCategories[catId] = true;
+  disableAllCatButtons();
+
+  btn.innerHTML =
+    '<div class="cat-btn-top"><span class="cat-icon">' + catObj.icon + '</span></div>'
+    + '<span class="cat-label-text">' + catName(catObj) + '</span>'
+    + '<span class="cat-badge"><span class="badge-flag">' + flag + '</span>' + cName + '</span>';
+  btn.style.borderColor = 'var(--accent3)';
+  btn.style.color = 'var(--accent3)';
+  applyEmoji(btn);
+
+  isRevealing = true;
+  showReveal(flag, cName, catObj, points, function() {
+    isRevealing = false;
+    if (points !== false) totalScore += points;
+    document.getElementById('total-score').textContent = totalScore;
+    currentStep++;
+    showTurn();
+  });
+}
+
+function disableAllCatButtons() {
+  document.querySelectorAll('.cat-btn').forEach(function(b) { b.disabled = true; });
+}
+
+// ─── ODOMETER REVEAL ──────────────────────────────────────────────────────────
+function showReveal(flag, cName, catObj, finalValue, onDone) {
+  var overlay = document.createElement('div');
+  overlay.id = 'reveal-overlay';
+  var isFalse = finalValue === false;
+  var target  = isFalse ? 0 : Math.abs(finalValue);
+
+  overlay.innerHTML =
+    '<div class="reveal-card">'
+    + '<div class="reveal-cat-label">' + t('catSelected') + '</div>'
+    + '<div class="reveal-cat-name">' + catObj.icon + ' ' + catName(catObj) + '</div>'
+    + '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>'
+    + '<span class="reveal-country-name">' + cName + '</span></div>'
+    + '<div class="odometer-wrap" id="odo-wrap"></div>'
+    + '<div class="reveal-points-label">' + (isFalse ? t('noData') : t('ptsAdded')) + '</div>'
+    + '<button class="reveal-skip" id="reveal-skip-btn">' + t('skip') + '</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  applyEmoji(overlay);
+
+  var digits = target.toString().split('').map(Number);
+  if (!digits.length) digits.push(0);
+  var wrap = document.getElementById('odo-wrap');
+  buildOdometer(wrap, digits.length);
+
+  var animDone = false;
+  var skipBtn  = document.getElementById('reveal-skip-btn');
+
+  var revealClosed = false;
+  function closeReveal() {
+    if (revealClosed) return;
+    revealClosed = true;
+    overlay.style.transition = 'opacity 0.3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { overlay.remove(); onDone(); }, 300);
+  }
+
+  function onComplete() {
+    animDone = true;
+    wrap.querySelectorAll('.odo-digit-wrap').forEach(function(d) { d.classList.add('done'); });
+    skipBtn.textContent = t('cont');
+    skipBtn.style.borderColor = 'var(--accent)';
+    skipBtn.style.color = 'var(--accent)';
+    skipBtn.onclick = closeReveal;
+    setTimeout(function() { if (document.getElementById('reveal-overlay')) closeReveal(); }, 2500);
+  }
+
+  function onSkip() {
+    setOdometerToFinal(wrap, digits);
+    onComplete();
+  }
+
+  skipBtn.onclick = function() { animDone ? closeReveal() : onSkip(); };
+  runOdometerAnimation(wrap, digits, target, isFalse, onComplete, onSkip);
+}
+
+function buildOdometer(wrap, n) {
+  wrap.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    var dw = document.createElement('div');
+    dw.className = 'odo-digit-wrap';
+    var inner = document.createElement('div');
+    inner.className = 'odo-digit-inner';
+    for (var d = 0; d <= 9; d++) {
+      var span = document.createElement('div');
+      span.className = 'odo-digit';
+      span.textContent = d;
+      inner.appendChild(span);
+    }
+    var ft = document.createElement('div'); ft.className = 'odo-fade-top';
+    var fb = document.createElement('div'); fb.className = 'odo-fade-bot';
+    dw.appendChild(inner); dw.appendChild(ft); dw.appendChild(fb);
+    wrap.appendChild(dw);
+    setDigitTo(dw, 0, false);
+  }
+}
+
+function setDigitTo(dw, value, animated) {
+  var inner = dw.querySelector('.odo-digit-inner');
+  inner.style.transition = animated ? 'transform 0.12s cubic-bezier(0.4,0,0.2,1)' : 'none';
+  inner.style.transform  = 'translateY(' + (-value * 74) + 'px)';
+}
+
+function setOdometerToFinal(wrap, digits) {
+  var dws = wrap.querySelectorAll('.odo-digit-wrap');
+  digits.forEach(function(d, i) { setDigitTo(dws[i], d, false); });
+}
+
+function runOdometerAnimation(wrap, finalDigits, finalValue, isFalse, onComplete, onSkip) {
+  if (isFalse || finalValue === 0) { setTimeout(onComplete, 600); return; }
+  var DURATION = 2400;
+  var start    = performance.now();
+  var dws      = Array.from(wrap.querySelectorAll('.odo-digit-wrap'));
+  var cancelled = false;
+  var skipBtn   = document.getElementById('reveal-skip-btn');
+  if (skipBtn) skipBtn.onclick = function() { cancelled = true; onSkip(); };
+
+  function ease(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+  function renderValue(val) {
+    var str = Math.round(val).toString().padStart(finalDigits.length, '0');
+    str.split('').forEach(function(ch, i) { if (i < dws.length) setDigitTo(dws[i], Number(ch), true); });
+  }
+
+  function tick(now) {
+    if (cancelled) return;
+    var t = Math.min((now - start) / DURATION, 1);
+    renderValue(ease(t) * finalValue);
+    if (t < 1) requestAnimationFrame(tick);
+    else { renderValue(finalValue); onComplete(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── FEEDBACK ─────────────────────────────────────────────────────────────────
+function clearFeedback() {
+  var el = document.getElementById('feedback');
+  el.textContent = ''; el.className = 'feedback';
+}
+
+// ─── END GAME ─────────────────────────────────────────────────────────────────
+function endGame() {
+  clearInterval(timerInterval);
+  document.getElementById('panel-game').classList.add('hidden');
+  document.getElementById('panel-end').classList.remove('hidden');
+  document.getElementById('final-score').textContent = totalScore;
+  var tl  = t('taglines');
+  var idx = totalScore < 100 ? 0 : totalScore < 300 ? 1 : totalScore < 600 ? 2 : totalScore < 1000 ? 3 : 4;
+  document.getElementById('end-tagline').textContent = tl[idx];
+  document.getElementById('seed-display').innerHTML =
+    '<strong>' + t('seedShare') + '</strong><span id="seed-value">' + currentSeed + '</span>';
+}
+
+function copySeed() {
+  navigator.clipboard.writeText(currentSeed).then(function() {
+    var btn = document.querySelector('[onclick="copySeed()"]');
+    var orig = btn.textContent;
+    btn.textContent = '✓ OK!';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
+  });
+}
+
+// ─── TWEMOJI HELPER ──────────────────────────────────────────────────────────────
+function applyEmoji(el) {
+  if (typeof twemoji !== 'undefined') {
+    twemoji.parse(el, {
+      folder: 'svg',
+      ext: '.svg',
+      base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/'
+    });
+  }
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+applyTranslations();
+initApp();
+</script>
+</body>
+</html>

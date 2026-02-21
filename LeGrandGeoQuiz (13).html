@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeGrandGeoQuiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<style>
+/* Twemoji emoji images */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.05em 0 0.1em;
+  vertical-align: -0.1em;
+  display: inline-block;
+}
+/* Larger emoji for country flag display */
+.country-flag img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+}
+/* Reveal overlay flag */
+.reveal-flag img.emoji {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+}
+
+:root {
+  --bg: #0d0f14;
+  --surface: #161920;
+  --surface2: #1e2230;
+  --border: #2a2f42;
+  --accent: #4fffb0;
+  --accent2: #ff4f7b;
+  --accent3: #4fc3ff;
+  --text: #e8ecf5;
+  --muted: #606880;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(79,255,176,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(79,255,176,0.03) 1px,transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+#app { position: relative; z-index: 1; width: 100%; max-width: 640px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* lang switcher */
+#lang-switcher { position:fixed; top:16px; right:16px; z-index:200; display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:99px; padding:4px; }
+.lang-btn { padding:5px 12px; border-radius:99px; border:none; background:transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.75em; font-weight:500; cursor:pointer; transition:all 0.15s; }
+.lang-btn:hover { color:var(--text); }
+.lang-btn.active { background:var(--accent); color:#000; font-weight:700; }
+
+/* typography */
+.logo { font-size:0.75em; font-weight:700; letter-spacing:0.25em; text-transform:uppercase; color:var(--accent); font-family:'DM Mono',monospace; margin-bottom:8px; }
+h1 { font-size:2.8em; font-weight:800; line-height:1; margin-bottom:6px; }
+.subtitle { color:var(--muted); font-size:0.9em; line-height:1.5; margin-bottom:28px; }
+.highlight { color:var(--accent); }
+.highlight2 { color:var(--accent2); }
+
+/* loader */
+#loader { display:flex; align-items:center; gap:10px; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.85em; }
+.dot-spin { width:10px; height:10px; border-radius:50%; background:var(--accent); animation:pulse 1s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+/* buttons */
+.btn-primary { display:inline-block; padding:14px 36px; background:var(--accent); color:#000; font-family:'Syne',sans-serif; font-weight:700; font-size:1em; border:none; border-radius:8px; cursor:pointer; letter-spacing:0.05em; transition:all 0.15s; margin-top:8px; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(79,255,176,0.3); }
+.btn-secondary { display:inline-block; padding:12px 28px; background:transparent; color:var(--text); font-family:'Syne',sans-serif; font-weight:700; font-size:0.95em; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:all 0.15s; margin-top:8px; }
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+
+/* rules */
+.rules { list-style:none; margin:16px 0 24px; display:flex; flex-direction:column; gap:8px; }
+.rules li { display:flex; align-items:flex-start; gap:10px; font-size:0.9em; color:var(--muted); line-height:1.4; }
+.rules li .ico { color:var(--accent); font-size:1em; margin-top:1px; flex-shrink:0; }
+
+/* timer */
+.timer-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.timer-label { font-family:'DM Mono',monospace; font-size:0.8em; color:var(--muted); white-space:nowrap; }
+.timer-num { font-family:'DM Mono',monospace; font-size:1.3em; font-weight:500; color:var(--accent); min-width:28px; transition:color 0.3s; }
+.timer-num.urgent { color:var(--accent2); }
+.progress-track { flex:1; height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--accent); border-radius:99px; transition:width 1s linear, background 0.3s; }
+.progress-fill.urgent { background:var(--accent2); }
+
+/* country block */
+.country-block { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin:16px 0; display:flex; align-items:center; gap:16px; }
+.country-flag { font-size:2.8em; line-height:1; }
+.country-info { flex:1; }
+.country-name { font-size:1.6em; font-weight:800; line-height:1.1; }
+.turn-label { font-family:'DM Mono',monospace; font-size:0.75em; color:var(--muted); margin-top:2px; }
+
+/* score */
+.score-strip { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.score-val { font-size:1.4em; font-weight:800; }
+.score-val span { color:var(--accent); }
+
+/* feedback */
+.feedback { min-height:24px; font-family:'DM Mono',monospace; font-size:0.85em; font-weight:500; margin-bottom:6px; }
+.feedback.ok { color:var(--accent); }
+.feedback.warn { color:var(--accent2); }
+
+/* cats grid */
+.cats-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.cat-btn { padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Syne',sans-serif; font-size:0.82em; font-weight:700; cursor:pointer; text-align:left; transition:all 0.15s; line-height:1.3; display:flex; flex-direction:column; }
+.cat-btn:hover:not(:disabled) { border-color:var(--accent3); color:var(--accent3); background:rgba(79,195,255,0.06); transform:translateY(-1px); }
+.cat-btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.cat-btn-top { display:flex; align-items:flex-start; justify-content:space-between; gap:4px; width:100%; }
+.cat-icon { font-size:1.2em; display:block; margin-bottom:4px; }
+.cat-label-text { flex:1; }
+
+/* info btn */
+.cat-info-btn { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; border-radius:50%; background:rgba(79,195,255,0.12); border:1px solid rgba(79,195,255,0.3); color:var(--accent3); font-family:'DM Mono',monospace; font-size:0.65em; font-weight:700; cursor:pointer; flex-shrink:0; line-height:1; transition:all 0.15s; user-select:none; }
+.cat-info-btn:hover { background:rgba(79,195,255,0.28); border-color:var(--accent3); transform:scale(1.15); }
+
+/* tooltip */
+#cat-tooltip { position:fixed; z-index:300; max-width:280px; background:var(--surface); border:1px solid var(--accent3); border-radius:10px; padding:12px 14px; box-shadow:0 8px 32px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transform:translateY(4px) scale(0.97); transition:opacity 0.15s ease,transform 0.15s ease; }
+#cat-tooltip.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+.tt-title { font-size:0.8em; font-weight:700; color:var(--accent3); margin-bottom:6px; }
+.tt-body  { font-size:0.78em; color:var(--muted); line-height:1.5; font-family:'DM Mono',monospace; }
+
+/* cat badge */
+.cat-badge { display:inline-flex; align-items:center; gap:6px; font-family:'DM Mono',monospace; font-size:0.7em; background:rgba(79,255,176,0.08); border:1px solid rgba(79,255,176,0.2); border-radius:99px; padding:3px 10px 3px 6px; margin-top:6px; color:var(--accent); }
+.badge-flag { font-size:1.2em; }
+
+/* end */
+.end-score { font-size:5em; font-weight:800; color:var(--accent); line-height:1; margin:16px 0; }
+.end-tagline { color:var(--muted); font-family:'DM Mono',monospace; font-size:0.85em; margin-bottom:28px; }
+
+/* seed box */
+.seed-box { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 16px; font-family:'DM Mono',monospace; font-size:0.7em; color:var(--muted); word-break:break-all; margin-bottom:12px; text-align:left; }
+.seed-box strong { color:var(--accent3); display:block; margin-bottom:8px; font-size:1.05em; }
+#seed-value { display:block; color:var(--text); font-size:1.1em; user-select:all; cursor:text; padding:8px; background:rgba(255,255,255,0.04); border-radius:4px; border:1px solid var(--border); }
+
+/* reveal overlay */
+#reveal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:100; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.25s ease; }
+.reveal-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:40px 48px; text-align:center; max-width:420px; width:90%; }
+.reveal-cat-label { font-family:'DM Mono',monospace; font-size:0.75em; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.reveal-cat-name  { font-size:1.1em; font-weight:700; color:var(--accent3); margin-bottom:20px; }
+.reveal-country   { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:28px; }
+.reveal-flag      { font-size:2.4em; }
+.reveal-country-name { font-size:1.5em; font-weight:800; }
+.odometer-wrap { display:flex; align-items:center; justify-content:center; gap:4px; margin-bottom:24px; min-height:80px; }
+.odo-digit-wrap { width:52px; height:74px; background:#0a0c10; border:1px solid var(--border); border-radius:8px; overflow:hidden; position:relative; box-shadow:inset 0 2px 8px rgba(0,0,0,0.6); }
+.odo-digit-wrap::before,.odo-digit-wrap::after { content:''; position:absolute; left:0; right:0; height:1px; background:rgba(79,255,176,0.15); z-index:3; }
+.odo-digit-wrap::before { top:36px; }
+.odo-digit-wrap::after  { top:37px; }
+.odo-digit-inner { position:absolute; width:100%; display:flex; flex-direction:column; align-items:center; }
+.odo-digit { width:100%; height:74px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:2.2em; font-weight:500; color:var(--accent); flex-shrink:0; user-select:none; }
+.odo-fade-top,.odo-fade-bot { position:absolute; left:0; right:0; height:24px; z-index:2; pointer-events:none; }
+.odo-fade-top { top:0;    background:linear-gradient(to bottom,#0a0c10,transparent); }
+.odo-fade-bot { bottom:0; background:linear-gradient(to top,  #0a0c10,transparent); }
+.odo-digit-wrap.done { border-color:var(--accent); box-shadow:0 0 12px rgba(79,255,176,0.25); }
+.reveal-points-label { font-family:'DM Mono',monospace; font-size:0.8em; color:var(--muted); margin-bottom:20px; letter-spacing:0.1em; }
+.reveal-skip { font-family:'DM Mono',monospace; font-size:0.75em; color:var(--muted); background:none; border:1px solid var(--border); border-radius:6px; padding:8px 20px; cursor:pointer; transition:all 0.15s; }
+.reveal-skip:hover { color:var(--text); border-color:var(--muted); }
+
+.hidden { display:none !important; }
+
+/* Country info button */
+.country-info-wrap { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* Hint buttons */
+.hint-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 10px; border-radius:99px; border:none; cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:0.68em; font-weight:500;
+  transition:all 0.15s; user-select:none; white-space:nowrap;
+}
+.hint-btn-1 {
+  background:rgba(79,255,176,0.1); border:1px solid rgba(79,255,176,0.3);
+  color:var(--accent);
+}
+.hint-btn-1:hover:not(:disabled) { background:rgba(79,255,176,0.22); border-color:var(--accent); }
+.hint-btn-2 {
+  background:rgba(255,179,79,0.1); border:1px solid rgba(255,179,79,0.3);
+  color:#ffb34f;
+}
+.hint-btn-2:hover:not(:disabled) { background:rgba(255,179,79,0.22); border-color:#ffb34f; }
+.hint-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.hint-btn.revealed {
+  opacity:0.5; cursor:default; pointer-events:none;
+}
+.hint-cost { font-size:0.85em; opacity:0.7; }
+
+/* Hint panel (inline below country block) */
+#hint-panel {
+  margin-top:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:0;
+  overflow:hidden;
+  max-height:0; transition:max-height 0.3s ease, padding 0.3s ease;
+}
+#hint-panel.open { max-height:200px; padding:12px 14px; }
+
+.hint-line {
+  font-family:'DM Mono',monospace; font-size:0.78em; line-height:1.55; color:var(--muted);
+  padding:4px 0;
+}
+.hint-line-1 { color:var(--muted); }
+.hint-line-2 { color:#ffb34f; border-top:1px solid var(--border); padding-top:8px; margin-top:6px; }
+.hint-label {
+  font-size:0.7em; letter-spacing:0.1em; text-transform:uppercase;
+  margin-bottom:3px; display:block;
+}
+.hint-label-1 { color:var(--accent); }
+.hint-label-2 { color:#ffb34f; }
+
+/* Country tooltip not used anymore but keep for compat */
+#country-tooltip { display:none; }
+
+</style>
+</head>
+<body>
+
+<div id="lang-switcher">
+  <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" onclick="setLang('ua')">UA</button>
+</div>
+
+<div id="app">
+
+  <!-- SETUP -->
+  <div id="panel-setup" class="panel">
+    <div class="logo">◈ LeGrandGeoQuiz</div>
+    <h1>Geo<span class="highlight">Quiz</span></h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
+    <div id="loader"><div class="dot-spin"></div>&nbsp;<span data-i18n="loading"></span></div>
+    <div id="setup-ready" class="hidden">
+      <ul class="rules">
+        <li><span class="ico">&#8594;</span><span data-i18n="rule1"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule2"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule3"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule4"></span></li>
+        <li><span class="ico">&#8594;</span><span data-i18n="rule5"></span></li>
+      </ul>
+      <div style="margin-bottom:16px;">
+        <label style="font-family:'DM Mono',monospace;font-size:0.75em;color:var(--muted);display:block;margin-bottom:6px;" data-i18n="seedLabel"></label>
+        <div style="display:flex;gap:8px;">
+          <input id="seed-input" type="text" data-i18n-placeholder="seedPlaceholder"
+            style="flex:1;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.75em;outline:none;">
+          <button class="btn-secondary" style="margin-top:0;padding:10px 16px;font-size:0.85em;" onclick="startWithSeedInput()" data-i18n="seedLoad"></button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="startGame()" data-i18n="newGame"></button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="panel-game" class="panel hidden">
+    <div class="score-strip">
+      <div class="score-val"><span data-i18n="score"></span>&nbsp;:&nbsp;<span id="total-score">0</span></div>
+      <div class="turn-label" id="turn-label"></div>
+    </div>
+    <div id="game-seed-display" style="font-family:'DM Mono',monospace;font-size:0.65em;color:var(--muted);margin-bottom:10px;word-break:break-all;"></div>
+    <div class="timer-row">
+      <span class="timer-label" data-i18n="time"></span>
+      <span class="timer-num" id="timer-num">20</span>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="country-block">
+      <div class="country-flag" id="country-flag">&#127757;</div>
+      <div class="country-info">
+        <div class="country-info-wrap">
+          <div class="country-name" id="country-name">---</div>
+          <button class="hint-btn hint-btn-1" id="hint-btn-1" onclick="revealHint1()">💡 <span data-i18n="hint1btn"></span></button>
+          <button class="hint-btn hint-btn-2" id="hint-btn-2" onclick="revealHint2()" style="display:none">🔍 <span data-i18n="hint2btn"></span></button>
+        </div>
+        <div class="turn-label" id="country-sub"></div>
+      </div>
+    </div>
+    <div id="hint-panel">
+      <span class="hint-label hint-label-1" data-i18n="hintLabel1"></span>
+      <div class="hint-line hint-line-1" id="hint-text-1"></div>
+      <div id="hint-block-2" style="display:none">
+        <span class="hint-label hint-label-2" data-i18n="hintLabel2"></span>
+        <div class="hint-line hint-line-2" id="hint-text-2"></div>
+      </div>
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
+  </div>
+
+  <!-- END -->
+  <div id="panel-end" class="panel hidden">
+    <div class="logo" data-i18n="gameOver"></div>
+    <h1><span data-i18n="finalScore"></span><br><span class="highlight" data-i18n="final"></span></h1>
+    <div class="end-score" id="final-score">0</div>
+    <p class="end-tagline" id="end-tagline"></p>
+    <div class="seed-box" id="seed-display"></div>
+    <button class="btn-secondary" style="margin-top:0;margin-bottom:16px;width:100%;font-size:0.85em;" onclick="copySeed()" data-i18n="copySeed"></button>
+    <button class="btn-primary" onclick="location.reload()" data-i18n="playAgain"></button>
+  </div>
+
+</div>
+
+<div id="country-tooltip"></div>
+<div id="cat-tooltip">
+  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-body"  id="tt-body"></div>
+</div>
+
+<script>
+// ─── I18N ─────────────────────────────────────────────────────────────────────
+var currentLang = 'fr';
+
+var TRANSLATIONS = {
+  fr: {
+    subtitle:       'Le jeu de g\u00e9ographie strat\u00e9gique \u2014 8 pays, 8 cat\u00e9gories, le score le plus <span class="highlight2">faible</span> possible.',
+    loading:        'Chargement des donn\u00e9es...',
+    rule1:          'Chaque tour, associez le pays affich\u00e9 \u00e0 une cat\u00e9gorie.',
+    rule2:          'Votre score = la valeur du pays dans cette cat\u00e9gorie (rang, taux, nb\u2026).',
+    rule3:          'Chaque cat\u00e9gorie ne peut \u00eatre utilis\u00e9e qu\'\u003cstrong style="color:var(--text)"\u003eune seule fois\u003c/strong\u003e.',
+    rule4:          'Vous avez \u003cstrong style="color:var(--text)"\u003e20 secondes\u003c/strong\u003e par pays. Sinon\u00a0: +200 points de p\u00e9nalit\u00e9\u00a0!',
+    rule5:          'Objectif\u00a0: minimiser votre score total\u00a0!',
+    seedLabel:      '\uD83D\uDD11 JOUER AVEC UNE SEED (optionnel)',
+    seedPlaceholder:'ex: 3-12-45-..._0-5-11-...',
+    seedLoad:       'Charger',
+    newGame:        'Nouvelle partie \u2192',
+    score:          'Score',
+    time:           'Temps',
+    turn:           'Tour',
+    of:             '/',
+    gameOver:       '\u25c8 Partie termin\u00e9e',
+    finalScore:     'Score',
+    final:          'Final',
+    copySeed:       '\uD83D\uDCCB Copier la seed',
+    playAgain:      'Rejouer',
+    seedShare:      '\uD83D\uDD11 SEED \u2014 partagez cette partie\u00a0!',
+    catSelected:    'cat\u00e9gorie s\u00e9lectionn\u00e9e',
+    ptsAdded:       'points ajout\u00e9s au score',
+    noData:         '\u26a0 Donn\u00e9e non disponible',
+    timeUp:         '\u23f1 temps \u00e9coul\u00e9\u00a0!',
+    noAnswer:       'Pas de r\u00e9ponse',
+    penalty:        'p\u00e9nalit\u00e9 ajout\u00e9e au score',
+    skip:           'Passer \u2192',
+    cont:           'Continuer \u2192',
+    invalidSeed:    'Seed invalide\u00a0!',
+    invalidSeedIdx: 'Seed invalide \u2014 indices hors limites.',
+    enterSeed:      'Entrez une seed d\'abord\u00a0!',
+    taglines:       ['\uD83C\uDFC6 Score exceptionnel \u2014 ma\u00eetrise totale\u00a0!','\uD83C\uDF1F Tr\u00e8s bon score \u2014 vous connaissez votre g\u00e9o\u00a0!','\uD83D\uDC4D Score correct \u2014 quelques bons choix\u00a0!','\uD83D\uDE2C Score moyen \u2014 \u00e0 am\u00e9liorer\u00a0!','\uD83D\uDCDA Score \u00e9lev\u00e9 \u2014 r\u00e9visez votre g\u00e9o\u00a0!']
+  },
+  en: {
+    subtitle:       'The strategic geography game \u2014 8 countries, 8 categories, the <span class="highlight2">lowest</span> score possible.',
+    loading:        'Loading data...',
+    rule1:          'Each turn, match the displayed country to a category.',
+    rule2:          'Your score = the country\'s value in that category (rank, rate, count\u2026).',
+    rule3:          'Each category can only be used \u003cstrong style="color:var(--text)"\u003eonce\u003c/strong\u003e.',
+    rule4:          'You have \u003cstrong style="color:var(--text)"\u003e20 seconds\u003c/strong\u003e per country. Otherwise: +200 penalty points!',
+    rule5:          'Goal: minimize your total score!',
+    seedLabel:      '\uD83D\uDD11 PLAY WITH A SEED (optional)',
+    seedPlaceholder:'e.g. 3-12-45-..._0-5-11-...',
+    seedLoad:       'Load',
+    newGame:        'New game \u2192',
+    score:          'Score',
+    time:           'Time',
+    turn:           'Round',
+    of:             '/',
+    gameOver:       '\u25c8 Game over',
+    finalScore:     'Final',
+    final:          'Score',
+    copySeed:       '\uD83D\uDCCB Copy seed',
+    playAgain:      'Play again',
+    seedShare:      '\uD83D\uDD11 SEED \u2014 share this game!',
+    catSelected:    'selected category',
+    ptsAdded:       'points added to score',
+    noData:         '\u26a0 Data not available',
+    timeUp:         '\u23f1 time\'s up!',
+    noAnswer:       'No answer',
+    penalty:        'penalty added to score',
+    hintLabel2:          '🔍 Additional information',
+    hintLabel1:          '💡 Geographic hint',
+    hint2btn:          'Details +50pts',
+    hint1btn:          'Hint +25pts',
+    skip:           'Skip \u2192',
+    cont:           'Continue \u2192',
+    invalidSeed:    'Invalid seed!',
+    invalidSeedIdx: 'Invalid seed \u2014 indices out of bounds.',
+    enterSeed:      'Please enter a seed first!',
+    taglines:       ['\uD83C\uDFC6 Exceptional score \u2014 total mastery!','\uD83C\uDF1F Great score \u2014 you know your geography!','\uD83D\uDC4D Decent score \u2014 a few good choices!','\uD83D\uDE2C Average score \u2014 room for improvement!','\uD83D\uDCDA High score \u2014 study your geography!']
+  },
+  ua: {
+    subtitle:       '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0456\u0447\u043d\u0430 \u0433\u0435\u043e\u0433\u0440\u0430\u0444\u0456\u0447\u043d\u0430 \u0433\u0440\u0430 \u2014 8 \u043a\u0440\u0430\u0457\u043d, 8 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0439, \u044f\u043a\u043e\u043c\u043e\u0433\u0430 <span class="highlight2">\u043c\u0435\u043d\u0448\u0438\u0439</span> \u0440\u0430\u0445\u0443\u043d\u043e\u043a.',
+    loading:        '\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0435\u043d\u043d\u044f \u0434\u0430\u043d\u0438\u0445...',
+    rule1:          '\u041a\u043e\u0436\u0435\u043d \u0445\u0456\u0434 \u2014 \u043f\u043e\u0432\'\u044f\u0436\u0456\u0442\u044c \u0432\u0456\u0434\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0443 \u043a\u0440\u0430\u0457\u043d\u0443 \u0437 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0454\u044e.',
+    rule2:          '\u0412\u0430\u0448 \u0440\u0430\u0445\u0443\u043d\u043e\u043a = \u0437\u043d\u0430\u0447\u0435\u043d\u043d\u044f \u043a\u0440\u0430\u0457\u043d\u0438 \u0432 \u0446\u0456\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u0457 (\u0440\u0430\u043d\u0433, \u0432\u0456\u0434\u0441\u043e\u0442\u043e\u043a, \u043a\u0456\u043b\u044c\u043a\u0456\u0441\u0442\u044c\u2026).',
+    rule3:          '\u041a\u043e\u0436\u043d\u0443 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044e \u043c\u043e\u0436\u043d\u0430 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u0442\u0438 \u043b\u0438\u0448\u0435 \u003cstrong style="color:var(--text)"\u003e\u043e\u0434\u0438\u043d \u0440\u0430\u0437\u003c/strong\u003e.',
+    rule4:          '\u0423 \u0432\u0430\u0441 \u0454 \u003cstrong style="color:var(--text)"\u003e20 \u0441\u0435\u043a\u0443\u043d\u0434\u003c/strong\u003e \u043d\u0430 \u043a\u0440\u0430\u0457\u043d\u0443. \u0406\u043d\u0430\u043a\u0448\u0435: +200 \u0448\u0442\u0440\u0430\u0444\u043d\u0438\u0445 \u043e\u0447\u043e\u043a!',
+    rule5:          '\u041c\u0435\u0442\u0430: \u043c\u0456\u043d\u0456\u043c\u0456\u0437\u0443\u0432\u0430\u0442\u0438 \u0437\u0430\u0433\u0430\u043b\u044c\u043d\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!',
+    seedLabel:      '\uD83D\uDD11 \u0413\u0420\u0410\u0422\u0418 \u0417 \u0421\u0406\u0414\u041e\u041c (\u043d\u0435\u043e\u0431\u043e\u0432\'\u044f\u0437\u043a\u043e\u0432\u043e)',
+    seedPlaceholder:'\u043d\u0430\u043f\u0440. 3-12-45-..._0-5-11-...',
+    seedLoad:       '\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438',
+    newGame:        '\u041d\u043e\u0432\u0430 \u0433\u0440\u0430 \u2192',
+    score:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
+    time:           '\u0427\u0430\u0441',
+    turn:           '\u0425\u0456\u0434',
+    of:             '/',
+    gameOver:       '\u25c8 \u0413\u0440\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u043e',
+    finalScore:     '\u0424\u0456\u043d\u0430\u043b\u044c\u043d\u0438\u0439',
+    final:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
+    copySeed:       '\uD83D\uDCCB \u041a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0441\u0456\u0434',
+    playAgain:      '\u0413\u0440\u0430\u0442\u0438 \u0437\u043d\u043e\u0432\u0443',
+    seedShare:      '\uD83D\uDD11 \u0421\u0406\u0414 \u2014 \u043f\u043e\u0434\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0446\u0456\u0454\u044e \u0433\u0440\u043e\u044e!',
+    catSelected:    '\u043e\u0431\u0440\u0430\u043d\u0430 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044f',
+    ptsAdded:       '\u043e\u0447\u043a\u0438 \u0434\u043e\u0434\u0430\u043d\u043e \u0434\u043e \u0440\u0430\u0445\u0443\u043d\u043a\u0443',
+    noData:         '\u26a0 \u0414\u0430\u043d\u0456 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0456',
+    timeUp:         '\u23f1 \u0447\u0430\u0441 \u0432\u0438\u0439\u0448\u043e\u0432!',
+    noAnswer:       '\u041d\u0435\u043c\u0430\u0454 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0456',
+    penalty:        '\u0448\u0442\u0440\u0430\u0444 \u0434\u043e\u0434\u0430\u043d\u043e \u0434\u043e \u0440\u0430\u0445\u0443\u043d\u043a\u0443',
+    skip:           '\u041f\u0440\u043e\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u2192',
+    cont:           '\u041f\u0440\u043e\u0434\u043e\u0432\u0436\u0438\u0442\u0438 \u2192',
+    invalidSeed:    '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434!',
+    invalidSeedIdx: '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434 \u2014 \u0456\u043d\u0434\u0435\u043a\u0441\u0438 \u043f\u043e\u0437\u0430 \u043c\u0435\u0436\u0430\u043c\u0438.',
+    enterSeed:      '\u0421\u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0432\u0432\u0435\u0434\u0456\u0442\u044c \u0441\u0456\u0434!',
+    taglines:       ['\uD83C\uDFC6 \u0412\u0438\u043a\u043b\u044e\u0447\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83C\uDF1F \u0427\u0443\u0434\u043e\u0432\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDC4D \u041d\u0435\u043f\u043e\u0433\u0430\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDE2C \u0421\u0435\u0440\u0435\u0434\u043d\u0456\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDCDA \u0412\u0438\u0441\u043e\u043a\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!']
+  }
+};
+
+function t(key) {
+  var lang = TRANSLATIONS[currentLang];
+  if (lang && lang[key] !== undefined) return lang[key];
+  return TRANSLATIONS['fr'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase());
+  });
+  document.documentElement.lang = (lang === 'ua') ? 'uk' : lang;
+  applyTranslations();
+  if (gameCategories.length > 0 && currentStep < 8) rerenderCategoryButtonNames();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    el.innerHTML = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
+// ─── CATEGORIES ───────────────────────────────────────────────────────────────
+var ALL_CATEGORIES = [
+  {id:'pib',icon:'💰',fr:'PIB Total',en:'Total GDP',ua:'Загальний ВВП',desc:{fr:'Valeur totale des biens et services produits par un pays sur une année. Le rang indique la position économique globale.',en:"Total value of goods and services produced in a year. The rank indicates the country's overall economic position.",ua:'Загальна вартість товарів і послуг за рік. Ранг відображає економічне становище країни.'}},
+  {id:'nb_habitant',icon:'👥',fr:"Nb d'habitants",en:'Population',ua:'Населення',desc:{fr:"Nombre total de personnes résidant dans le pays, indicateur fondamental de la taille d'un État.",en:"Total number of people residing in the country, a fundamental indicator of a state's size.",ua:'Загальна кількість людей у країні — базовий показник розміру держави.'}},
+  {id:'depense_defense_pctg_pib',icon:'🛡️',fr:'Dépense défense % PIB',en:'Defense spending % GDP',ua:'Витрати на оборону % ВВП',desc:{fr:"Part du budget national allouée à la défense, en % du PIB. Reflète les priorités stratégiques d'un pays.",en:"Share of national budget allocated to defense, as % of GDP. Reflects a country's strategic priorities.",ua:'Частка бюджету на оборону у відсотках від ВВП. Відображає стратегічні пріоритети країни.'}},
+  {id:'indice_paix',icon:'☮️',fr:'Indice de paix',en:'Peace index',ua:'Індекс миру',desc:{fr:'Mesure le niveau de paix : conflits internes, relations avec les voisins, stabilité politique. Rang faible = plus pacifique.',en:'Measures peace and security: internal conflicts, neighbor relations, political stability. Low rank = more peaceful.',ua:'Вимірює рівень миру: конфлікти, відносини з сусідами, стабільність. Низький ранг = мирніша країна.'}},
+  {id:'densite_pop',icon:'🏙️',fr:'Densité de population',en:'Population density',ua:'Густота населення',desc:{fr:'Nombre d\'habitants par km², reflétant la concentration de la population sur le territoire.',en:'Number of inhabitants per km², reflecting the concentration of the population.',ua:'Кількість мешканців на км² — концентрація населення на території.'}},
+  {id:'age_median',icon:'📅',fr:'Âge médian',en:'Median age',ua:'Середній вік',desc:{fr:'Âge qui sépare la population en deux groupes égaux. Indique si la population est plutôt jeune ou vieillissante.',en:'Age that divides the population into two equal groups. Indicates whether the population is younger or aging.',ua:'Вік, який ділить населення навпіл. Вказує, молода чи стара країна.'}},
+  {id:'taux_mortalite',icon:'💀',fr:'Taux de mortalité',en:'Mortality rate',ua:'Рівень смертності',desc:{fr:'Nombre de décès pour 1 000 habitants, indicateur général de la santé d\'une population.',en:'Number of deaths per 1,000 inhabitants, a general health indicator.',ua:'Кількість смертей на 1 000 жителів — загальний показник здоров\'я населення.'}},
+  {id:'taux_mortalite_routiere',icon:'🚗',fr:'Mortalité routière',en:'Road mortality',ua:'Дорожня смертність',desc:{fr:'Nombre de décès liés aux accidents de la route pour 100 000 habitants.',en:'Number of road accident deaths per 100,000 inhabitants.',ua:'Кількість загиблих у ДТП на 100 000 жителів.'}},
+  {id:'taux_fecondite',icon:'🍼',fr:'Taux de fécondité',en:'Fertility rate',ua:'Рівень народжуваності',desc:{fr:'Nombre moyen d\'enfants par femme. Influence la croissance démographique.',en:'Average number of children per woman. Directly influences population growth.',ua:'Середня кількість дітей на жінку. Впливає на демографічне зростання.'}},
+  {id:'esperance_vie',icon:'❤️',fr:'Espérance de vie',en:'Life expectancy',ua:'Очікувана тривалість життя',desc:{fr:'Âge moyen auquel on s\'attend à vivre. Indicateur clé de la qualité de vie.',en:'Average age one is expected to live to. A key quality of life indicator.',ua:'Середній очікуваний вік. Ключовий показник якості життя.'}},
+  {id:'pib_habitant',icon:'💵',fr:'PIB / Habitant',en:'GDP per capita',ua:'ВВП на душу населення',desc:{fr:'Richesse économique moyenne par personne (PIB ÷ nb habitants).',en:'Average economic wealth per person (GDP ÷ population).',ua:'Середній економічний добробут на одну особу (ВВП ÷ населення).'}},
+  {id:'dette_publique_pctg_pib',icon:'📉',fr:'Dette publique % PIB',en:'Public debt % GDP',ua:'Держборг % ВВП',desc:{fr:"Niveau d'endettement d'un État par rapport à sa richesse économique annuelle, en % du PIB.",en:"Level of a state's debt relative to its annual economic wealth, as % of GDP.",ua:'Рівень заборгованості держави відносно ВВП, у відсотках.'}},
+  {id:'indice_corruption',icon:'🕵️',fr:'Indice de corruption',en:'Corruption index',ua:'Індекс корупції',desc:{fr:'Mesure le niveau perçu de corruption dans le secteur public.',en:'Measures the perceived level of corruption in the public sector.',ua:'Вимірює сприйнятий рівень корупції в державному секторі.'}},
+  {id:'nb_touriste',icon:'✈️',fr:'Arrivées touristiques',en:'Tourist arrivals',ua:'Туристичні прибуття',desc:{fr:"Nombre total de visiteurs internationaux, indicateur de l'attractivité touristique.",en:"Total number of international visitors, an indicator of tourist attractiveness.",ua:'Загальна кількість міжнародних відвідувачів — показник привабливості країни.'}},
+  {id:'niveau_mathematique',icon:'📐',fr:'Niveau mathématiques',en:'Math level',ua:'Рівень математики',desc:{fr:'Performance en mathématiques mesurée par des tests standardisés internationaux (PISA).',en:'Math performance measured by international standardized tests (PISA).',ua:'Успішність з математики за міжнародними тестами (PISA).'}},
+  {id:'empreinte_ecologique_par_habitant',icon:'🌱',fr:'Empreinte éco/hab',en:'Eco footprint/capita',ua:'Екослід на душу',desc:{fr:'Pression sur les ressources naturelles par habitant, en hectares globaux.',en:'Pressure on natural resources per inhabitant, in global hectares.',ua:'Навантаження на природні ресурси на одного жителя, у глобальних гектарах.'}},
+  {id:'empreinte_ecologique',icon:'🌍',fr:'Empreinte écologique',en:'Ecological footprint',ua:'Екологічний слід',desc:{fr:'Pression totale exercée par un pays sur les ressources naturelles, en hectares globaux.',en:"Total pressure exerted by a country on natural resources, in global hectares.",ua:'Загальне навантаження країни на природні ресурси, у глобальних гектарах.'}},
+  {id:'surface_foret_pctg_territoire',icon:'🌲',fr:'Surface forestière %',en:'Forest cover %',ua:'Лісовий покрив %',desc:{fr:'Pourcentage du territoire couvert par des forêts. Indicateur de biodiversité.',en:'Percentage of the territory covered by forests. A biodiversity indicator.',ua:'Відсоток території, вкритої лісами. Показник біорізноманіття.'}},
+  {id:'production_or',icon:'🥇',fr:"Production d'or",en:'Gold production',ua:'Виробництво золота',desc:{fr:"Quantité d'or produite, liée à l'activité minière et aux ressources naturelles.",en:'Amount of gold produced, linked to mining activity and natural resources.',ua:'Кількість видобутого золота, пов\'язана з гірничодобувною діяльністю.'}},
+  {id:'pctg_irreligieux',icon:'🔮',fr:'% Irréligieux',en:'% Non-religious',ua:'% Нерелігійних',desc:{fr:"Proportion de la population ne s'identifiant à aucune religion.",en:'Proportion of the population not identifying with any religion.',ua:'Частка населення без релігійної приналежності.'}},
+  {id:'taux_suicide',icon:'📊',fr:'Taux de suicide',en:'Suicide rate',ua:'Рівень суїциду',desc:{fr:'Nombre de suicides pour 100 000 habitants. Indicateur de santé mentale.',en:'Number of suicides per 100,000 inhabitants. A mental health indicator.',ua:'Кількість самогубств на 100 000 жителів. Показник психічного здоров\'я.'}},
+  {id:'taux_tabagisme',icon:'🚬',fr:'Taux de tabagisme',en:'Smoking rate',ua:'Рівень куріння',desc:{fr:'Pourcentage de la population qui fume régulièrement.',en:'Percentage of the population that smokes regularly.',ua:'Відсоток населення, яке регулярно курить.'}},
+  {id:'conso_alcool_par_habitant',icon:'🍺',fr:'Conso alcool/hab',en:'Alcohol consumption/capita',ua:'Споживання алкоголю',desc:{fr:"Quantité moyenne d'alcool pur consommée par personne et par an.",en:'Average amount of pure alcohol consumed per person per year.',ua:'Середня кількість чистого алкоголю на одну особу на рік.'}},
+  {id:'travail_enfant',icon:'👶',fr:'Travail des enfants',en:'Child labour',ua:'Дитяча праця',desc:{fr:"Prévalence du travail des enfants dans une activité économique. Reflète les conditions sociales.",en:'Prevalence of child labor in economic activity. Reflects social conditions.',ua:'Поширеність дитячої праці. Відображає соціально-економічні умови.'}},
+  {id:'nb_militaire',icon:'🪖',fr:'Nb de militaires',en:'Military personnel',ua:'Військовий персонал',desc:{fr:"Effectif total des forces armées. Indicateur de la capacité militaire d'un pays.",en:"Total size of a country's armed forces. A military capacity indicator.",ua:'Загальна чисельність збройних сил. Показник військового потенціалу країни.'}}
+];
+
+function catName(cat) { return cat[currentLang] || cat.fr; }
+function catDesc(cat) { return (cat.desc && cat.desc[currentLang]) ? cat.desc[currentLang] : (cat.desc ? cat.desc.fr : ''); }
+function getCountryName(c) {
+  if (currentLang === 'en') return c.country_EN || c.country_FR || c.name || '???';
+  if (currentLang === 'ua') return c.country_UA || c.country_FR || c.name || '???';
+  return c.country_FR || c.country_EN || c.name || '???';
+}
+
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+var tooltipTimeout = null;
+
+function showTooltip(catId, targetEl) {
+  var cat = ALL_CATEGORIES.find(function(c) { return c.id === catId; });
+  if (!cat) return;
+  document.getElementById('tt-title').textContent = cat.icon + ' ' + catName(cat);
+  document.getElementById('tt-body').textContent  = catDesc(cat);
+  var tip = document.getElementById('cat-tooltip');
+  var tipWidth = 280;
+  var rect = targetEl.getBoundingClientRect();
+  var left = Math.max(8, Math.min(rect.left + rect.width/2 - tipWidth/2, window.innerWidth - tipWidth - 8));
+  tip.style.width = tipWidth + 'px';
+  tip.style.left  = left + 'px';
+  tip.style.visibility = 'hidden';
+  tip.classList.add('visible');
+  var tipH = tip.offsetHeight;
+  tip.classList.remove('visible');
+  tip.style.visibility = '';
+  tip.style.top = (rect.top - 8 - tipH < 8) ? (rect.bottom + 8) + 'px' : (rect.top - 8 - tipH) + 'px';
+  clearTimeout(tooltipTimeout);
+  tip.classList.add('visible');
+}
+
+function hideTooltip() {
+  clearTimeout(tooltipTimeout);
+  tooltipTimeout = setTimeout(function() {
+    document.getElementById('cat-tooltip').classList.remove('visible');
+  }, 120);
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cat-info-btn') && !e.target.closest('#cat-tooltip')) {
+    document.getElementById('cat-tooltip').classList.remove('visible');
+  }
+});
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var countriesDB    = [];
+var gameCountries  = [];
+var gameCategories = [];
+var currentStep    = 0;
+var totalScore     = 0;
+var timerInterval  = null;
+var timeLeft       = 20;
+var usedCategories = {};
+var currentSeed    = '';
+var TIME_PER_TURN  = 20;
+var isRevealing    = false;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function initApp() {
+  try {
+    var res = await fetch('./country.json');
+    if (!res.ok) throw new Error('not found');
+    var data = await res.json();
+    countriesDB = data.Main || data.countries || data;
+  } catch(e) {
+    console.warn('country.json not found — using fallback');
+    countriesDB = getFallbackData();
+  }
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('setup-ready').classList.remove('hidden');
+  applyTranslations();
+}
+
+function getFallbackData() {
+  return [
+    {country_FR:'France',    country_EN:'France',        country_UA:'Франція',   flag:'🇫🇷',pib:17, nb_habitant:80, pib_habitant:15, taux_fecondite:100,taux_suicide:20, empreinte_ecologique:55, conso_alcool_par_habitant:12, indice_paix:67, densite_pop:30, esperance_vie:35,travail_enfant:180},
+    {country_FR:'États-Unis',country_EN:'United States', country_UA:'США',        flag:'🇺🇸',pib:1,  nb_habitant:3,  pib_habitant:8,  taux_fecondite:95, taux_suicide:55, empreinte_ecologique:5,  conso_alcool_par_habitant:25, indice_paix:128,densite_pop:145,esperance_vie:55,travail_enfant:190},
+    {country_FR:'Brésil',    country_EN:'Brazil',        country_UA:'Бразилія',  flag:'🇧🇷',pib:9,  nb_habitant:7,  pib_habitant:80, taux_fecondite:60, taux_suicide:60, empreinte_ecologique:40, conso_alcool_par_habitant:38, indice_paix:111,densite_pop:110,esperance_vie:70,travail_enfant:60},
+    {country_FR:'Japon',     country_EN:'Japan',         country_UA:'Японія',    flag:'🇯🇵',pib:4,  nb_habitant:11, pib_habitant:28, taux_fecondite:200,taux_suicide:30, empreinte_ecologique:35, conso_alcool_par_habitant:55, indice_paix:9,  densite_pop:10, esperance_vie:5, travail_enfant:195},
+    {country_FR:'Inde',      country_EN:'India',         country_UA:'Індія',     flag:'🇮🇳',pib:5,  nb_habitant:2,  pib_habitant:140,taux_fecondite:40, taux_suicide:45, empreinte_ecologique:130,conso_alcool_par_habitant:135,indice_paix:135,densite_pop:20, esperance_vie:90,travail_enfant:30},
+    {country_FR:'Norvège',   country_EN:'Norway',        country_UA:'Норвегія',  flag:'🇳🇴',pib:35, nb_habitant:120,pib_habitant:3,  taux_fecondite:130,taux_suicide:90, empreinte_ecologique:10, conso_alcool_par_habitant:70, indice_paix:17, densite_pop:180,esperance_vie:10,travail_enfant:192},
+    {country_FR:'Nigeria',   country_EN:'Nigeria',       country_UA:'Нігерія',   flag:'🇳🇬',pib:28, nb_habitant:6,  pib_habitant:150,taux_fecondite:5,  taux_suicide:120,empreinte_ecologique:100,conso_alcool_par_habitant:80, indice_paix:150,densite_pop:50, esperance_vie:140,travail_enfant:15},
+    {country_FR:'Argentine', country_EN:'Argentina',     country_UA:'Аргентина', flag:'🇦🇷',pib:22, nb_habitant:45, pib_habitant:65, taux_fecondite:80, taux_suicide:75, empreinte_ecologique:65, conso_alcool_par_habitant:45, indice_paix:74, densite_pop:155,esperance_vie:60,travail_enfant:120},
+    {country_FR:'Australie', country_EN:'Australia',     country_UA:'Австралія', flag:'🇦🇺',pib:13, nb_habitant:55, pib_habitant:12, taux_fecondite:115,taux_suicide:80, empreinte_ecologique:8,  conso_alcool_par_habitant:30, indice_paix:13, densite_pop:200,esperance_vie:15,travail_enfant:193},
+    {country_FR:'Chine',     country_EN:'China',         country_UA:'Китай',     flag:'🇨🇳',pib:2,  nb_habitant:2,  pib_habitant:72, taux_fecondite:175,taux_suicide:40, empreinte_ecologique:3,  conso_alcool_par_habitant:60, indice_paix:100,densite_pop:60, esperance_vie:50,travail_enfant:110}
+  ];
+}
+
+// ─── SEED ─────────────────────────────────────────────────────────────────────
+function shuffle(arr) { return arr.slice().sort(function() { return Math.random() - 0.5; }); }
+
+function encodeSeed(ci, ki) { return ci.join('-') + '_' + ki.join('-'); }
+
+function decodeSeed(seed) {
+  var parts = seed.split('_');
+  if (parts.length !== 2) return null;
+  var ci = parts[0].split('-').map(Number);
+  var ki = parts[1].split('-').map(Number);
+  if (ci.length !== 8 || ki.length !== 8) return null;
+  if (ci.some(isNaN) || ki.some(isNaN)) return null;
+  return {countryIndices:ci, catIndices:ki};
+}
+
+function generateSeed() {
+  var catPool = shuffle(ALL_CATEGORIES.map(function(_,i){return i;})).slice(0,8);
+  var catIds  = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
+  var eligible = countriesDB
+    .map(function(c,i){return {c:c,i:i};})
+    .filter(function(x){ return catIds.every(function(id){ return x.c[id] !== false && x.c[id] !== null && x.c[id] !== undefined; }); });
+  var countryPool;
+  if (eligible.length >= 8) {
+    countryPool = shuffle(eligible).slice(0,8);
+  } else {
+    var scored = countriesDB.map(function(c,i){
+      return {c:c,i:i,score:catIds.filter(function(id){return c[id]!==false&&c[id]!==null&&c[id]!==undefined;}).length};
+    }).sort(function(a,b){return b.score-a.score;});
+    countryPool = shuffle(scored.slice(0, Math.min(16,scored.length))).slice(0,8);
+  }
+  return encodeSeed(countryPool.map(function(x){return x.i;}), catPool);
+}
+
+function applyGameFromSeed(seed) {
+  var decoded = decodeSeed(seed);
+  if (!decoded) { alert(t('invalidSeed')); return false; }
+  var ci = decoded.countryIndices, ki = decoded.catIndices;
+  if (ci.some(function(i){return i<0||i>=countriesDB.length;}))  { alert(t('invalidSeedIdx')); return false; }
+  if (ki.some(function(i){return i<0||i>=ALL_CATEGORIES.length;})) { alert(t('invalidSeedIdx')); return false; }
+  gameCountries  = ci.map(function(i){return countriesDB[i];});
+  gameCategories = ki.map(function(i){return ALL_CATEGORIES[i];});
+  currentSeed = seed;
+  return true;
+}
+
+// ─── GAME START ───────────────────────────────────────────────────────────────
+function startGame(seedOverride) {
+  var seed = seedOverride || generateSeed();
+  if (!applyGameFromSeed(seed)) return;
+  currentSeed    = seed;
+  currentStep    = 0;
+  totalScore     = 0;
+  usedCategories = {};
+  isRevealing    = false;
+  if (typeof resetHints === 'function') resetHints();
+  document.getElementById('panel-setup').classList.add('hidden');
+  document.getElementById('panel-game').classList.remove('hidden');
+  document.getElementById('game-seed-display').textContent = '🔑 ' + currentSeed;
+  renderCategoryButtons();
+  showTurn();
+}
+
+function startWithSeedInput() {
+  var raw = document.getElementById('seed-input').value.trim();
+  if (!raw) { alert(t('enterSeed')); return; }
+  var match = raw.match(/(\d[\d-]*_[\d-]*\d)/);
+  startGame(match ? match[1] : raw);
+}
+
+// ─── CATEGORY BUTTONS ─────────────────────────────────────────────────────────
+function makeCatBtnHTML(cat) {
+  return '<div class="cat-btn-top">'
+       + '<span class="cat-icon">' + cat.icon + '</span>'
+       + '<span class="cat-info-btn" data-catid="' + cat.id + '">i</span>'
+       + '</div>'
+       + '<span class="cat-label-text">' + catName(cat) + '</span>';
+}
+
+function renderCategoryButtons() {
+  var grid = document.getElementById('cats-grid');
+  grid.innerHTML = '';
+  gameCategories.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.id = 'cat-' + cat.id;
+    btn.innerHTML = makeCatBtnHTML(cat);
+    btn.addEventListener('click', function(e) {
+      if (e.target.closest('.cat-info-btn')) return;
+      handleChoice(cat.id);
+    });
+    grid.appendChild(btn);
+  });
+  attachInfoListeners();
+}
+
+function rerenderCategoryButtonNames() {
+  gameCategories.forEach(function(cat) {
+    var btn = document.getElementById('cat-' + cat.id);
+    if (!btn || btn.disabled) return;
+    var el = btn.querySelector('.cat-label-text');
+    if (el) el.textContent = catName(cat);
+    var infoBtn = btn.querySelector('.cat-info-btn');
+    if (infoBtn) {
+      infoBtn.replaceWith(infoBtn.cloneNode(true));
+    }
+  });
+  attachInfoListeners();
+}
+
+function attachInfoListeners() {
+  document.querySelectorAll('.cat-info-btn').forEach(function(el) {
+    var clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    clone.addEventListener('mouseenter', function() { showTooltip(clone.dataset.catid, clone); });
+    clone.addEventListener('mouseleave', hideTooltip);
+    clone.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var tip = document.getElementById('cat-tooltip');
+      if (tip.classList.contains('visible')) hideTooltip();
+      else showTooltip(clone.dataset.catid, clone);
+    });
+  });
+}
+
+// ─── TURN DISPLAY ─────────────────────────────────────────────────────────────
+function showTurn() {
+  if (currentStep >= 8) { endGame(); return; }
+  var c    = gameCountries[currentStep];
+  var name = getCountryName(c);
+  var flag = c.flag || c.emoji || '🌍';
+
+  document.getElementById('country-flag').textContent = flag;
+  applyEmoji(document.getElementById('country-flag'));
+  document.getElementById('country-name').textContent = name;
+  document.getElementById('country-sub').textContent  = c.country_code ? '[' + c.country_code + ']' : '';
+
+  // Country info button: show/hide based on description availability
+  // Hint buttons: show hint1 if desc available, hide hint2 until hint1 revealed
+  var btn1 = document.getElementById('hint-btn-1');
+  var desc1 = getCountryDesc(c);
+  btn1.style.display = desc1 ? 'inline-flex' : 'none';
+  document.getElementById('hint-btn-2').style.display = 'none';
+  document.getElementById('turn-label').textContent   = t('turn') + ' ' + (currentStep+1) + ' ' + t('of') + ' 8';
+  document.getElementById('total-score').textContent  = totalScore;
+
+  gameCategories.forEach(function(cat) {
+    var btn = document.getElementById('cat-' + cat.id);
+    if (!btn) return;
+    if (usedCategories[cat.id]) {
+      btn.disabled = true;
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = makeCatBtnHTML(cat);
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      // re-bind click
+      var newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      (function(catId) {
+        newBtn.addEventListener('click', function(e) {
+          if (e.target.closest('.cat-info-btn')) return;
+          handleChoice(catId);
+        });
+      })(cat.id);
+    }
+  });
+
+  applyEmoji(document.getElementById('cats-grid'));
+  resetHints();
+  attachInfoListeners();
+  clearFeedback();
+  startTimer();
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIME_PER_TURN;
+  updateTimerUI();
+  timerInterval = setInterval(function() {
+    timeLeft--;
+    updateTimerUI();
+    if (timeLeft <= 0) { clearInterval(timerInterval); autoPick(); }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  var numEl  = document.getElementById('timer-num');
+  var fillEl = document.getElementById('progress-fill');
+  numEl.textContent   = timeLeft;
+  fillEl.style.width  = (timeLeft / TIME_PER_TURN * 100) + '%';
+  var urgent = timeLeft <= 8;
+  numEl.classList.toggle('urgent',  urgent);
+  fillEl.classList.toggle('urgent', urgent);
+}
+
+// ─── AUTO PICK ────────────────────────────────────────────────────────────────
+function autoPick() {
+  if (isRevealing) return;
+  isRevealing = true;
+  clearInterval(timerInterval);
+  disableAllCatButtons();
+  var PENALTY = 200;
+  totalScore += PENALTY;
+  document.getElementById('total-score').textContent = totalScore;
+
+  var country = gameCountries[currentStep];
+  var cName   = getCountryName(country);
+  var flag    = country.flag || country.emoji || '🌍';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'reveal-overlay';
+  overlay.innerHTML =
+    '<div class="reveal-card" style="border-color:var(--accent2);">'
+    + '<div class="reveal-cat-label" style="color:var(--accent2);">' + t('timeUp') + '</div>'
+    + '<div class="reveal-cat-name" style="color:var(--accent2);">' + t('noAnswer') + '</div>'
+    + '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>'
+    + '<span class="reveal-country-name">' + cName + '</span></div>'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:4em;font-weight:700;color:var(--accent2);margin:16px 0;animation:penaltyPop 0.4s cubic-bezier(0.34,1.56,0.64,1);">+' + PENALTY + '</div>'
+    + '<div class="reveal-points-label" style="color:var(--accent2);">' + t('penalty') + '</div>'
+    + '<button class="reveal-skip" id="reveal-skip-btn" style="border-color:var(--accent2);color:var(--accent2);">' + t('cont') + '</button>'
+    + '</div>';
+  var s = document.createElement('style');
+  s.textContent = '@keyframes penaltyPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}';
+  overlay.appendChild(s);
+  document.body.appendChild(overlay);
+
+  var overlayClosed = false;
+  function closeOverlay() {
+    if (overlayClosed) return;
+    overlayClosed = true;
+    overlay.style.transition = 'opacity 0.3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { isRevealing = false; overlay.remove(); currentStep++; showTurn(); }, 300);
+  }
+  applyEmoji(overlay);
+  document.getElementById('reveal-skip-btn').onclick = closeOverlay;
+  setTimeout(closeOverlay, 2800);
+}
+
+// ─── HANDLE CHOICE ────────────────────────────────────────────────────────────
+function handleChoice(catId) {
+  if (isRevealing) return;
+  clearInterval(timerInterval);
+  var btn = document.getElementById('cat-' + catId);
+  if (!btn || btn.disabled) return;
+
+  var country = gameCountries[currentStep];
+  var rawVal  = country[catId];
+  var points  = (rawVal === false || rawVal === null || rawVal === undefined) ? false : Number(rawVal);
+  var cName   = getCountryName(country);
+  var flag    = country.flag || country.emoji || '🌍';
+  var catObj  = gameCategories.find(function(c) { return c.id === catId; });
+
+  usedCategories[catId] = true;
+  disableAllCatButtons();
+
+  btn.innerHTML =
+    '<div class="cat-btn-top"><span class="cat-icon">' + catObj.icon + '</span></div>'
+    + '<span class="cat-label-text">' + catName(catObj) + '</span>'
+    + '<span class="cat-badge"><span class="badge-flag">' + flag + '</span>' + cName + '</span>';
+  btn.style.borderColor = 'var(--accent3)';
+  btn.style.color = 'var(--accent3)';
+  applyEmoji(btn);
+
+  isRevealing = true;
+  showReveal(flag, cName, catObj, points, function() {
+    isRevealing = false;
+    if (points !== false) totalScore += points;
+    document.getElementById('total-score').textContent = totalScore;
+    currentStep++;
+    showTurn();
+  });
+}
+
+function disableAllCatButtons() {
+  document.querySelectorAll('.cat-btn').forEach(function(b) { b.disabled = true; });
+}
+
+// ─── ODOMETER REVEAL ──────────────────────────────────────────────────────────
+function showReveal(flag, cName, catObj, finalValue, onDone) {
+  var overlay = document.createElement('div');
+  overlay.id = 'reveal-overlay';
+  var isFalse = finalValue === false;
+  var target  = isFalse ? 0 : Math.abs(finalValue);
+
+  overlay.innerHTML =
+    '<div class="reveal-card">'
+    + '<div class="reveal-cat-label">' + t('catSelected') + '</div>'
+    + '<div class="reveal-cat-name">' + catObj.icon + ' ' + catName(catObj) + '</div>'
+    + '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>'
+    + '<span class="reveal-country-name">' + cName + '</span></div>'
+    + '<div class="odometer-wrap" id="odo-wrap"></div>'
+    + '<div class="reveal-points-label">' + (isFalse ? t('noData') : t('ptsAdded')) + '</div>'
+    + '<button class="reveal-skip" id="reveal-skip-btn">' + t('skip') + '</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  applyEmoji(overlay);
+
+  var digits = target.toString().split('').map(Number);
+  if (!digits.length) digits.push(0);
+  var wrap = document.getElementById('odo-wrap');
+  buildOdometer(wrap, digits.length);
+
+  var animDone = false;
+  var skipBtn  = document.getElementById('reveal-skip-btn');
+
+  var revealClosed = false;
+  function closeReveal() {
+    if (revealClosed) return;
+    revealClosed = true;
+    overlay.style.transition = 'opacity 0.3s';
+    overlay.style.opacity = '0';
+    setTimeout(function() { overlay.remove(); onDone(); }, 300);
+  }
+
+  function onComplete() {
+    animDone = true;
+    wrap.querySelectorAll('.odo-digit-wrap').forEach(function(d) { d.classList.add('done'); });
+    skipBtn.textContent = t('cont');
+    skipBtn.style.borderColor = 'var(--accent)';
+    skipBtn.style.color = 'var(--accent)';
+    skipBtn.onclick = closeReveal;
+    setTimeout(function() { if (document.getElementById('reveal-overlay')) closeReveal(); }, 2500);
+  }
+
+  function onSkip() {
+    setOdometerToFinal(wrap, digits);
+    onComplete();
+  }
+
+  skipBtn.onclick = function() { animDone ? closeReveal() : onSkip(); };
+  runOdometerAnimation(wrap, digits, target, isFalse, onComplete, onSkip);
+}
+
+function buildOdometer(wrap, n) {
+  wrap.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    var dw = document.createElement('div');
+    dw.className = 'odo-digit-wrap';
+    var inner = document.createElement('div');
+    inner.className = 'odo-digit-inner';
+    for (var d = 0; d <= 9; d++) {
+      var span = document.createElement('div');
+      span.className = 'odo-digit';
+      span.textContent = d;
+      inner.appendChild(span);
+    }
+    var ft = document.createElement('div'); ft.className = 'odo-fade-top';
+    var fb = document.createElement('div'); fb.className = 'odo-fade-bot';
+    dw.appendChild(inner); dw.appendChild(ft); dw.appendChild(fb);
+    wrap.appendChild(dw);
+    setDigitTo(dw, 0, false);
+  }
+}
+
+function setDigitTo(dw, value, animated) {
+  var inner = dw.querySelector('.odo-digit-inner');
+  inner.style.transition = animated ? 'transform 0.12s cubic-bezier(0.4,0,0.2,1)' : 'none';
+  inner.style.transform  = 'translateY(' + (-value * 74) + 'px)';
+}
+
+function setOdometerToFinal(wrap, digits) {
+  var dws = wrap.querySelectorAll('.odo-digit-wrap');
+  digits.forEach(function(d, i) { setDigitTo(dws[i], d, false); });
+}
+
+function runOdometerAnimation(wrap, finalDigits, finalValue, isFalse, onComplete, onSkip) {
+  if (isFalse || finalValue === 0) { setTimeout(onComplete, 600); return; }
+  var DURATION = 2400;
+  var start    = performance.now();
+  var dws      = Array.from(wrap.querySelectorAll('.odo-digit-wrap'));
+  var cancelled = false;
+  var skipBtn   = document.getElementById('reveal-skip-btn');
+  if (skipBtn) skipBtn.onclick = function() { cancelled = true; onSkip(); };
+
+  function ease(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+  function renderValue(val) {
+    var str = Math.round(val).toString().padStart(finalDigits.length, '0');
+    str.split('').forEach(function(ch, i) { if (i < dws.length) setDigitTo(dws[i], Number(ch), true); });
+  }
+
+  function tick(now) {
+    if (cancelled) return;
+    var t = Math.min((now - start) / DURATION, 1);
+    renderValue(ease(t) * finalValue);
+    if (t < 1) requestAnimationFrame(tick);
+    else { renderValue(finalValue); onComplete(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── FEEDBACK ─────────────────────────────────────────────────────────────────
+function clearFeedback() {
+  var el = document.getElementById('feedback');
+  el.textContent = ''; el.className = 'feedback';
+}
+
+// ─── END GAME ─────────────────────────────────────────────────────────────────
+function endGame() {
+  clearInterval(timerInterval);
+  document.getElementById('panel-game').classList.add('hidden');
+  document.getElementById('panel-end').classList.remove('hidden');
+  document.getElementById('final-score').textContent = totalScore;
+  var tl  = t('taglines');
+  var idx = totalScore < 100 ? 0 : totalScore < 300 ? 1 : totalScore < 600 ? 2 : totalScore < 1000 ? 3 : 4;
+  document.getElementById('end-tagline').textContent = tl[idx];
+  document.getElementById('seed-display').innerHTML =
+    '<strong>' + t('seedShare') + '</strong><span id="seed-value">' + currentSeed + '</span>';
+}
+
+function copySeed() {
+  navigator.clipboard.writeText(currentSeed).then(function() {
+    var btn = document.querySelector('[onclick="copySeed()"]');
+    var orig = btn.textContent;
+    btn.textContent = '✓ OK!';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
+  });
+}
+
+
+// ─── COUNTRY DESCRIPTIONS ─────────────────────────────────────────────────────
+// Keyed by ISO2 country_code ; fallback matching by country_FR name
+var COUNTRY_DESCRIPTIONS = {
+  AF:{fr:"État d'Asie centrale enclavé, entouré par l'Iran, le Pakistan et les anciennes républiques soviétiques.",en:"Landlocked state in Central Asia, bordered by Iran, Pakistan and former Soviet republics.",ua:"Держава в Центральній Азії, оточена Іраном, Пакистаном та колишніми радянськими республіками."},
+  AL:{fr:"Petit pays des Balkans sur la côte adriatique, entre le Monténégro, le Kosovo, la Macédoine et la Grèce.",en:"Small Balkan country on the Adriatic coast, between Montenegro, Kosovo, North Macedonia and Greece.",ua:"Невелика балканська країна на Адріатичному узбережжі."},
+  DZ:{fr:"Plus grand pays d'Afrique par la superficie, situé au nord du continent sur la côte méditerranéenne.",en:"Africa's largest country by area, located in the north of the continent on the Mediterranean coast.",ua:"Найбільша за площею країна Африки, на північ від континенту на Середземноморському узбережжі."},
+  AD:{fr:"Minuscule principauté nichée dans les Pyrénées, entre la France et l'Espagne.",en:"Tiny principality nestled in the Pyrenees, between France and Spain.",ua:"Крихітне князівство в Піренеях між Францією та Іспанією."},
+  AO:{fr:"Grand pays d'Afrique subsaharienne occidentale, bordé par la Namibie, la Zambie et le Congo.",en:"Large country in western sub-Saharan Africa, bordered by Namibia, Zambia and the Congo.",ua:"Велика країна Західної Африки на південь від Сахари."},
+  AG:{fr:"Petit État insulaire des Caraïbes, composé de deux îles principales dans la mer des Antilles.",en:"Small island state in the Caribbean, consisting of two main islands in the Antilles.",ua:"Невеликий острівний острів у Карибському морі."},
+  AR:{fr:"Vaste pays du cône Sud de l'Amérique latine, bordé par le Chili, la Bolivie, le Paraguay, le Brésil et l'Uruguay.",en:"Vast country in southern South America, bordered by Chile, Bolivia, Paraguay, Brazil and Uruguay.",ua:"Велика країна на півдні Південної Америки, межує з Чилі, Болівією, Парагваєм, Бразилією та Уругваєм."},
+  AM:{fr:"Petit pays du Caucase du Sud, enclavé entre la Turquie, la Géorgie, l'Azerbaïdjan et l'Iran.",en:"Small country in the South Caucasus, landlocked between Turkey, Georgia, Azerbaijan and Iran.",ua:"Невелика держава Південного Кавказу між Туреччиною, Грузією, Азербайджаном та Іраном."},
+  AU:{fr:"Continent-pays de l'hémisphère sud, entouré par l'océan Indien et le Pacifique.",en:"Continent-country in the southern hemisphere, surrounded by the Indian and Pacific Oceans.",ua:"Країна-континент у Південній півкулі, оточена Індійським та Тихим океанами."},
+  AT:{fr:"Pays alpin d'Europe centrale, sans accès à la mer, entouré par l'Allemagne, la Suisse, l'Italie et plusieurs autres pays.",en:"Alpine country in central Europe, landlocked, surrounded by Germany, Switzerland, Italy and others.",ua:"Альпійська держава Центральної Європи, оточена Німеччиною, Швейцарією, Італією та іншими."},
+  AZ:{fr:"Pays du Caucase du Sud bordant la mer Caspienne, entre la Russie, la Géorgie, l'Arménie et l'Iran.",en:"South Caucasus country bordering the Caspian Sea, between Russia, Georgia, Armenia and Iran.",ua:"Країна Південного Кавказу на березі Каспійського моря."},
+  BS:{fr:"Archipel de près de 700 îles dans les Caraïbes, au nord des Grandes Antilles.",en:"Archipelago of nearly 700 islands in the Caribbean, north of the Greater Antilles.",ua:"Архіпелаг із ~700 островів у Карибському морі."},
+  BH:{fr:"Petit archipel du Golfe persique, relié à l'Arabie saoudite par un pont.",en:"Small archipelago in the Persian Gulf, connected to Saudi Arabia by a causeway.",ua:"Невеликий архіпелаг у Перській затоці."},
+  BD:{fr:"Pays d'Asie du Sud formant une enclave presque complète dans l'Inde, avec un accès au golfe du Bengale.",en:"South Asian country almost entirely enclosed by India, with access to the Bay of Bengal.",ua:"Країна Південної Азії, майже повністю оточена Індією, з виходом до Бенгальської затоки."},
+  BB:{fr:"Petite île des Caraïbes orientales, à l'est de l'arc des Antilles.",en:"Small island in the eastern Caribbean, east of the Antilles arc.",ua:"Невеликий острів у Карибському морі."},
+  BY:{fr:"Pays d'Europe de l'Est enclavé, entre la Pologne, la Lituanie, la Lettonie, la Russie et l'Ukraine.",en:"Landlocked country in Eastern Europe, between Poland, Lithuania, Latvia, Russia and Ukraine.",ua:"Держава Східної Європи без виходу до моря, між Польщею та Росією."},
+  BE:{fr:"Petit pays d'Europe occidentale situé entre la France, l'Allemagne, les Pays-Bas et le Luxembourg.",en:"Small country in Western Europe between France, Germany, the Netherlands and Luxembourg.",ua:"Невелика держава Західної Європи між Францією, Німеччиною та Нідерландами."},
+  BZ:{fr:"Petit pays d'Amérique centrale bordant la mer des Caraïbes, entre le Mexique et le Guatemala.",en:"Small Central American country on the Caribbean coast, between Mexico and Guatemala.",ua:"Невелика центральноамериканська країна на Карибському узбережжі."},
+  BJ:{fr:"Pays d'Afrique de l'Ouest, entre le Togo, le Nigéria, le Burkina Faso et le Niger, avec un accès au golfe de Guinée.",en:"West African country between Togo, Nigeria, Burkina Faso and Niger, with access to the Gulf of Guinea.",ua:"Держава Західної Африки між Того, Нігерією та Гвінейською затокою."},
+  BT:{fr:"Petit royaume bouddhiste enclavé dans l'Himalaya, entre l'Inde et la Chine.",en:"Small Buddhist kingdom landlocked in the Himalayas, between India and China.",ua:"Невеле буддистське королівство в Гімалаях між Індією та Китаєм."},
+  BO:{fr:"Pays enclavé d'Amérique du Sud, situé dans les Andes, entre le Pérou, le Brésil, le Chili, l'Argentine et le Paraguay.",en:"Landlocked country in South America, in the Andes, between Peru, Brazil, Chile, Argentina and Paraguay.",ua:"Країна без виходу до моря в Андах Південної Америки."},
+  BA:{fr:"Pays des Balkans occidentaux, entre la Croatie, la Serbie et le Monténégro.",en:"Country in the western Balkans, between Croatia, Serbia and Montenegro.",ua:"Держава Балканського півострова між Хорватією, Сербією та Чорногорією."},
+  BW:{fr:"Pays enclavé d'Afrique australe, bordé par l'Afrique du Sud, la Namibie, le Zimbabwe et la Zambie.",en:"Landlocked country in southern Africa, bordered by South Africa, Namibia, Zimbabwe and Zambia.",ua:"Держава на півдні Африки без виходу до моря."},
+  BR:{fr:"Immense pays d'Amérique du Sud, le plus grand du continent, bordant l'Atlantique et la quasi-totalité de ses voisins.",en:"Vast country in South America, the largest on the continent, bordering the Atlantic and nearly all its neighbors.",ua:"Величезна держава Південної Америки, найбільша на континенті."},
+  BN:{fr:"Petit sultanat d'Asie du Sud-Est sur l'île de Bornéo, enclavé dans la Malaisie.",en:"Small sultanate in Southeast Asia on the island of Borneo, surrounded by Malaysia.",ua:"Невеликий султанат у Південно-Східній Азії на острові Борнео."},
+  BG:{fr:"Pays des Balkans sur la mer Noire, entre la Roumanie, la Serbie, la Macédoine, la Grèce et la Turquie.",en:"Balkan country on the Black Sea, between Romania, Serbia, North Macedonia, Greece and Turkey.",ua:"Балканська держава на Чорному морі."},
+  BF:{fr:"Pays enclavé d'Afrique de l'Ouest, entouré par le Mali, le Niger, le Bénin, le Togo, le Ghana et la Côte d'Ivoire.",en:"Landlocked country in West Africa, surrounded by Mali, Niger, Benin, Togo, Ghana and Ivory Coast.",ua:"Країна без виходу до моря у Західній Африці."},
+  BI:{fr:"Petit pays d'Afrique centrale enclavé, au bord du lac Tanganyika, entouré par la RDC, le Rwanda et la Tanzanie.",en:"Small landlocked country in Central Africa, on Lake Tanganyika, surrounded by DR Congo, Rwanda and Tanzania.",ua:"Невелика держава Центральної Африки біля озера Танганьїка."},
+  CV:{fr:"Archipel de l'Atlantique, à environ 500 km des côtes de l'Afrique de l'Ouest.",en:"Atlantic archipelago, about 500 km off the coast of West Africa.",ua:"Архіпелаг в Атлантичному океані, за ~500 км від узбережжя Західної Африки."},
+  KH:{fr:"Pays d'Asie du Sud-Est bordé par la Thaïlande, le Laos et le Vietnam, avec un accès au golfe de Thaïlande.",en:"Southeast Asian country bordered by Thailand, Laos and Vietnam, with access to the Gulf of Thailand.",ua:"Держава Південно-Східної Азії між Таїландом, Лаосом та В'єтнамом."},
+  CM:{fr:"Pays d'Afrique centrale avec un accès à l'Atlantique, souvent surnommé «l'Afrique en miniature».",en:"Central African country with Atlantic access, often nicknamed 'Africa in miniature'.",ua:"Держава Центральної Африки з виходом до Атлантичного океану."},
+  CA:{fr:"Deuxième plus grand pays du monde par la superficie, occupant la majeure partie du nord de l'Amérique du Nord.",en:"The world's second-largest country by area, occupying most of northern North America.",ua:"Друга за площею держава світу, займає більшу частину Північної Америки."},
+  CF:{fr:"Pays enclavé d'Afrique centrale, entouré par le Cameroun, le Tchad, le Soudan, la RDC et la République du Congo.",en:"Landlocked country in Central Africa, surrounded by Cameroon, Chad, Sudan, DR Congo and Republic of Congo.",ua:"Держава без виходу до моря в Центральній Африці."},
+  TD:{fr:"Grand pays enclavé d'Afrique centrale, s'étendant du désert du Sahara au sud semi-aride.",en:"Large landlocked country in Central Africa, stretching from the Sahara desert to a semi-arid south.",ua:"Велика держава без виходу до моря в Центральній Африці."},
+  CL:{fr:"Pays en forme de lanière le long de la côte occidentale de l'Amérique du Sud, entre les Andes et le Pacifique.",en:"Strip-shaped country along the western coast of South America, between the Andes and the Pacific.",ua:"Вузька держава вздовж західного узбережжя Південної Америки між Андами та Тихим океаном."},
+  CN:{fr:"Plus grand pays d'Asie et troisième du monde par la superficie, bordant 14 pays voisins.",en:"The largest country in Asia and third in the world by area, bordering 14 neighboring countries.",ua:"Найбільша держава Азії та третя у світі за площею, межує з 14 країнами."},
+  CO:{fr:"Pays d'Amérique du Sud au carrefour de l'Amazonie, des Andes et des Caraïbes.",en:"South American country at the crossroads of the Amazon, the Andes and the Caribbean.",ua:"Держава Південної Америки на перетині Амазонії, Анд та Карибського моря."},
+  KM:{fr:"Archipel de l'océan Indien, entre le Mozambique et Madagascar.",en:"Archipelago in the Indian Ocean, between Mozambique and Madagascar.",ua:"Архіпелаг в Індійському океані між Мозамбіком та Мадагаскаром."},
+  CG:{fr:"Pays d'Afrique centrale avec un accès à l'Atlantique, bordé par le Cameroun, la RCA, la RDC, le Gabon et l'Angola.",en:"Central African country with Atlantic access, bordered by Cameroon, CAR, DR Congo, Gabon and Angola.",ua:"Держава Центральної Африки з виходом до Атлантики."},
+  CD:{fr:"Immense pays d'Afrique centrale, le deuxième plus grand du continent, au cœur du bassin du fleuve Congo.",en:"Vast country in Central Africa, second largest on the continent, at the heart of the Congo River basin.",ua:"Величезна держава Центральної Африки, друга за площею на континенті."},
+  CR:{fr:"Pays d'Amérique centrale entre le Nicaragua et le Panama, avec des côtes sur le Pacifique et les Caraïbes.",en:"Central American country between Nicaragua and Panama, with coasts on both the Pacific and Caribbean.",ua:"Центральноамериканська держава між Нікарагуа та Панамою."},
+  HR:{fr:"Pays des Balkans avec un long littoral sur la mer Adriatique, bordé par la Slovénie, la Hongrie, la Serbie, la BiH et le Monténégro.",en:"Balkan country with a long Adriatic coastline, bordered by Slovenia, Hungary, Serbia, BiH and Montenegro.",ua:"Балканська держава з довгим Адріатичним узбережжям."},
+  CU:{fr:"Grande île des Caraïbes, la plus grande des Antilles, entre le golfe du Mexique et la mer des Caraïbes.",en:"Large island in the Caribbean, the largest in the Antilles, between the Gulf of Mexico and the Caribbean Sea.",ua:"Великий острів у Карибському морі, найбільший в Антильських островах."},
+  CY:{fr:"Île de la Méditerranée orientale, au sud de la Turquie et à l'ouest du Liban.",en:"Island in the eastern Mediterranean, south of Turkey and west of Lebanon.",ua:"Острів у Східному Середземномор'ї на південь від Туреччини."},
+  CZ:{fr:"Pays enclavé d'Europe centrale, anciennement Tchécoslovaquie, bordé par l'Allemagne, la Pologne, la Slovaquie et l'Autriche.",en:"Landlocked country in Central Europe, formerly Czechoslovakia, bordered by Germany, Poland, Slovakia and Austria.",ua:"Держава Центральної Європи без виходу до моря між Німеччиною та Польщею."},
+  DK:{fr:"Pays nordique d'Europe du Nord, comprenant la péninsule du Jutland et de nombreuses îles en mer du Nord et Baltique.",en:"Nordic country in Northern Europe, comprising the Jutland Peninsula and many islands in the North and Baltic Seas.",ua:"Скандинавська країна Північної Європи, включає півострів Ютландія та численні острови."},
+  DJ:{fr:"Petit pays de la Corne de l'Afrique, sur le golfe d'Aden, entre l'Éthiopie, l'Érythrée et la Somalie.",en:"Small country in the Horn of Africa, on the Gulf of Aden, between Ethiopia, Eritrea and Somalia.",ua:"Невелика держава Африканського Рогу на березі Аденської затоки."},
+  DM:{fr:"Petite île volcanique des Petites Antilles dans la mer des Caraïbes.",en:"Small volcanic island in the Lesser Antilles in the Caribbean Sea.",ua:"Невеликий вулканічний острів у Карибському морі."},
+  DO:{fr:"Pays des Caraïbes occupant les deux tiers orientaux de l'île d'Hispaniola, partagée avec Haïti.",en:"Caribbean country occupying the eastern two-thirds of Hispaniola island, shared with Haiti.",ua:"Держава на сході острова Гіспаньйола в Карибському морі."},
+  EC:{fr:"Pays andin d'Amérique du Sud sur le Pacifique, entre la Colombie et le Pérou, incluant les Galápagos.",en:"Andean country in South America on the Pacific coast, between Colombia and Peru, including the Galápagos.",ua:"Андська держава на узбережжі Тихого океану між Колумбією та Перу."},
+  EG:{fr:"Pays d'Afrique du Nord-Est à cheval entre l'Afrique et l'Asie, arrosé par le Nil.",en:"Country in northeastern Africa straddling Africa and Asia, watered by the Nile.",ua:"Країна на північному сході Африки на перетині Африки та Азії, омивається Нілом."},
+  SV:{fr:"Petit pays d'Amérique centrale sur le Pacifique, le plus petit et le plus dense d'Amérique continentale.",en:"Small Central American country on the Pacific, the smallest and most densely populated in mainland America.",ua:"Невелика центральноамериканська держава на Тихоокеанському узбережжі."},
+  GQ:{fr:"Petit pays d'Afrique centrale constitué d'une partie continentale et d'îles dans le golfe de Guinée.",en:"Small Central African country with a mainland part and islands in the Gulf of Guinea.",ua:"Невелика держава Центральної Африки з материковою частиною та островами."},
+  ER:{fr:"Pays de la Corne de l'Afrique sur la mer Rouge, entre le Soudan, l'Éthiopie et Djibouti.",en:"Country in the Horn of Africa on the Red Sea, between Sudan, Ethiopia and Djibouti.",ua:"Держава Африканського Рогу на Червоному морі між Суданом та Ефіопією."},
+  EE:{fr:"Petit pays balte d'Europe du Nord, au bord de la mer Baltique, entre la Lettonie et la Russie.",en:"Small Baltic country in Northern Europe, on the Baltic Sea, between Latvia and Russia.",ua:"Невелика балтійська держава Північної Європи між Латвією та Росією."},
+  ET:{fr:"Grand pays enclavé de la Corne de l'Afrique, le pays le plus peuplé d'Afrique subsaharienne.",en:"Large landlocked country in the Horn of Africa, the most populous in sub-Saharan Africa.",ua:"Велика держава без виходу до моря на Африканському Розі."},
+  FJ:{fr:"Archipel d'environ 330 îles dans le Pacifique Sud, au nord-est de l'Australie.",en:"Archipelago of around 330 islands in the South Pacific, northeast of Australia.",ua:"Архіпелаг із ~330 островів у Південному Тихому океані."},
+  FI:{fr:"Pays nordique d'Europe du Nord, borné par la Suède, la Norvège et la Russie, avec un long littoral sur la mer Baltique.",en:"Nordic country in Northern Europe, bordered by Sweden, Norway and Russia, with a long Baltic Sea coastline.",ua:"Скандинавська держава Північної Європи між Швецією, Норвегією та Росією."},
+  FR:{fr:"Pays d'Europe occidentale avec des façades sur l'Atlantique et la Méditerranée, au cœur de l'Union européenne.",en:"Western European country with Atlantic and Mediterranean coastlines, at the heart of the European Union.",ua:"Держава Західної Європи з виходом до Атлантичного океану та Середземного моря."},
+  GA:{fr:"Pays d'Afrique centrale sur l'Atlantique, recouvert à plus de 80 % de forêt équatoriale.",en:"Central African country on the Atlantic, more than 80% covered by equatorial forest.",ua:"Держава Центральної Африки на Атлантичному узбережжі, вкрита екваторіальним лісом."},
+  GM:{fr:"Petit pays d'Afrique de l'Ouest presque entièrement enclavé dans le Sénégal, avec un court accès à l'Atlantique.",en:"Small West African country almost entirely surrounded by Senegal, with a short Atlantic coast.",ua:"Найменша держава континентальної Африки, майже повністю оточена Сенегалом."},
+  GE:{fr:"Pays du Caucase du Sud sur la mer Noire, entre la Russie, l'Arménie, l'Azerbaïdjan et la Turquie.",en:"South Caucasus country on the Black Sea, between Russia, Armenia, Azerbaijan and Turkey.",ua:"Держава Південного Кавказу на Чорному морі між Росією та Туреччиною."},
+  DE:{fr:"Pays d'Europe centrale au cœur de l'Union européenne, bordant 9 pays voisins.",en:"Central European country at the heart of the European Union, bordering 9 countries.",ua:"Держава Центральної Європи в серці Євросоюзу, межує з 9 країнами."},
+  GH:{fr:"Pays d'Afrique de l'Ouest sur le golfe de Guinée, entre la Côte d'Ivoire, le Burkina Faso et le Togo.",en:"West African country on the Gulf of Guinea, between Ivory Coast, Burkina Faso and Togo.",ua:"Держава Західної Африки на Гвінейській затоці."},
+  GR:{fr:"Pays du sud des Balkans avec un vaste archipel en Méditerranée, entre l'Adriatique et la mer Égée.",en:"Country in the southern Balkans with a vast Mediterranean archipelago, between the Adriatic and Aegean Seas.",ua:"Держава на півдні Балканського півострова з великим архіпелагом у Середземному морі."},
+  GD:{fr:"Petite île-État des Caraïbes orientales, dans les Petites Antilles.",en:"Small island state in the eastern Caribbean, in the Lesser Antilles.",ua:"Невелика острівна держава у Карибському морі."},
+  GT:{fr:"Pays d'Amérique centrale au cœur de l'Amérique centrale, bordant le Mexique, Belize, le Honduras et El Salvador.",en:"Country in the heart of Central America, bordering Mexico, Belize, Honduras and El Salvador.",ua:"Держава в центрі Центральної Америки."},
+  GN:{fr:"Pays d'Afrique de l'Ouest sur l'Atlantique, entre la Guinée-Bissau, le Sénégal, le Mali, la Côte d'Ivoire, le Liberia et la Sierra Leone.",en:"West African country on the Atlantic, between Guinea-Bissau, Senegal, Mali, Ivory Coast, Liberia and Sierra Leone.",ua:"Держава Західної Африки на Атлантичному узбережжі."},
+  GW:{fr:"Petit pays d'Afrique de l'Ouest avec des façades sur l'Atlantique, entre le Sénégal et la Guinée.",en:"Small West African country with an Atlantic coast, between Senegal and Guinea.",ua:"Невелика держава Західної Африки між Сенегалом та Гвінеєю."},
+  GY:{fr:"Pays d'Amérique du Sud sur la côte atlantique, entre le Venezuela, le Brésil et le Suriname.",en:"South American country on the Atlantic coast, between Venezuela, Brazil and Suriname.",ua:"Держава на узбережжі Атлантики в Південній Америці."},
+  HT:{fr:"Pays des Caraïbes occupant le tiers occidental de l'île d'Hispaniola, partagée avec la République dominicaine.",en:"Caribbean country occupying the western third of Hispaniola island, shared with the Dominican Republic.",ua:"Держава на заході острова Гіспаньйола в Карибському морі."},
+  HN:{fr:"Pays d'Amérique centrale entre le Guatemala, El Salvador et le Nicaragua, avec des côtes sur le Pacifique et la mer des Caraïbes.",en:"Central American country between Guatemala, El Salvador and Nicaragua, with coasts on both the Pacific and Caribbean.",ua:"Центральноамериканська держава між Гватемалою та Нікарагуа."},
+  HU:{fr:"Pays enclavé d'Europe centrale, ancien cœur de l'empire austro-hongrois, entouré par l'Autriche, la Slovaquie, l'Ukraine, la Roumanie, la Serbie, la Croatie et la Slovénie.",en:"Landlocked Central European country, former heart of the Austro-Hungarian Empire, surrounded by Austria, Slovakia, Ukraine, Romania, Serbia, Croatia and Slovenia.",ua:"Держава без виходу до моря в Центральній Європі, оточена сімома країнами."},
+  IS:{fr:"Grande île volcanique de l'Atlantique Nord, entre le Groenland et la Norvège, au bord du cercle polaire.",en:"Large volcanic island in the North Atlantic, between Greenland and Norway, near the Arctic Circle.",ua:"Великий вулканічний острів в Атлантиці між Гренландією та Норвегією."},
+  IN:{fr:"Immense pays d'Asie du Sud en forme de péninsule, s'avançant dans l'océan Indien entre la mer d'Arabie et le golfe du Bengale.",en:"Vast South Asian country in the shape of a peninsula, jutting into the Indian Ocean between the Arabian Sea and Bay of Bengal.",ua:"Величезна держава Південної Азії у формі півострова між Аравійським морем та Бенгальською затокою."},
+  ID:{fr:"Plus grand archipel du monde, s'étendant sur plus de 5000 km entre l'Asie du Sud-Est et l'Australie.",en:"The world's largest archipelago, stretching over 5,000 km between Southeast Asia and Australia.",ua:"Найбільший архіпелаг світу, розтягнувся на понад 5000 км між Південно-Східною Азією та Австралією."},
+  IR:{fr:"Grand pays du Moyen-Orient et d'Asie centrale, ancien empire perse, entre la mer Caspienne et le golfe Persique.",en:"Large Middle Eastern and Central Asian country, ancient Persian Empire, between the Caspian Sea and the Persian Gulf.",ua:"Велика держава Близького Сходу, стародавня Перська імперія між Каспійським морем та Перською затокою."},
+  IQ:{fr:"Pays du Moyen-Orient arrosé par le Tigre et l'Euphrate, berceau de la Mésopotamie antique.",en:"Middle Eastern country watered by the Tigris and Euphrates, cradle of ancient Mesopotamia.",ua:"Держава Близького Сходу, омивається Тигром та Євфратом — колиска Месопотамії."},
+  IE:{fr:"Île d'Europe du Nord-Ouest dans l'Atlantique, à l'ouest de la Grande-Bretagne.",en:"Island in northwestern Europe in the Atlantic, west of Great Britain.",ua:"Острів на північному заході Європи в Атлантичному океані."},
+  IL:{fr:"Pays du Proche-Orient sur la Méditerranée orientale, entre le Liban, la Syrie, la Jordanie et l'Égypte.",en:"Middle Eastern country on the eastern Mediterranean, between Lebanon, Syria, Jordan and Egypt.",ua:"Держава Близького Сходу на Середземноморському узбережжі."},
+  IT:{fr:"Pays d'Europe du Sud en forme de botte avançant dans la Méditerranée, incluant la Sicile et la Sardaigne.",en:"Southern European country shaped like a boot jutting into the Mediterranean, including Sicily and Sardinia.",ua:"Держава Південної Європи у формі чобота в Середземному морі."},
+  JM:{fr:"Île des Grandes Antilles dans la mer des Caraïbes, au sud de Cuba.",en:"Island in the Greater Antilles in the Caribbean Sea, south of Cuba.",ua:"Острів у Великих Антильських островах у Карибському морі."},
+  JP:{fr:"Archipel d'Asie de l'Est composé de quatre grandes îles et de milliers de petites, en bordure de l'océan Pacifique.",en:"East Asian archipelago composed of four main islands and thousands of smaller ones, on the Pacific Ocean.",ua:"Архіпелаг Східної Азії з чотирьох великих островів та тисяч менших."},
+  JO:{fr:"Pays du Proche-Orient entre Israël, la Syrie, l'Irak et l'Arabie saoudite, sans accès à la mer sauf un court littoral sur la mer Rouge.",en:"Middle Eastern country between Israel, Syria, Iraq and Saudi Arabia, with just a short Red Sea coastline.",ua:"Держава Близького Сходу між Ізраїлем, Сирією, Іраком та Саудівською Аравією."},
+  KZ:{fr:"Immense pays d'Asie centrale entre la mer Caspienne et la Russie, le 9e plus grand pays du monde.",en:"Vast country in Central Asia between the Caspian Sea and Russia, the 9th largest country in the world.",ua:"Величезна держава Центральної Азії між Каспійським морем та Росією."},
+  KE:{fr:"Pays d'Afrique de l'Est sur l'océan Indien, traversé par l'équateur, entre l'Éthiopie, la Somalie, la Tanzanie et l'Ouganda.",en:"East African country on the Indian Ocean, crossed by the equator, between Ethiopia, Somalia, Tanzania and Uganda.",ua:"Держава Східної Африки на Індійському океані, перетинається екватором."},
+  KI:{fr:"Archipel d'atolls coralliens dispersés dans le Pacifique central, à cheval sur l'équateur.",en:"Archipelago of coral atolls scattered across the central Pacific, straddling the equator.",ua:"Архіпелаг коралових атолів у центральній частині Тихого океану."},
+  KP:{fr:"Pays d'Asie de l'Est occupant la moitié nord de la péninsule coréenne, entre la Chine, la Russie et la Corée du Sud.",en:"East Asian country occupying the northern half of the Korean Peninsula, between China, Russia and South Korea.",ua:"Держава Східної Азії на північ Корейського півострова."},
+  KR:{fr:"Pays d'Asie de l'Est occupant la moitié sud de la péninsule coréenne, entre la mer du Japon et la mer Jaune.",en:"East Asian country occupying the southern half of the Korean Peninsula, between the Sea of Japan and the Yellow Sea.",ua:"Держава Східної Азії на півдні Корейського півострова."},
+  KW:{fr:"Petit émirat du Golfe persique, entre l'Arabie saoudite et l'Irak.",en:"Small emirate on the Persian Gulf, between Saudi Arabia and Iraq.",ua:"Невеликий еміrat у Перській затоці між Саудівською Аравією та Іраком."},
+  KG:{fr:"Pays montagneux d'Asie centrale enclavé dans les monts Tian Shan, entre le Kazakhstan, la Chine, le Tadjikistan et l'Ouzbékistan.",en:"Mountainous landlocked country in Central Asia in the Tian Shan mountains, between Kazakhstan, China, Tajikistan and Uzbekistan.",ua:"Гірська держава Центральної Азії без виходу до моря в горах Тянь-Шань."},
+  LA:{fr:"Pays enclavé d'Asie du Sud-Est dans la péninsule indochinoise, entre le Vietnam, la Chine, le Myanmar, la Thaïlande et le Cambodge.",en:"Landlocked country in Southeast Asia in the Indochinese peninsula, between Vietnam, China, Myanmar, Thailand and Cambodia.",ua:"Держава без виходу до моря в Індокитайському півострові."},
+  LV:{fr:"Pays balte d'Europe du Nord entre l'Estonie, la Russie, la Biélorussie et la Lituanie, avec un accès à la mer Baltique.",en:"Baltic country in Northern Europe between Estonia, Russia, Belarus and Lithuania, with Baltic Sea access.",ua:"Балтійська держава Північної Європи між Естонією та Литвою."},
+  LB:{fr:"Petit pays du Proche-Orient sur la Méditerranée orientale, entre la Syrie et Israël.",en:"Small Middle Eastern country on the eastern Mediterranean, between Syria and Israel.",ua:"Невелика держава Близького Сходу на Середземноморі між Сирією та Ізраїлем."},
+  LS:{fr:"Petit pays enclavé dans l'Afrique du Sud, entièrement entouré par son voisin.",en:"Small country entirely surrounded by and landlocked within South Africa.",ua:"Невелика держава, повністю оточена Південно-Африканською Республікою."},
+  LR:{fr:"Pays d'Afrique de l'Ouest sur la côte atlantique, entre la Sierra Leone, la Guinée et la Côte d'Ivoire.",en:"West African country on the Atlantic coast, between Sierra Leone, Guinea and Ivory Coast.",ua:"Держава Західної Африки на Атлантичному узбережжі."},
+  LY:{fr:"Grand pays d'Afrique du Nord sur la mer Méditerranée, entre la Tunisie, l'Algérie, le Niger, le Tchad, le Soudan et l'Égypte.",en:"Large North African country on the Mediterranean Sea, between Tunisia, Algeria, Niger, Chad, Sudan and Egypt.",ua:"Велика держава Північної Африки на Середземноморському узбережжі."},
+  LI:{fr:"Minuscule principauté d'Europe centrale enclavée entre la Suisse et l'Autriche.",en:"Tiny principality in Central Europe, landlocked between Switzerland and Austria.",ua:"Крихітне князівство між Швейцарією та Австрією."},
+  LT:{fr:"Pays balte d'Europe du Nord entre la Lettonie, la Biélorussie, la Pologne et l'enclave russe de Kaliningrad.",en:"Baltic country in Northern Europe between Latvia, Belarus, Poland and the Russian exclave of Kaliningrad.",ua:"Балтійська держава Північної Європи між Латвією, Польщею та Білоруссю."},
+  LU:{fr:"Petit grand-duché d'Europe occidentale enclavé entre la France, la Belgique et l'Allemagne.",en:"Small grand duchy in Western Europe, landlocked between France, Belgium and Germany.",ua:"Невеликий великий герцогство між Францією, Бельгією та Німеччиною."},
+  MG:{fr:"Grande île de l'océan Indien au large de l'Afrique de l'Est, quatrième plus grande île du monde.",en:"Large island in the Indian Ocean off the coast of East Africa, the world's fourth-largest island.",ua:"Великий острів в Індійському океані біля узбережжя Східної Африки."},
+  MW:{fr:"Petit pays enclavé d'Afrique orientale le long du lac Malawi, entre la Tanzanie, la Zambie et le Mozambique.",en:"Small landlocked country in East Africa along Lake Malawi, between Tanzania, Zambia and Mozambique.",ua:"Невелика держава без виходу до моря в Східній Африці вздовж озера Малаві."},
+  MY:{fr:"Pays d'Asie du Sud-Est composé de deux parties : la péninsule malaise et le nord de Bornéo.",en:"Southeast Asian country composed of two parts: the Malay Peninsula and northern Borneo.",ua:"Держава Південно-Східної Азії, складається з Малайського півострова та частини Борнео."},
+  MV:{fr:"Archipel de l'océan Indien au sud-ouest du Sri Lanka, composé d'environ 1200 récifs coralliens.",en:"Indian Ocean archipelago southwest of Sri Lanka, composed of around 1,200 coral reefs.",ua:"Архіпелаг в Індійському океані на південний захід від Шрі-Ланки."},
+  ML:{fr:"Grand pays enclavé d'Afrique de l'Ouest, dont le nord est en partie occupé par le Sahara.",en:"Large landlocked country in West Africa, whose north is partly covered by the Sahara.",ua:"Велика держава без виходу до моря у Західній Африці, північ займає Сахара."},
+  MT:{fr:"Petit archipel de l'Europe du Sud au centre de la Méditerranée, au sud de la Sicile.",en:"Small Southern European archipelago in the center of the Mediterranean, south of Sicily.",ua:"Невеликий архіпелаг у центрі Середземного моря на південь від Сицилії."},
+  MH:{fr:"Archipel de deux chaînes d'atolls dans le Pacifique Nord, entre Hawaï et les Philippines.",en:"Archipelago of two chains of atolls in the North Pacific, between Hawaii and the Philippines.",ua:"Архіпелаг двох ланцюгів атолів у Північній частині Тихого океану."},
+  MR:{fr:"Grand pays du nord-ouest de l'Afrique entre le Sahara et le Sahel, entre le Maroc, l'Algérie, le Mali et le Sénégal.",en:"Large country in northwestern Africa between the Sahara and the Sahel, between Morocco, Algeria, Mali and Senegal.",ua:"Велика держава північно-заходу Африки між Сахарою та Сахелем."},
+  MU:{fr:"Île volcanique de l'océan Indien à l'est de Madagascar.",en:"Volcanic island in the Indian Ocean east of Madagascar.",ua:"Вулканічний острів в Індійському океані на схід від Мадагаскару."},
+  MX:{fr:"Grand pays d'Amérique du Nord entre les États-Unis et l'Amérique centrale, avec des côtes sur le Pacifique et le golfe du Mexique.",en:"Large North American country between the United States and Central America, with coasts on both the Pacific and Gulf of Mexico.",ua:"Велика держава Північної Америки між США та Центральною Америкою."},
+  FM:{fr:"Archipel d'États fédérés du Pacifique occidental, au nord de la Nouvelle-Guinée.",en:"Archipelago of federated states in the western Pacific, north of New Guinea.",ua:"Архіпелаг федеративних держав у Тихому океані."},
+  MD:{fr:"Petit pays enclavé d'Europe de l'Est entre la Roumanie et l'Ukraine.",en:"Small landlocked country in Eastern Europe between Romania and Ukraine.",ua:"Невелика держава без виходу до моря між Румунією та Україною."},
+  MC:{fr:"Minuscule principauté sur la Côte d'Azur, enclavée dans le département français des Alpes-Maritimes.",en:"Tiny principality on the French Riviera, enclosed within the French department of Alpes-Maritimes.",ua:"Крихітне князівство на Французькій Рив'єрі."},
+  MN:{fr:"Grand pays enclavé d'Asie de l'Est entre la Russie et la Chine, cœur historique de l'empire mongol.",en:"Large landlocked country in East Asia between Russia and China, historic heart of the Mongol Empire.",ua:"Велика держава без виходу до моря між Росією та Китаєм."},
+  ME:{fr:"Petit pays des Balkans sur la mer Adriatique, entre la Croatie, la BiH, la Serbie et l'Albanie.",en:"Small Balkan country on the Adriatic Sea, between Croatia, BiH, Serbia and Albania.",ua:"Невелика балканська держава на Адріатичному морі."},
+  MA:{fr:"Pays du nord-ouest de l'Afrique sur l'Atlantique et la Méditerranée, face à l'Espagne.",en:"Country in northwestern Africa on the Atlantic and Mediterranean, facing Spain.",ua:"Держава на північному заході Африки на Атлантиці та Середземноморі."},
+  MZ:{fr:"Pays d'Afrique australe sur l'océan Indien, entre la Tanzanie, le Malawi, la Zambie, le Zimbabwe et l'Afrique du Sud.",en:"Southern African country on the Indian Ocean, between Tanzania, Malawi, Zambia, Zimbabwe and South Africa.",ua:"Держава Південної Африки на Індійському океані."},
+  MM:{fr:"Grand pays d'Asie du Sud-Est, le plus grand de la péninsule indochinoise, entre l'Inde, la Chine, la Thaïlande, le Laos et le Bangladesh.",en:"Large Southeast Asian country, the largest in the Indochinese peninsula, between India, China, Thailand, Laos and Bangladesh.",ua:"Велика держава Південно-Східної Азії, найбільша в Індокитаї."},
+  NA:{fr:"Pays d'Afrique australe sur l'Atlantique, entre l'Angola, la Zambie, le Botswana et l'Afrique du Sud.",en:"Southern African country on the Atlantic, between Angola, Zambia, Botswana and South Africa.",ua:"Держава Південної Африки на Атлантичному узбережжі."},
+  NR:{fr:"Minuscule île-État du Pacifique central, l'un des plus petits pays du monde.",en:"Tiny island state in the central Pacific, one of the smallest countries in the world.",ua:"Крихітна острівна держава в Центральному Тихому океані."},
+  NP:{fr:"Pays himalayen enclavé entre l'Inde et la Chine, abritant l'Everest et les plus hauts sommets du monde.",en:"Himalayan landlocked country between India and China, home to Everest and the world's highest peaks.",ua:"Гімалайська держава між Індією та Китаєм, де знаходиться Еверест."},
+  NL:{fr:"Pays d'Europe occidentale aux côtes sur la mer du Nord, entre la Belgique et l'Allemagne, connu pour ses terres conquises sur la mer.",en:"Western European country on the North Sea coast, between Belgium and Germany, known for its land reclaimed from the sea.",ua:"Держава Західної Європи на Північному морі між Бельгією та Німеччиною."},
+  NZ:{fr:"Archipel de l'Océanie dans le Pacifique Sud composé de deux grandes îles et de nombreuses îles plus petites.",en:"Oceanian archipelago in the South Pacific composed of two main islands and many smaller ones.",ua:"Архіпелаг Океанії у Південному Тихому океані, складається з двох великих островів."},
+  NI:{fr:"Pays d'Amérique centrale entre le Honduras et le Costa Rica, avec des côtes sur le Pacifique et la mer des Caraïbes.",en:"Central American country between Honduras and Costa Rica, with coasts on both the Pacific and Caribbean.",ua:"Центральноамериканська держава між Гондурасом та Коста-Рікою."},
+  NE:{fr:"Grand pays enclavé d'Afrique de l'Ouest dont les deux tiers sont couverts par le désert du Sahara.",en:"Large landlocked country in West Africa, two-thirds of which is covered by the Sahara desert.",ua:"Велика держава без виходу до моря у Західній Африці, дві третини — Сахара."},
+  NG:{fr:"Pays le plus peuplé d'Afrique, sur le golfe de Guinée, entre le Bénin, le Niger, le Tchad et le Cameroun.",en:"Africa's most populous country, on the Gulf of Guinea, between Benin, Niger, Chad and Cameroon.",ua:"Найбільша за населенням країна Африки на Гвінейській затоці."},
+  NO:{fr:"Pays nordique d'Europe du Nord avec un long littoral sur la mer du Nord et l'Atlantique, incluant le Svalbard.",en:"Nordic country in Northern Europe with a long coastline on the North Sea and Atlantic, including Svalbard.",ua:"Скандинавська держава Північної Європи з довгим узбережжям Атлантики."},
+  OM:{fr:"Pays du Moyen-Orient au sud-est de la péninsule arabique sur le golfe d'Oman et la mer d'Arabie.",en:"Middle Eastern country in the southeastern Arabian Peninsula, on the Gulf of Oman and Arabian Sea.",ua:"Держава Близького Сходу на південному сході Аравійського півострова."},
+  PK:{fr:"Grand pays d'Asie du Sud entre l'Iran, l'Afghanistan, l'Inde et la Chine, avec un accès à la mer d'Arabie.",en:"Large South Asian country between Iran, Afghanistan, India and China, with access to the Arabian Sea.",ua:"Велика держава Південної Азії між Іраном, Афганістаном та Індією."},
+  PW:{fr:"Archipel de quelques 340 îles du Pacifique occidental, au nord-est des Philippines.",en:"Archipelago of about 340 islands in the western Pacific, northeast of the Philippines.",ua:"Архіпелаг із ~340 островів у Тихому океані."},
+  PA:{fr:"Pays d'Amérique centrale reliant le continent américain du Nord au Sud, avec le canal de Panama.",en:"Central American country linking North and South America, home to the Panama Canal.",ua:"Центральноамериканська держава, що з'єднує Північ і Південь Америки через Панамський канал."},
+  PG:{fr:"Pays d'Océanie occupant la moitié orientale de la Nouvelle-Guinée et de nombreuses îles du Pacifique.",en:"Oceanian country occupying the eastern half of New Guinea and many Pacific islands.",ua:"Держава Океанії на сході острова Нова Гвінея та численних тихоокеанських островах."},
+  PY:{fr:"Pays enclavé d'Amérique du Sud entre l'Argentine, la Bolivie et le Brésil.",en:"Landlocked country in South America between Argentina, Bolivia and Brazil.",ua:"Держава без виходу до моря між Аргентиною, Болівією та Бразилією."},
+  PE:{fr:"Pays andin d'Amérique du Sud sur le Pacifique, berceau de l'empire inca, entre l'Équateur, la Colombie, le Brésil, la Bolivie et le Chili.",en:"Andean South American country on the Pacific, cradle of the Inca Empire, between Ecuador, Colombia, Brazil, Bolivia and Chile.",ua:"Андська держава на узбережжі Тихого океану, колиска імперії Інків."},
+  PH:{fr:"Archipel d'Asie du Sud-Est de plus de 7600 îles dans la mer de Chine méridionale et le Pacifique.",en:"Southeast Asian archipelago of over 7,600 islands in the South China Sea and Pacific.",ua:"Архіпелаг Південно-Східної Азії з понад 7600 островів у Тихому океані."},
+  PL:{fr:"Grand pays d'Europe centrale entre l'Allemagne, la République tchèque, la Slovaquie, l'Ukraine, la Biélorussie, la Lituanie et la Russie.",en:"Large Central European country between Germany, Czech Republic, Slovakia, Ukraine, Belarus, Lithuania and Russia.",ua:"Велика держава Центральної Європи між Німеччиною та Україною."},
+  PT:{fr:"Pays d'Europe du Sud-Ouest à l'extrémité de la péninsule ibérique sur l'Atlantique, incluant les Açores et Madère.",en:"Country in southwestern Europe at the tip of the Iberian Peninsula on the Atlantic, including the Azores and Madeira.",ua:"Держава на крайньому заході Піренейського півострова на Атлантиці."},
+  QA:{fr:"Petite péninsule du Golfe persique, entre l'Arabie saoudite et les Émirats arabes unis.",en:"Small peninsula in the Persian Gulf, between Saudi Arabia and the United Arab Emirates.",ua:"Невеликий півострів у Перській затоці між Саудівською Аравією та ОАЕ."},
+  RO:{fr:"Pays des Balkans du Nord sur la mer Noire, entre la Bulgarie, la Serbie, la Hongrie, la Moldavie et l'Ukraine.",en:"Northern Balkan country on the Black Sea, between Bulgaria, Serbia, Hungary, Moldova and Ukraine.",ua:"Держава північних Балкан на Чорному морі між Болгарією та Угорщиною."},
+  RU:{fr:"Plus grand pays du monde par la superficie, s'étendant de l'Europe de l'Est jusqu'au Pacifique à travers toute l'Asie du Nord.",en:"The world's largest country by area, stretching from Eastern Europe to the Pacific across all of northern Asia.",ua:"Найбільша держава у світі за площею, простягається від Східної Європи до Тихого океану."},
+  RW:{fr:"Petit pays enclavé d'Afrique centrale entre la RDC, l'Ouganda, la Tanzanie et le Burundi.",en:"Small landlocked country in Central Africa between DR Congo, Uganda, Tanzania and Burundi.",ua:"Невелика держава без виходу до моря в Центральній Африці."},
+  KN:{fr:"Petit État insulaire des Caraïbes orientales composé de deux îles.",en:"Small island state in the eastern Caribbean composed of two islands.",ua:"Невелика острівна держава у Карибському морі."},
+  LC:{fr:"Île des Petites Antilles dans les Caraïbes orientales, entre Martinique et Saint-Vincent.",en:"Island in the Lesser Antilles in the eastern Caribbean, between Martinique and Saint Vincent.",ua:"Острів у Малих Антильських островах у Карибському морі."},
+  VC:{fr:"Île des Petites Antilles dans les Caraïbes orientales, au sud de Sainte-Lucie.",en:"Island in the Lesser Antilles in the eastern Caribbean, south of Saint Lucia.",ua:"Острів у Карибському морі на південь від Сент-Люсії."},
+  WS:{fr:"Archipel polynésien du Pacifique Sud composé de deux grandes îles et de plusieurs îles plus petites.",en:"Polynesian archipelago in the South Pacific composed of two main islands and several smaller ones.",ua:"Полінезійський архіпелаг у Південному Тихому океані."},
+  SM:{fr:"Minuscule État enclavé au cœur de l'Italie centrale, dans les Apennins.",en:"Tiny landlocked state in the heart of central Italy, in the Apennines.",ua:"Крихітна держава в центрі Італії в Апеннінах."},
+  ST:{fr:"Petit archipel du golfe de Guinée, à environ 250 km des côtes du Cameroun et du Gabon.",en:"Small archipelago in the Gulf of Guinea, about 250 km from the coasts of Cameroon and Gabon.",ua:"Невеликий архіпелаг у Гвінейській затоці."},
+  SA:{fr:"Vaste pays du Moyen-Orient occupant la majeure partie de la péninsule arabique.",en:"Vast Middle Eastern country occupying most of the Arabian Peninsula.",ua:"Велика держава Близького Сходу, займає більшу частину Аравійського півострова."},
+  SN:{fr:"Pays d'Afrique de l'Ouest sur l'Atlantique, presque entourant la Gambie, entre la Mauritanie, le Mali, la Guinée et la Guinée-Bissau.",en:"West African country on the Atlantic, almost surrounding Gambia, between Mauritania, Mali, Guinea and Guinea-Bissau.",ua:"Держава Західної Африки на Атлантиці, майже оточує Гамбію."},
+  RS:{fr:"Pays des Balkans centraux enclavé entre la Croatie, la Bosnie, le Monténégro, la Bulgarie, la Macédoine et la Hongrie.",en:"Central Balkan country landlocked between Croatia, Bosnia, Montenegro, Bulgaria, North Macedonia and Hungary.",ua:"Держава центральних Балкан між Хорватією, Боснією та Угорщиною."},
+  SC:{fr:"Archipel de l'océan Indien au nord-est de Madagascar, à environ 1500 km des côtes d'Afrique de l'Est.",en:"Indian Ocean archipelago northeast of Madagascar, about 1,500 km from the East African coast.",ua:"Архіпелаг в Індійському океані на північний схід від Мадагаскару."},
+  SL:{fr:"Pays d'Afrique de l'Ouest sur l'Atlantique, entre la Guinée et le Liberia.",en:"West African country on the Atlantic, between Guinea and Liberia.",ua:"Держава Західної Африки між Гвінеєю та Ліберією."},
+  SG:{fr:"Cité-État insulaire d'Asie du Sud-Est au sud de la Malaisie, à l'extrémité de la péninsule malaise.",en:"Island city-state in Southeast Asia at the southern tip of the Malay Peninsula.",ua:"Острівне місто-держава в Південно-Східній Азії на крайньому півдні Малайського півострова."},
+  SK:{fr:"Pays enclavé d'Europe centrale entre la Pologne, l'Ukraine, la Hongrie, l'Autriche et la République tchèque.",en:"Landlocked Central European country between Poland, Ukraine, Hungary, Austria and Czech Republic.",ua:"Держава Центральної Європи без виходу до моря між Польщею та Угорщиною."},
+  SI:{fr:"Petit pays d'Europe centrale avec un accès à la mer Adriatique, entre l'Italie, l'Autriche, la Hongrie et la Croatie.",en:"Small Central European country with Adriatic Sea access, between Italy, Austria, Hungary and Croatia.",ua:"Невелика держава Центральної Європи з виходом до Адріатичного моря."},
+  SB:{fr:"Archipel du Pacifique Sud à l'est de la Nouvelle-Guinée et au nord de l'Australie.",en:"South Pacific archipelago east of New Guinea and north of Australia.",ua:"Архіпелаг Південного Тихого океану на схід від Нової Гвінеї."},
+  SO:{fr:"Pays de la Corne de l'Afrique avec le plus long littoral d'Afrique continentale sur l'océan Indien.",en:"Country in the Horn of Africa with the longest coastline on mainland Africa, on the Indian Ocean.",ua:"Держава Африканського Рогу з найдовшим узбережжям континентальної Африки."},
+  ZA:{fr:"Pays d'Afrique australe sur l'Atlantique et l'océan Indien, entourant le Lesotho et bordant le Swaziland, le Mozambique, le Zimbabwe et d'autres.",en:"Southern African country on the Atlantic and Indian Oceans, surrounding Lesotho and bordering Eswatini, Mozambique, Zimbabwe and others.",ua:"Держава на півдні Африки між Атлантичним та Індійським океанами."},
+  SS:{fr:"Pays enclavé d'Afrique de l'Est, le plus jeune pays du monde (indépendant depuis 2011), entre le Soudan, l'Éthiopie, le Kenya, l'Ouganda et la RDC.",en:"Landlocked East African country, the world's youngest nation (independent since 2011), between Sudan, Ethiopia, Kenya, Uganda and DR Congo.",ua:"Наймолодша держава світу (незалежна з 2011 р.) у Східній Африці без виходу до моря."},
+  ES:{fr:"Pays d'Europe du Sud occupant la majeure partie de la péninsule ibérique, sur l'Atlantique et la Méditerranée.",en:"Southern European country occupying most of the Iberian Peninsula, on the Atlantic and Mediterranean.",ua:"Держава Південної Європи на Піренейському півострові між Атлантикою та Середземномор'ям."},
+  LK:{fr:"Grande île de l'océan Indien au sud-est de l'Inde, séparée du continent par le détroit de Palk.",en:"Large island in the Indian Ocean southeast of India, separated from the mainland by the Palk Strait.",ua:"Великий острів в Індійському океані на південь від Індії."},
+  SD:{fr:"Grand pays d'Afrique du Nord-Est entre la Libye, l'Égypte, la mer Rouge, l'Érythrée et l'Éthiopie.",en:"Large country in northeastern Africa between Libya, Egypt, the Red Sea, Eritrea and Ethiopia.",ua:"Велика держава Північно-Східної Африки між Лівією та Ефіопією."},
+  SR:{fr:"Petit pays d'Amérique du Sud sur la côte atlantique, entre la Guyana, le Brésil et la Guyane française.",en:"Small South American country on the Atlantic coast, between Guyana, Brazil and French Guiana.",ua:"Невелика держава на Атлантичному узбережжі Південної Америки."},
+  SZ:{fr:"Petit pays enclavé d'Afrique australe entouré par l'Afrique du Sud et le Mozambique.",en:"Small landlocked country in southern Africa surrounded by South Africa and Mozambique.",ua:"Невелика держава без виходу до моря, оточена ПАР та Мозамбіком."},
+  SE:{fr:"Grand pays nordique de la péninsule Scandinavie, entre la Norvège, la Finlande et la mer Baltique.",en:"Large Nordic country on the Scandinavian Peninsula, between Norway, Finland and the Baltic Sea.",ua:"Велика скандинавська держава між Норвегією, Фінляндією та Балтійським морем."},
+  CH:{fr:"Pays alpin d'Europe centrale enclavé entre l'Allemagne, la France, l'Italie, l'Autriche et le Liechtenstein.",en:"Alpine landlocked country in Central Europe between Germany, France, Italy, Austria and Liechtenstein.",ua:"Альпійська держава Центральної Європи між Францією, Німеччиною та Італією."},
+  SY:{fr:"Pays du Proche-Orient sur la Méditerranée orientale, entre la Turquie, l'Irak, la Jordanie, Israël et le Liban.",en:"Middle Eastern country on the eastern Mediterranean, between Turkey, Iraq, Jordan, Israel and Lebanon.",ua:"Держава Близького Сходу на Середземноморі між Туреччиною та Іраком."},
+  TW:{fr:"Île d'Asie de l'Est dans l'océan Pacifique, au large du sud-est de la Chine continentale.",en:"East Asian island in the Pacific Ocean, off the southeastern coast of mainland China.",ua:"Острів Східної Азії в Тихому океані біля берегів Китаю."},
+  TJ:{fr:"Pays montagneux d'Asie centrale enclavé dans le Pamir, entre la Chine, l'Afghanistan, l'Ouzbékistan et le Kirghizistan.",en:"Mountainous landlocked country in Central Asia in the Pamirs, between China, Afghanistan, Uzbekistan and Kyrgyzstan.",ua:"Гірська держава Центральної Азії в горах Паміру."},
+  TZ:{fr:"Pays d'Afrique de l'Est sur l'océan Indien, incluant les îles de Zanzibar, entre le Kenya, l'Ouganda, le Rwanda, le Burundi, la RDC, la Zambie, le Malawi et le Mozambique.",en:"East African country on the Indian Ocean including Zanzibar islands, between Kenya, Uganda, Rwanda, Burundi, DR Congo, Zambia, Malawi and Mozambique.",ua:"Держава Східної Африки на Індійському океані, включає острови Занзібар."},
+  TH:{fr:"Pays d'Asie du Sud-Est au cœur de la péninsule indochinoise, entre le Myanmar, le Laos, le Cambodge et la Malaisie.",en:"Southeast Asian country at the heart of the Indochinese Peninsula, between Myanmar, Laos, Cambodia and Malaysia.",ua:"Держава Південно-Східної Азії в центрі Індокитайського півострова."},
+  TL:{fr:"Demi-île du Pacifique occidental et de l'Asie du Sud-Est, à l'est de l'île de Timor, entre l'Indonésie et l'Australie.",en:"Half-island in the western Pacific and Southeast Asia, on the eastern part of Timor Island, between Indonesia and Australia.",ua:"Держава на Тиморському острові у Тихому океані між Індонезією та Австралією."},
+  TG:{fr:"Petit pays allongé d'Afrique de l'Ouest sur le golfe de Guinée, entre le Bénin et le Ghana.",en:"Small elongated country in West Africa on the Gulf of Guinea, between Benin and Ghana.",ua:"Невелика видовжена держава Західної Африки між Беніном та Ганою."},
+  TO:{fr:"Archipel polynésien du Pacifique Sud à l'est des Fidji et au nord de la Nouvelle-Zélande.",en:"Polynesian archipelago in the South Pacific, east of Fiji and north of New Zealand.",ua:"Полінезійський архіпелаг у Південному Тихому океані."},
+  TT:{fr:"Île-État des Caraïbes au large de la côte nord du Venezuela, la plus méridionale des Grandes Antilles.",en:"Island state in the Caribbean off the northern coast of Venezuela, the southernmost of the Greater Antilles.",ua:"Острівна держава у Карибському морі біля узбережжя Венесуели."},
+  TN:{fr:"Pays d'Afrique du Nord sur la Méditerranée, entre l'Algérie et la Libye.",en:"North African country on the Mediterranean, between Algeria and Libya.",ua:"Держава Північної Африки на Середземному морі між Алжиром та Лівією."},
+  TR:{fr:"Pays à cheval entre l'Europe du Sud-Est et l'Asie occidentale, au carrefour de la mer Noire, de la Méditerranée et du Proche-Orient.",en:"Country straddling southeastern Europe and western Asia, at the crossroads of the Black Sea, the Mediterranean and the Middle East.",ua:"Держава на межі Південно-Східної Європи та Близького Сходу між Чорним та Середземним морями."},
+  TM:{fr:"Pays d'Asie centrale en grande partie désertique (désert du Karakoum), entre le Kazakhstan, l'Ouzbékistan, l'Afghanistan et l'Iran.",en:"Largely desert Central Asian country (Karakum Desert), between Kazakhstan, Uzbekistan, Afghanistan and Iran.",ua:"Переважно пустельна держава Центральної Азії між Казахстаном та Іраном."},
+  TV:{fr:"Minuscule archipel polynésien du Pacifique central, l'un des plus petits et isolés pays du monde.",en:"Tiny Polynesian archipelago in the central Pacific, one of the world's smallest and most isolated countries.",ua:"Крихітний полінезійський архіпелаг у центральній частині Тихого океану."},
+  UG:{fr:"Pays enclavé d'Afrique de l'Est, au bord du lac Victoria, entre la RDC, le Soudan du Sud, le Kenya, la Tanzanie et le Rwanda.",en:"Landlocked East African country on Lake Victoria, between DR Congo, South Sudan, Kenya, Tanzania and Rwanda.",ua:"Держава без виходу до моря в Східній Африці біля озера Вікторія."},
+  UA:{fr:"Grand pays d'Europe de l'Est, le plus grand entièrement en Europe, entre la Russie, la Biélorussie, la Pologne, la Slovaquie, la Hongrie, la Roumanie et la Moldavie.",en:"Large Eastern European country, the largest entirely within Europe, between Russia, Belarus, Poland, Slovakia, Hungary, Romania and Moldova.",ua:"Найбільша держава Європи (повністю в межах континенту), між Росією, Польщею та Румунією."},
+  AE:{fr:"Fédération de 7 émirats sur la côte du Golfe persique et du golfe d'Oman, entre l'Arabie saoudite et Oman.",en:"Federation of 7 emirates on the Persian Gulf and Gulf of Oman coast, between Saudi Arabia and Oman.",ua:"Федерація 7 еміратів на Перській затоці між Саудівською Аравією та Оманом."},
+  GB:{fr:"Archipel d'Europe du Nord-Ouest composé de la Grande-Bretagne, de l'Irlande du Nord et de nombreuses petites îles.",en:"Northwestern European archipelago composed of Great Britain, Northern Ireland and many smaller islands.",ua:"Архіпелаг Північно-Західної Європи, включає Велику Британію та Північну Ірландію."},
+  US:{fr:"Immense pays d'Amérique du Nord entre le Canada et le Mexique, avec des côtes sur l'Atlantique et le Pacifique, incluant l'Alaska et Hawaï.",en:"Vast North American country between Canada and Mexico, with Atlantic and Pacific coasts, including Alaska and Hawaii.",ua:"Велика держава Північної Америки між Канадою та Мексикою з узбережжями Атлантики та Тихого океану."},
+  UY:{fr:"Petit pays d'Amérique du Sud sur l'Atlantique, entre l'Argentine et le Brésil.",en:"Small South American country on the Atlantic, between Argentina and Brazil.",ua:"Невелика держава на Атлантичному узбережжі Південної Америки між Аргентиною та Бразилією."},
+  UZ:{fr:"Grand pays enclavé d'Asie centrale, berceau de la Route de la Soie, entre le Kazakhstan, le Kirghizistan, le Tadjikistan, l'Afghanistan et le Turkménistan.",en:"Large landlocked Central Asian country, historic Silk Road hub, between Kazakhstan, Kyrgyzstan, Tajikistan, Afghanistan and Turkmenistan.",ua:"Велика держава без виходу до моря в Центральній Азії, колишній центр Шовкового шляху."},
+  VU:{fr:"Archipel de l'Océanie dans le Pacifique Sud, à l'est de l'Australie et au nord de la Nouvelle-Calédonie.",en:"Oceanian archipelago in the South Pacific, east of Australia and north of New Caledonia.",ua:"Архіпелаг Океанії у Південному Тихому океані."},
+  VE:{fr:"Pays d'Amérique du Sud sur la mer des Caraïbes, entre la Colombie, le Brésil et le Guyana.",en:"South American country on the Caribbean Sea, between Colombia, Brazil and Guyana.",ua:"Держава Південної Америки на Карибському морі між Колумбією та Бразилією."},
+  VN:{fr:"Pays d'Asie du Sud-Est en forme de bande côtière le long du golfe du Tonkin et de la mer de Chine méridionale.",en:"Southeast Asian country in the shape of a coastal strip along the Gulf of Tonkin and South China Sea.",ua:"Держава Південно-Східної Азії вздовж узбережжя Південнокитайського моря."},
+  YE:{fr:"Pays de la péninsule arabique sur la mer d'Arabie et le golfe d'Aden, entre l'Arabie saoudite et Oman.",en:"Country on the Arabian Peninsula on the Arabian Sea and Gulf of Aden, between Saudi Arabia and Oman.",ua:"Держава на Аравійському півострові між Саудівською Аравією та Оманом."},
+  ZM:{fr:"Pays enclavé d'Afrique australe entre la RDC, la Tanzanie, le Malawi, le Mozambique, le Zimbabwe, le Botswana, la Namibie et l'Angola.",en:"Landlocked country in southern Africa between DR Congo, Tanzania, Malawi, Mozambique, Zimbabwe, Botswana, Namibia and Angola.",ua:"Держава без виходу до моря в Південній Африці між вісьмома країнами."},
+  ZW:{fr:"Pays enclavé d'Afrique australe entre la Zambie, le Mozambique, l'Afrique du Sud et le Botswana.",en:"Landlocked country in southern Africa between Zambia, Mozambique, South Africa and Botswana.",ua:"Держава без виходу до моря в Південній Африці між Замбією, Мозамбіком та ПАР."}
+};
+
+function getCountryDesc(c) {
+  // Try by country_code first, then by matching known names
+  var code = (c.country_code || '').toUpperCase();
+  if (code && COUNTRY_DESCRIPTIONS[code]) {
+    var d = COUNTRY_DESCRIPTIONS[code];
+    return d[currentLang] || d.fr;
+  }
+  // Fallback: try matching by country_FR
+  var nameFR = (c.country_FR || '').toLowerCase();
+  var nameLookup = {
+    'france':'FR','états-unis':'US','etats-unis':'US','brésil':'BR','bresil':'BR',
+    'japon':'JP','inde':'IN','norvège':'NO','norvege':'NO','nigeria':'NG',
+    'argentine':'AR','australie':'AU','chine':'CN','allemagne':'DE','russie':'RU',
+    'royaume-uni':'GB','espagne':'ES','italie':'IT','canada':'CA','mexique':'MX'
+  };
+  var mapped = nameLookup[nameFR];
+  if (mapped && COUNTRY_DESCRIPTIONS[mapped]) {
+    var d2 = COUNTRY_DESCRIPTIONS[mapped];
+    return d2[currentLang] || d2.fr;
+  }
+  return null;
+}
+
+// ─── COUNTRY HINTS LEVEL 2 ────────────────────────────────────────────────────
+var COUNTRY_HINTS2 = {
+  AF:{fr:"Parmi les pays les plus pauvres du monde. Économie quasi inexistante. Carrefour stratégique entre Asie centrale et Moyen-Orient. Conflits armés permanents.",en:"Among the world's poorest countries. Almost no formal economy. Strategic crossroads between Central Asia and the Middle East. Permanent armed conflicts.",ua:"Серед найбідніших країн. Стратегічне перехрестя Центральної Азії та Близького Сходу. Постійні збройні конфлікти."},
+  DZ:{fr:"Grand producteur de gaz naturel et pétrole. Armée parmi les plus puissantes d'Afrique. Économie très dépendante des hydrocarbures.",en:"Major natural gas and oil producer. One of Africa's most powerful armies. Economy heavily reliant on hydrocarbons.",ua:"Великий виробник газу та нафти. Одна з найпотужніших армій Африки. Економіка залежить від вуглеводнів."},
+  AR:{fr:"Puissance économique régionale mais dette chroniquement élevée et inflation record. Grands producteurs de soja et de bœuf.",en:"Regional economic power but chronically high debt and record inflation. Major soybean and beef producers.",ua:"Регіональна економічна сила, але хронічно висока заборгованість та рекордна інфляція. Великий виробник сої та яловичини."},
+  AM:{fr:"Petite économie enclavée, dépendante des transferts de la diaspora. Conflits avec l'Azerbaïdjan. Industrie minière (cuivre, or).",en:"Small landlocked economy dependent on diaspora remittances. Conflicts with Azerbaijan. Mining industry (copper, gold).",ua:"Мала економіка, залежна від переказів діаспори. Конфлікти з Азербайджаном. Видобуток міді та золота."},
+  AU:{fr:"Économie très développée, l'une des plus riches per capita. Immenses ressources minières. Très faible densité de population. Exportateur majeur de charbon et de minerai de fer.",en:"Highly developed economy, one of the richest per capita. Vast mining resources. Very low population density. Major coal and iron ore exporter.",ua:"Розвинена економіка, одна з найбагатших. Величезні гірничодобувні ресурси. Мала густота населення."},
+  AT:{fr:"Économie très développée. Neutre militairement depuis 1955. Fort tourisme alpin. Siège de nombreuses organisations internationales.",en:"Highly developed economy. Militarily neutral since 1955. Strong Alpine tourism. Headquarters of many international organizations.",ua:"Розвинена економіка. Нейтральна з 1955 р. Альпійський туризм. Штаб-квартири міжнародних організацій."},
+  AZ:{fr:"Grand producteur de pétrole et de gaz de la mer Caspienne. Régime autoritaire. Conflit récent sur le Haut-Karabakh.",en:"Major Caspian Sea oil and gas producer. Authoritarian regime. Recent conflict over Nagorno-Karabakh.",ua:"Великий виробник нафти та газу. Авторитарний режим. Нещодавній конфлікт за Нагірний Карабах."},
+  BE:{fr:"Siège de l'UE et de l'OTAN. Économie très développée, grand exportateur. Fortement endetté. Pays divisé entre francophones et néerlandophones.",en:"EU and NATO headquarters. Highly developed economy, major exporter. Heavily indebted. Country divided between French and Dutch speakers.",ua:"Штаб-квартира ЄС та НАТО. Розвинена економіка. Велика заборгованість. Лінгвістично розділена країна."},
+  BD:{fr:"Économie émergente, grand exportateur de textile. Parmi les pays les plus densément peuplés. Très vulnérable aux cyclones et inondations.",en:"Emerging economy, major textile exporter. Among the world's most densely populated. Very vulnerable to cyclones and flooding.",ua:"Економіка, що розвивається, великий експортер текстилю. Одна з найгустіше заселених країн. Вразлива до ударів стихії."},
+  BY:{fr:"Régime autoritaire très proche de la Russie. Économie planifiée, peu réformée. Sous sanctions depuis 2020.",en:"Highly authoritarian regime closely aligned with Russia. Planned economy, barely reformed. Under sanctions since 2020.",ua:"Авторитарний режим, тісно пов'язаний з Росією. Планова нереформована економіка. Санкції з 2020 р."},
+  BO:{fr:"Grandes réserves de lithium parmi les premières mondiales. Gaz naturel. L'un des plus pauvres d'Amérique du Sud.",en:"World-leading lithium reserves. Natural gas. One of the poorest in South America.",ua:"Одні з найбільших запасів літію. Природний газ. Одна з найбідніших країн Південної Америки."},
+  BA:{fr:"Économie en développement post-guerre civile des années 1990. Gouvernance très complexe. Candidat à l'UE.",en:"Developing economy post-1990s civil war. Very complex governance. EU candidate.",ua:"Економіка відновлюється після громадянської війни 1990-х. Складне управління. Кандидат у члени ЄС."},
+  BR:{fr:"Plus grande économie d'Amérique latine, 9e mondiale. Immenses ressources naturelles. Armée la plus grande d'Amérique du Sud. Forte inégalité.",en:"Largest Latin American economy, 9th globally. Vast natural resources. Largest military in South America. High inequality.",ua:"Найбільша економіка Латинської Америки. Найбільша армія Південної Америки. Висока нерівність."},
+  BG:{fr:"Parmi les moins développées de l'UE. Forte émigration. Ancienne économie communiste en transition.",en:"Among the EU's least developed. High emigration. Former communist economy in transition.",ua:"Серед найменш розвинених в ЄС. Висока еміграція. Колишня комуністична економіка."},
+  BF:{fr:"Parmi les plus pauvres du monde. Grave insécurité liée aux groupes armés sahéliens. Ressources en or.",en:"Among the world's poorest. Severe insecurity from Sahelian armed groups. Gold resources.",ua:"Серед найбідніших. Серйозна нестабільність від озброєних груп. Золото."},
+  CA:{fr:"Économie du G7. Immenses ressources naturelles (pétrole, gaz, bois, minerais). Très faible densité de population.",en:"G7 economy. Vast natural resources (oil, gas, timber, minerals). Very low population density.",ua:"Економіка G7. Величезні природні ресурси. Дуже мала густота населення."},
+  CL:{fr:"Économie la plus développée d'Amérique du Sud. Premier producteur mondial de cuivre. Faible corruption régionale.",en:"Most developed economy in South America. World's top copper producer. Low regional corruption.",ua:"Найрозвиненіша економіка Південної Америки. №1 виробник міді. Низька корупція."},
+  CN:{fr:"2e économie mondiale. Plus grande armée en effectifs. Exportateur n°1 mondial. Membre permanent du Conseil de sécurité de l'ONU. Puissance nucléaire.",en:"World's 2nd economy. Largest military by headcount. #1 global exporter. Permanent UN Security Council member. Nuclear power.",ua:"2-га економіка світу. Найбільша армія. №1 експортер. Постійний член РБ ООН. Ядерна держава."},
+  CO:{fr:"Une des plus grandes économies d'Amérique du Sud. Grand producteur de café. Longtemps touché par les narcotrafiquants et guérillas.",en:"One of South America's largest economies. Major coffee producer. Long affected by drug cartels and guerrillas.",ua:"Одна з найбільших економік Південної Америки. Великий виробник кави. Тривалий вплив наркокартелів."},
+  CD:{fr:"Richesses naturelles immenses (cobalt, coltan, diamants, or). Malgré cela, l'un des plus pauvres. Conflits armés récurrents à l'est.",en:"Immense natural wealth (cobalt, coltan, diamonds, gold). Despite this, one of the poorest. Recurrent armed conflicts in the east.",ua:"Величезні природні ресурси. Але одна з найбідніших. Збройні конфлікти на сході."},
+  CU:{fr:"Économie planifiée sous embargo américain. Fort niveau d'éducation et de santé malgré la pauvreté.",en:"Planned economy under US embargo. High education and health levels despite poverty.",ua:"Планова економіка під американським ембарго. Висока освіта та охорона здоров'я попри бідність."},
+  CZ:{fr:"Économie la plus industrialisée d'Europe centrale. Grand constructeur automobile. Parmi les moins corrompus d'Europe de l'Est.",en:"Most industrialized economy in Central Europe. Major car manufacturer. Among the least corrupt in Eastern Europe.",ua:"Найбільш індустріалізована економіка Центральної Європи. Великий виробник автомобілів."},
+  DK:{fr:"Parmi les plus riches per capita. Leader en énergie éolienne. Très faible corruption. Haut niveau de bien-être social.",en:"Among the richest per capita. Wind energy leader. Very low corruption. High social welfare.",ua:"Серед найбагатших. Лідер у вітровій енергетиці. Дуже низька корупція."},
+  EG:{fr:"Économie la plus importante du monde arabe après l'Arabie saoudite. Canal de Suez stratégique. Grande armée.",en:"Most important Arab economy after Saudi Arabia. Strategic Suez Canal. Large military.",ua:"Найважливіша арабська економіка після Саудівської Аравії. Суецький канал. Велика армія."},
+  ET:{fr:"Économie à croissance rapide mais très pauvre. Grande armée. Siège de l'Union africaine. Population très jeune.",en:"Fast-growing but very poor economy. Large military. African Union HQ. Very young population.",ua:"Швидке зростання, але бідна. Велика армія. Штаб-квартира АС. Молоде населення."},
+  FI:{fr:"Économie très développée. Leader mondial en éducation (modèle PISA). Parmi les moins corrompus.",en:"Highly developed economy. Global education leader (PISA model). Among world's least corrupt.",ua:"Розвинена економіка. Світовий лідер в освіті. Серед найменш корумпованих."},
+  FR:{fr:"5e ou 6e économie mondiale, membre du G7. Puissance nucléaire, membre permanent du Conseil de sécurité de l'ONU. 1re destination touristique mondiale.",en:"5th or 6th economy worldwide, G7 member. Nuclear power, permanent UN Security Council member. World's top tourist destination.",ua:"5-та або 6-та економіка світу, G7. Ядерна держава, постійний член РБ ООН. №1 туристичне призначення."},
+  DE:{fr:"Plus grande économie d'Europe, 3e ou 4e mondiale. Leader de l'industrie automobile et chimique. Membre fondateur de l'UE.",en:"Europe's largest economy, 3rd or 4th globally. Leader in automotive and chemical industries. EU founding member.",ua:"Найбільша економіка Європи. Лідер автомобільної промисловості. Засновник ЄС."},
+  GH:{fr:"Économie stable d'Afrique de l'Ouest. Producteur d'or et de cacao. Démocratie modèle pour l'Afrique.",en:"Stable West African economy. Gold and cocoa producer. Model democracy for Africa.",ua:"Стабільна економіка Африки. Виробник золота та какао. Зразкова демократія."},
+  GR:{fr:"Grave crise financière post-2008. Forte dette publique. Tourisme majeur. Armée relativement forte en raison des tensions avec la Turquie.",en:"Severe post-2008 financial crisis. High public debt. Major tourism. Relatively strong military due to tensions with Turkey.",ua:"Фінансова криза після 2008 р. Великий борг. Важливий туризм. Напруга з Туреччиною."},
+  HU:{fr:"Ancienne économie communiste. Régime politique controversé en Europe. Faible natalité et vieillissement rapide.",en:"Former communist economy. Controversial political regime in Europe. Low birth rate and rapid aging.",ua:"Колишня комуністична економіка. Суперечливий режим. Низька народжуваність."},
+  IN:{fr:"3e économie mondiale en PPA. Puissance nucléaire. Très grande armée. Membre des BRICS. Géant technologique.",en:"3rd economy by PPP. Nuclear power. Very large military. BRICS member. Tech giant.",ua:"3-тя економіка за ПКС. Ядерна держава. Велика армія. БРІКС. Технологічний гігант."},
+  ID:{fr:"Plus grande économie d'Asie du Sud-Est, G20. Grand producteur de charbon, d'huile de palme et de nickel.",en:"Largest Southeast Asian economy, G20. Major coal, palm oil and nickel producer.",ua:"Найбільша економіка Південно-Східної Азії, G20. Великий виробник вугілля та пальмової олії."},
+  IR:{fr:"Grande économie du Moyen-Orient sous sanctions. Immenses réserves pétrolières. Puissance militaire régionale. Programme nucléaire controversé.",en:"Large Middle Eastern economy under sanctions. Huge oil reserves. Regional military power. Controversial nuclear program.",ua:"Велика економіка під санкціями. Нафтові запаси. Регіональна воєнна сила. Ядерна програма."},
+  IQ:{fr:"Grandes réserves pétrolières (top 5). Économie très dépendante du pétrole. Instabilité récurrente depuis les années 1980.",en:"Major oil reserves (top 5). Oil-dependent economy. Recurring instability since the 1980s.",ua:"Великі нафтові запаси (топ-5). Залежна від нафти. Нестабільність з 1980-х."},
+  IE:{fr:"Économie très développée, parmi les plus riches per capita. Siège européen de grandes multinationales. Très faible corruption.",en:"Highly developed, among Europe's richest. European HQ of major multinationals. Very low corruption.",ua:"Одна з найбагатших в Європі. Штаб-квартири транснаціональних корпорацій. Дуже низька корупція."},
+  IL:{fr:"Économie très développée, 'Start-up Nation'. Puissance nucléaire présumée. Armée technologiquement avancée.",en:"Highly developed, 'Start-up Nation'. Presumed nuclear power. Technologically advanced military.",ua:"'Стартап-нація'. Ймовірна ядерна держава. Передова армія."},
+  IT:{fr:"3e économie de la zone euro, 8e mondiale. Leader du luxe et de la mode. Forte dette publique. Instabilité politique chronique.",en:"3rd eurozone economy, 8th globally. Leader in luxury and fashion. High public debt. Chronic political instability.",ua:"3-тя економіка єврозони. Лідер розкоші та моди. Великий борг. Хронічна нестабільність."},
+  JP:{fr:"3e économie mondiale. Technologies de pointe. Armée puissante. Population la plus vieillissante au monde.",en:"World's 3rd economy. Cutting-edge technology. Powerful military. World's most aging population.",ua:"3-тя економіка. Передові технології. Потужна армія. Найстаріше населення у світі."},
+  KZ:{fr:"Grandes réserves de pétrole, gaz et uranium. Économie la plus développée d'Asie centrale. Régime autoritaire.",en:"Large oil, gas and uranium reserves. Most developed Central Asian economy. Authoritarian regime.",ua:"Нафта, газ, уран. Найрозвиненіша економіка Центральної Азії. Авторитарний режим."},
+  KE:{fr:"Plus grande économie d'Afrique de l'Est. Hub technologique africain. Centre financier régional.",en:"East Africa's largest economy. African tech hub. Regional financial center.",ua:"Найбільша економіка Східної Африки. Технологічний хаб. Регіональний фінансовий центр."},
+  KP:{fr:"Régime totalitaire très fermé. Puissance nucléaire. Armée très grande en effectifs. Économie isolée et peu développée.",en:"Very closed totalitarian regime. Nuclear power. Very large military by headcount. Isolated and underdeveloped economy.",ua:"Закритий тоталітарний режим. Ядерна держава. Велика армія. Ізольована економіка."},
+  KR:{fr:"4e économie d'Asie. Leader de la construction navale, de l'électronique (Samsung, LG) et de l'automobile (Hyundai, Kia).",en:"4th Asian economy. Leader in shipbuilding, electronics (Samsung, LG) and cars (Hyundai, Kia).",ua:"4-та економіка Азії. Лідер суднобудування, електроніки (Samsung) та авто (Hyundai)."},
+  KW:{fr:"Très riches réserves pétrolières, un des plus riches per capita. Économie très dépendante du pétrole.",en:"Very large oil reserves, one of the world's richest per capita. Oil-dependent economy.",ua:"Великі нафтові запаси. Одна з найбагатших країн. Залежить від нафти."},
+  LY:{fr:"Grandes réserves pétrolières. Instabilité politique majeure depuis 2011. Économie très dépendante du pétrole.",en:"Large oil reserves. Major political instability since 2011. Oil-dependent economy.",ua:"Нафтові запаси. Нестабільність з 2011 р. Залежність від нафти."},
+  MX:{fr:"2e économie d'Amérique latine, G20. Grand producteur pétrolier. Exportateur industriel vers les États-Unis. Violence chronique liée aux cartels.",en:"2nd Latin American economy, G20. Major oil producer. Industrial exporter to the US. Chronic cartel violence.",ua:"2-га економіка Латинської Америки, G20. Нафта. Промисловий експорт до США. Картелі."},
+  MA:{fr:"Économie la plus stable du Maghreb. Grand producteur de phosphates (top 3 mondial). Hub d'investissement en Afrique.",en:"Most stable Maghreb economy. Top-3 global phosphate producer. Investment hub for Africa.",ua:"Найстабільніша економіка Магрибу. Топ-3 фосфатів. Інвестиційний хаб Африки."},
+  NL:{fr:"5e économie de l'UE. Premier port d'Europe (Rotterdam). Grand exportateur agricole. Centre financier mondial.",en:"5th EU economy. Europe's largest port (Rotterdam). Major agricultural exporter. Global financial center.",ua:"5-та економіка ЄС. Найбільший порт (Роттердам). Великий аграрний експортер."},
+  NZ:{fr:"Économie très développée. Faible corruption. Qualité de vie parmi les meilleures du monde.",en:"Highly developed economy. Low corruption. Quality of life among the world's best.",ua:"Розвинена економіка. Низька корупція. Одна з найвищих якостей життя."},
+  NG:{fr:"Plus grande économie d'Afrique. Grand producteur de pétrole. Grande pauvreté malgré les ressources. Armée la plus puissante d'Afrique de l'Ouest.",en:"Africa's largest economy. Major oil producer. Widespread poverty despite resources. West Africa's strongest military.",ua:"Найбільша економіка Африки. Нафта. Попри ресурси — бідність. Найсильніша армія Західної Африки."},
+  NO:{fr:"Un des plus riches per capita grâce au pétrole. Plus grand fonds souverain du monde. Très faible corruption.",en:"One of the world's richest per capita thanks to oil. World's largest sovereign wealth fund. Very low corruption.",ua:"Одна з найбагатших завдяки нафті. Найбільший суверенний фонд. Дуже низька корупція."},
+  PK:{fr:"Puissance nucléaire. Grande armée. Instabilité politique et sécuritaire récurrente. Relations tendues avec l'Inde.",en:"Nuclear power. Large military. Recurring political and security instability. Tense relations with India.",ua:"Ядерна держава. Велика армія. Нестабільність. Напружені відносини з Індією."},
+  PL:{fr:"Plus grande économie d'Europe de l'Est, 6e de l'UE. Armée parmi les plus puissantes d'Europe. Membre UE et OTAN.",en:"Largest Eastern European economy, 6th in EU. One of Europe's most powerful armies. EU and NATO member.",ua:"Найбільша економіка Східної Європи. Одна з найпотужніших армій. ЄС та НАТО."},
+  PT:{fr:"Économie développée mais parmi les moins riches d'Europe occidentale. Forte dépendance au tourisme. Membre fondateur de l'OTAN.",en:"Developed but among Western Europe's least wealthy. Strong tourism dependence. NATO founding member.",ua:"Розвинена, але менш заможна. Велика залежність від туризму. Засновник НАТО."},
+  QA:{fr:"Un des plus riches per capita grâce au gaz. 3e réserves mondiales de gaz. A organisé la Coupe du Monde 2022.",en:"One of the world's richest per capita thanks to gas. 3rd largest gas reserves globally. Hosted the 2022 World Cup.",ua:"Одна з найбагатших завдяки газу. 3-ті запаси газу. ЧС-2022."},
+  RO:{fr:"Économie en développement rapide dans l'UE. Producteur agricole et pétrolier. Forte émigration.",en:"Fast-developing EU economy. Agricultural and oil producer. High emigration.",ua:"Швидко зростаюча економіка в ЄС. Аграрний та нафтовий виробник. Масова еміграція."},
+  RU:{fr:"2e arsenal nucléaire mondial. Membre permanent du Conseil de sécurité de l'ONU. Grand producteur de pétrole et gaz. Sous sanctions depuis 2022.",en:"World's 2nd nuclear arsenal. Permanent UN Security Council member. Major oil and gas producer. Under sanctions since 2022.",ua:"2-й ядерний арсенал. Постійний член РБ ООН. Нафта та газ. Санкції з 2022 р."},
+  SA:{fr:"1er exportateur mondial de pétrole. Économie la plus grande du monde arabe. Armée puissante. Aucune démocratie.",en:"World's #1 oil exporter. Largest Arab economy. Powerful military. No democracy.",ua:"№1 експортер нафти. Найбільша арабська економіка. Потужна армія. Без демократії."},
+  SG:{fr:"Hub financier et commercial mondial malgré sa très petite superficie. Un des plus riches per capita. Port parmi les plus actifs.",en:"Global financial hub despite tiny size. One of the richest per capita. One of the world's busiest ports.",ua:"Глобальний фінансовий хаб. Один з найбагатших. Один з найактивніших портів."},
+  ZA:{fr:"Plus grande économie d'Afrique australe. Producteur d'or, platine et diamants. Très forte inégalité.",en:"Largest southern African economy. Gold, platinum and diamond producer. Very high inequality.",ua:"Найбільша економіка Південної Африки. Золото, платина, алмази. Висока нерівність."},
+  ES:{fr:"4e économie de la zone euro. Grand producteur d'huile d'olive et de vin. Tourisme majeur. Chômage élevé.",en:"4th eurozone economy. Major olive oil and wine producer. Major tourism. High unemployment.",ua:"4-та економіка єврозони. Оливкова олія та вино. Великий туризм. Безробіття."},
+  LK:{fr:"Grave crise financière en 2022. Grand producteur de thé. Dépendance au tourisme.",en:"Severe financial crisis in 2022. Major tea producer. Tourism dependent.",ua:"Фінансова криза 2022 р. Великий виробник чаю. Залежність від туризму."},
+  SE:{fr:"Économie très développée. Marques mondiales (IKEA, H&M, Volvo). Très faible corruption. Entrée récente dans l'OTAN.",en:"Highly developed. Global brands (IKEA, H&M, Volvo). Very low corruption. Recently joined NATO.",ua:"Розвинена. Глобальні бренди (IKEA, H&M). Нещодавно в НАТО. Низька корупція."},
+  CH:{fr:"Parmi les plus riches per capita. Centre financier mondial. Sièges d'organisations internationales. Neutralité historique.",en:"Among the world's richest per capita. Global financial center. International organization HQs. Historic neutrality.",ua:"Серед найбагатших. Фінансовий центр. Штаб-квартири міжнародних організацій. Нейтралітет."},
+  SY:{fr:"Pays ravagé par la guerre civile depuis 2011. Économie en ruines. Sous sanctions internationales.",en:"Country ravaged by civil war since 2011. Economy in ruins. Under international sanctions.",ua:"Громадянська війна з 2011 р. Зруйнована економіка. Міжнародні санкції."},
+  TR:{fr:"G20. Armée parmi les plus grandes de l'OTAN. Inflation très élevée. Carrefour Europe-Asie. Exportateur textile et agricole.",en:"G20. One of NATO's largest armies. Very high inflation. Europe-Asia crossroads. Textile and agricultural exporter.",ua:"G20. Велика армія НАТО. Висока інфляція. Міст Європа-Азія."},
+  TM:{fr:"Grand producteur de gaz naturel (top 5). Régime très autoritaire. Économie quasi entièrement étatique.",en:"Major gas producer (top 5). Very authoritarian regime. Almost fully state-controlled economy.",ua:"Великий виробник газу (топ-5). Авторитарний режим. Державна економіка."},
+  UA:{fr:"Économie en guerre depuis 2022. Grand exportateur de blé et d'acier. Armée en forte expansion.",en:"Economy at war since 2022. Major wheat and steel exporter. Rapidly expanding military.",ua:"Економіка у стані війни. Великий експортер зерна та сталі. Армія зростає."},
+  AE:{fr:"Hub financier et commercial mondial (Dubaï). Un des plus riches per capita. Économie diversifiée.",en:"Global financial and commercial hub (Dubai). One of the richest per capita. Diversified economy.",ua:"Глобальний хаб (Дубай). Одна з найбагатших. Диверсифікована економіка."},
+  GB:{fr:"5e ou 6e économie mondiale. Puissance nucléaire, membre permanent du Conseil de sécurité de l'ONU. Centre financier mondial (Londres). Brexit 2020.",en:"5th or 6th economy. Nuclear power, permanent UN Security Council member. Global financial center (London). Brexit 2020.",ua:"5-та або 6-та економіка. Ядерна держава, РБ ООН. Лондон — фінансовий центр. Brexit 2020."},
+  US:{fr:"1ère économie mondiale. 1ère puissance militaire. Puissance nucléaire. Membre permanent du Conseil de sécurité de l'ONU. Dollar = monnaie de réserve mondiale.",en:"World's #1 economy. #1 military power. Nuclear power. Permanent UN Security Council member. Dollar is the global reserve currency.",ua:"№1 економіка. №1 військова сила. Ядерна держава. РБ ООН. Долар — світова резервна валюта."},
+  UZ:{fr:"Grandes réserves de gaz et d'or. Régime autoritaire en transition. Grand exportateur de coton.",en:"Large gas and gold reserves. Authoritarian regime in transition. Major cotton exporter.",ua:"Газ та золото. Авторитарний режим. Великий експортер бавовни."},
+  VE:{fr:"Plus grandes réserves prouvées de pétrole au monde. Grave crise économique et humanitaire. Régime autoritaire. Forte émigration.",en:"World's largest proven oil reserves. Severe economic and humanitarian crisis. Authoritarian regime. High emigration.",ua:"Найбільші запаси нафти. Криза. Авторитарний режим. Масова еміграція."},
+  VN:{fr:"Économie émergente à forte croissance. Ancien pays communiste ouvert depuis les années 1990. Grand producteur de riz et de café.",en:"Fast-growing emerging economy. Former communist country opened since 1990s. Major rice and coffee producer.",ua:"Швидке зростання. Колишній комунізм, відкрита торгівля з 1990-х. Рис та кава."},
+  ZM:{fr:"Grand producteur de cuivre (top mondial). Économie très dépendante du cours du cuivre.",en:"Major copper producer (global top). Economy highly dependent on copper prices.",ua:"Великий виробник міді. Залежність від ціни міді."},
+  ZW:{fr:"Économie instable, connue pour son hyperinflation historique. Riches ressources minières (platine, diamants, or).",en:"Unstable economy, known for historic hyperinflation. Rich mineral resources (platinum, diamonds, gold).",ua:"Нестабільна економіка та гіперінфляція. Платина, алмази, золото."},
+  EC:{fr:"Membre de l'OPEP. Producteur de pétrole et grand exportateur de bananes. Économie dollarisée.",en:"OPEC member. Oil producer and major banana exporter. Dollarized economy.",ua:"ОПЕК. Нафта та банани. Доларизована економіка."},
+  PE:{fr:"Producteur majeur de cuivre, d'or et d'argent. Économie en développement rapide. Inégalités élevées.",en:"Major copper, gold and silver producer. Fast-developing economy. High inequality.",ua:"Мідь, золото, срібло. Швидко зростає. Висока нерівність."},
+  PH:{fr:"Économie émergente à forte croissance. Exportateur de travailleurs à l'étranger. Hub d'outsourcing. Catastrophes naturelles fréquentes.",en:"Fast-growing emerging economy. Major overseas worker exporter. Outsourcing hub. Frequent natural disasters.",ua:"Зростаюча економіка. Велика трудова еміграція. Аутсорсинг. Стихійні лиха."},
+  GT:{fr:"Plus grande économie d'Amérique centrale. Importantes inégalités. Exportateur de café, bananes et sucre.",en:"Largest Central American economy. Major inequalities. Coffee, banana and sugar exporter.",ua:"Найбільша економіка Центральної Америки. Нерівність. Кава та банани."},
+  PY:{fr:"Économie agricole. Grand producteur de soja et d'énergie hydroélectrique (Itaipu).",en:"Agricultural economy. Major soybean and hydroelectric power producer (Itaipu).",ua:"Сільськогосподарська. Соя та гідроенергія (Ітайпу)."},
+  CM:{fr:"Économie la plus diversifiée d'Afrique centrale. Producteur de pétrole, cacao et café.",en:"Most diversified Central African economy. Oil, cocoa and coffee producer.",ua:"Найдиверсифікованіша у Центральній Африці. Нафта, какао, кава."},
+  TN:{fr:"Économie émergente, la plus développée du Maghreb après le Maroc. Tourisme important. Crise politique depuis 2011.",en:"Emerging economy, most developed in Maghreb after Morocco. Important tourism. Political crisis since 2011.",ua:"Найрозвиненіший Магриб після Марокко. Туризм. Криза з 2011 р."},
+  SN:{fr:"Hub régional d'Afrique de l'Ouest. Économie stable et diversifiée. Siège de nombreuses ONG.",en:"West Africa's regional hub. Stable, diversified economy. HQ of many NGOs.",ua:"Регіональний хаб Африки. Стабільна економіка. Штаб-квартири НУО."},
+  MG:{fr:"Biodiversité unique au monde. Économie pauvre, dépendante de l'agriculture. Vanille de haute qualité.",en:"Unique worldwide biodiversity. Poor, agriculture-dependent economy. High-quality vanilla.",ua:"Унікальне біорізноманіття. Бідна. Якісна ваніль."},
+  ML:{fr:"Grande richesse culturelle (Tombouctou). Insécurité liée aux groupes armés au nord. Parmi les plus pauvres.",en:"Rich cultural heritage (Timbuktu). Armed groups in the north. Among the world's poorest.",ua:"Томбукту. Збройні групи на півночі. Серед найбідніших."},
+  NE:{fr:"Un des plus pauvres du monde. Grandes réserves d'uranium. Défis climatiques majeurs (désertification).",en:"One of the world's poorest. Large uranium reserves. Major climate challenges (desertification).",ua:"Серед найбідніших. Уран. Серйозна посуха та спустелення."},
+  AO:{fr:"Grand producteur de pétrole et de diamants. Malgré les ressources, grande pauvreté. Économie post-guerre civile.",en:"Major oil and diamond producer. Despite resources, widespread poverty. Post-civil war economy.",ua:"Нафта та алмази. Попри ресурси — бідність. Після громадянської війни."},
+  OM:{fr:"Producteur de pétrole modéré. Régime stable et diplomatie équilibrée dans le Golfe. Diversification économique.",en:"Moderate oil producer. Stable regime and balanced diplomacy in the Gulf. Economic diversification.",ua:"Помірний виробник нафти. Стабільний режим. Збалансована дипломатія."},
+  KG:{fr:"Parmi les plus pauvres d'Asie centrale. Dépendant des transferts de la diaspora. Ressources hydrauliques importantes.",en:"Among the poorest in Central Asia. Dependent on diaspora remittances. Important water resources.",ua:"Серед найбідніших у Центральній Азії. Переказ грошей. Водні ресурси."},
+  GE:{fr:"Économie en développement, réformes importantes. Hub touristique du Caucase. Conflits territoriaux avec la Russie.",en:"Developing economy with major reforms. Caucasus tourist hub. Territorial conflicts with Russia.",ua:"Реформована економіка. Туристичний хаб Кавказу. Конфлікти з Росією."},
+  BI:{fr:"Parmi les plus pauvres du monde. Instabilité politique récurrente. Agriculture de subsistance.",en:"Among the world's poorest. Recurring political instability. Subsistence agriculture.",ua:"Серед найбідніших. Нестабільність. Натуральне господарство."},
+  BY:{fr:"Régime autoritaire proche de la Russie. Économie planifiée. Sous sanctions depuis 2020.",en:"Authoritarian regime aligned with Russia. Planned economy. Under sanctions since 2020.",ua:"Авторитарний режим, пов'язаний з Росією. Планова. Санкції з 2020."}
+};
+
+function getCountryDesc2(c) {
+  var code = (c.country_code || '').toUpperCase();
+  if (code && COUNTRY_HINTS2[code]) {
+    var d = COUNTRY_HINTS2[code];
+    return d[currentLang] || d.fr;
+  }
+  var nameFR = (c.country_FR || '').toLowerCase();
+  var nameLookup = {
+    'france':'FR','états-unis':'US','etats-unis':'US','brésil':'BR','bresil':'BR',
+    'japon':'JP','inde':'IN','norvège':'NO','norvege':'NO','nigeria':'NG',
+    'argentine':'AR','australie':'AU','chine':'CN','allemagne':'DE','russie':'RU',
+    'royaume-uni':'GB','espagne':'ES','italie':'IT','canada':'CA','mexique':'MX',
+    'colombie':'CO','viêt nam':'VN','viet nam':'VN','vietnam':'VN',
+    'turquie':'TR','ukraine':'UA','pologne':'PL','pays-bas':'NL'
+  };
+  var mapped = nameLookup[nameFR];
+  if (mapped && COUNTRY_HINTS2[mapped]) {
+    var d2 = COUNTRY_HINTS2[mapped];
+    return d2[currentLang] || d2.fr;
+  }
+  return null;
+}
+
+
+// ─── COUNTRY TOOLTIP ──────────────────────────────────────────────────────────
+// Hint state for current turn
+var hintState = { hint1Revealed: false, hint2Revealed: false };
+
+function revealHint1() {
+  if (hintState.hint1Revealed || isRevealing) return;
+  hintState.hint1Revealed = true;
+  totalScore += 25;
+  document.getElementById('total-score').textContent = totalScore;
+
+  var c = gameCountries[currentStep];
+  var desc = getCountryDesc(c);
+
+  document.getElementById('hint-text-1').textContent = desc || '—';
+  document.getElementById('hint-panel').classList.add('open');
+
+  // Update button state
+  var btn1 = document.getElementById('hint-btn-1');
+  btn1.classList.add('revealed');
+  btn1.innerHTML = '💡 ✓';
+
+  // Show hint2 button if desc2 available
+  var desc2 = getCountryDesc2(c);
+  var btn2 = document.getElementById('hint-btn-2');
+  if (desc2) {
+    btn2.style.display = 'inline-flex';
+  }
+}
+
+function revealHint2() {
+  if (hintState.hint2Revealed || isRevealing) return;
+  hintState.hint2Revealed = true;
+  totalScore += 50;
+  document.getElementById('total-score').textContent = totalScore;
+
+  var c = gameCountries[currentStep];
+  var desc2 = getCountryDesc2(c);
+
+  document.getElementById('hint-text-2').textContent = desc2 || '—';
+  document.getElementById('hint-block-2').style.display = 'block';
+
+  var btn2 = document.getElementById('hint-btn-2');
+  btn2.classList.add('revealed');
+  btn2.innerHTML = '🔍 ✓';
+}
+
+function resetHints() {
+  hintState = { hint1Revealed: false, hint2Revealed: false };
+  document.getElementById('hint-panel').classList.remove('open');
+  document.getElementById('hint-block-2').style.display = 'none';
+  document.getElementById('hint-text-1').textContent = '';
+  document.getElementById('hint-text-2').textContent = '';
+
+  var btn1 = document.getElementById('hint-btn-1');
+  btn1.classList.remove('revealed');
+  btn1.innerHTML = '💡 <span data-i18n="hint1btn"></span>';
+  btn1.style.display = 'inline-flex';
+
+  var btn2 = document.getElementById('hint-btn-2');
+  btn2.classList.remove('revealed');
+  btn2.innerHTML = '🔍 <span data-i18n="hint2btn"></span>';
+  btn2.style.display = 'none';
+
+  // Re-apply translations to new spans
+  applyTranslations();
+
+  // Update availability based on current country
+  if (currentStep < 8 && gameCountries[currentStep]) {
+    var c = gameCountries[currentStep];
+    if (!getCountryDesc(c)) btn1.style.display = 'none';
+  }
+}
+
+// ─── TWEMOJI HELPER ──────────────────────────────────────────────────────────────
+function applyEmoji(el) {
+  if (typeof twemoji !== 'undefined') {
+    twemoji.parse(el, {
+      folder: 'svg',
+      ext: '.svg',
+      base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/'
+    });
+  }
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+applyTranslations();
+initApp();
+</script>
+</body>
+</html>

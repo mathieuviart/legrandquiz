@@ -369,6 +369,138 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
 }
 .draft-tooltip.visible { display:block; }
 
+
+/* ── Custom mode in-game theme (violet accents) ── */
+body.custom-mode #timer-num { color: var(--accent3) !important; }
+body.custom-mode .progress-fill { background: linear-gradient(90deg, var(--accent3), #c084fc) !important; }
+body.custom-mode .odo-digit { color: var(--accent3) !important; }
+body.custom-mode .odo-digit-wrap.done { border-color: var(--accent3) !important; box-shadow: 0 0 12px rgba(167,139,250,0.3) !important; }
+body.custom-mode .cat-btn:not(:disabled):hover { border-color: var(--accent3); box-shadow: 0 0 12px rgba(167,139,250,0.2); }
+body.custom-mode .timer-num.urgent { color: var(--accent3) !important; }
+body.custom-mode .progress-fill.urgent { background: linear-gradient(90deg, #c084fc, #a78bfa) !important; }
+body.custom-mode #countdown-overlay { background: var(--bg); }
+body.custom-mode .countdown-num { color: var(--accent3); text-shadow: 0 0 30px rgba(167,139,250,0.4); }
+body.custom-mode .score-val { color: var(--text); }
+
+
+/* ── Reverse mode yellow theme ── */
+body.reverse-mode {
+  --accent:  #f5c842;
+  --accent2: #ff9d00;
+  --accent3: #4fc3ff;
+}
+body.reverse-mode .logo { color:#f5c842 !important; }
+body.reverse-mode .highlight { color:#f5c842 !important; }
+body.reverse-mode .progress-fill { background:linear-gradient(90deg,#f5c842,#ff9d00) !important; }
+body.reverse-mode #timer-num { color:#f5c842 !important; }
+body.reverse-mode .odo-digit { color:#f5c842 !important; }
+body.reverse-mode .odo-digit-wrap.done { border-color:#f5c842 !important; box-shadow:0 0 12px rgba(245,200,66,0.3) !important; }
+body.reverse-mode #countdown-overlay { background:var(--bg); }
+body.reverse-mode .countdown-num { color:#f5c842; text-shadow:0 0 30px rgba(245,200,66,0.5); }
+
+/* ── Reverse: active category display (shown at top instead of country block) ── */
+#reverse-cat-display {
+  display:none;
+  background:var(--surface2);
+  border:1px solid rgba(245,200,66,0.3);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:12px;
+  text-align:center;
+  position:relative;
+}
+body.reverse-mode #reverse-cat-display { display:block; }
+body.reverse-mode .country-block { display:none !important; }
+body.reverse-mode #hint-panel { display:none !important; }
+body.reverse-mode .cats-grid { display:none !important; }
+
+.reverse-cat-icon { font-size:2.4em; line-height:1; margin-bottom:6px; }
+.reverse-cat-name { font-family:'Syne',sans-serif; font-size:1.15em; font-weight:700; color:#f5c842; margin-bottom:4px; }
+.reverse-cat-desc { font-family:'DM Mono',monospace; font-size:0.68em; color:var(--muted); line-height:1.5; margin-bottom:8px; }
+.reverse-cat-info-row { display:flex; align-items:center; justify-content:center; gap:8px; }
+.reverse-info-toggle {
+  font-family:'DM Mono',monospace; font-size:0.65em; color:var(--accent3);
+  border:1px solid rgba(79,195,255,0.35); background:rgba(79,195,255,0.08);
+  border-radius:99px; padding:3px 10px; cursor:pointer; transition:all 0.15s;
+}
+.reverse-info-toggle:hover { background:rgba(79,195,255,0.2); }
+.reverse-cat-tooltip {
+  display:none; margin-top:8px; text-align:left;
+  font-family:'DM Mono',monospace; font-size:0.68em; color:var(--muted); line-height:1.5;
+  background:rgba(79,195,255,0.06); border:1px solid rgba(79,195,255,0.2);
+  border-radius:8px; padding:8px 10px;
+}
+.reverse-cat-tooltip.open { display:block; }
+
+/* ── Country buttons grid (reverse mode) ── */
+#countries-grid {
+  display:none;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin-top:4px;
+}
+body.reverse-mode #countries-grid { display:grid; }
+
+.country-btn {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text); font-family:'Syne',sans-serif;
+  font-size:0.88em; font-weight:600; cursor:pointer;
+  transition:all 0.15s; text-align:left;
+}
+.country-btn:hover:not(:disabled) {
+  border-color:#f5c842;
+  box-shadow:0 0 12px rgba(245,200,66,0.2);
+  transform:translateY(-1px);
+}
+.country-btn:disabled {
+  opacity:0.45; cursor:not-allowed;
+}
+.country-btn.assigned {
+  border-color:rgba(245,200,66,0.4);
+  background:rgba(245,200,66,0.06);
+  opacity:0.6; cursor:default;
+}
+.country-btn .cb-flag { font-size:1.5em; flex-shrink:0; }
+.country-btn .cb-info { display:flex; flex-direction:column; min-width:0; }
+.country-btn .cb-name { font-size:0.82em; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.country-btn .cb-cat-badge { font-size:0.62em; color:var(--muted); font-family:'DM Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Btn reverse */
+.btn-reverse {
+  display:block; width:100%; padding:14px 20px; border-radius:10px;
+  background:rgba(245,200,66,0.08);
+  border:1px solid rgba(245,200,66,0.4);
+  color:#f5c842; font-family:'Syne',sans-serif;
+  font-size:1em; font-weight:700; cursor:pointer;
+  letter-spacing:0.04em; transition:all 0.2s;
+}
+.btn-reverse:hover {
+  background:rgba(245,200,66,0.16);
+  box-shadow:0 0 20px rgba(245,200,66,0.25);
+  transform:translateY(-2px);
+}
+
+
+/* ── Star rating ── */
+.reveal-star { font-size:2.4em; line-height:1; margin:8px 0 2px; animation:starPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+.reveal-star.mega { font-size:3.2em; animation:megaStarPop 0.7s cubic-bezier(0.34,1.56,0.64,1) both; filter:drop-shadow(0 0 14px rgba(255,215,0,0.85)); }
+@keyframes starPop  { 0%{transform:scale(0) rotate(-30deg);opacity:0} 70%{transform:scale(1.3) rotate(5deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes megaStarPop { 0%{transform:scale(0) rotate(-45deg);opacity:0} 50%{transform:scale(1.65) rotate(10deg);opacity:1} 75%{transform:scale(0.9) rotate(-4deg)} 100%{transform:scale(1.2) rotate(0);opacity:1} }
+.star-burst { position:fixed;pointer-events:none;z-index:9999;top:0;left:0;width:100%;height:100%; }
+.star-particle { position:absolute;font-size:1.3em;animation:starFly 0.95s ease-out forwards; }
+@keyframes starFly { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) scale(0.15) rotate(var(--rot));opacity:0} }
+.reveal-best-btn { font-family:'DM Mono',monospace;font-size:0.62em;color:var(--muted);border:1px solid var(--border);background:none;border-radius:6px;padding:5px 14px;cursor:pointer;margin-top:8px;transition:all 0.15s;display:block;width:100%; }
+.reveal-best-btn:hover { color:var(--text);border-color:var(--muted); }
+.reveal-best-panel { margin-top:6px;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;display:none;font-family:'DM Mono',monospace;font-size:0.68em;color:var(--muted);text-align:left;line-height:1.7; }
+.reveal-best-panel.open { display:block; }
+.reveal-best-row { display:flex;justify-content:space-between;gap:8px;padding:2px 0; }
+.reveal-best-row .rbr-cat { color:var(--text); }
+.reveal-best-row .rbr-val { color:#f5c842;font-weight:700; }
+.rr-star { font-size:0.85em;margin-left:3px; }
+
 .hidden { display:none !important; }
 
 /* Optimal combo modal rows */
@@ -533,19 +665,21 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
 
         <!-- Mode Normal -->
         <div style="border:1px solid rgba(79,255,176,0.25);border-radius:12px;padding:10px 12px;background:rgba(79,255,176,0.04);">
-          <div style="font-family:'DM Mono',monospace;font-size:0.62em;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Normal</div>
-          <button class="btn-primary" onclick="startGame('normal')" data-i18n="btnNormal"></button>
+          <button class="btn-primary" style="display:block;width:100%;margin-top:0;" onclick="startGame('normal')" data-i18n="btnNormal"></button>
         </div>
 
         <!-- Mode Hardcore -->
         <div style="border:1px solid rgba(255,61,90,0.25);border-radius:12px;padding:10px 12px;background:rgba(255,61,90,0.04);">
-          <div style="font-family:'DM Mono',monospace;font-size:0.62em;color:#ff3d5a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Hardcore</div>
           <button class="btn-hardcore" onclick="startGame('hardcore')" data-i18n="btnHardcore"></button>
+        </div>
+
+        <!-- Mode Reverse -->
+        <div style="border:1px solid rgba(245,200,66,0.3);border-radius:12px;padding:10px 12px;background:rgba(245,200,66,0.04);">
+          <button class="btn-reverse" onclick="startGame('reverse')" data-i18n="btnReverse"></button>
         </div>
 
         <!-- Mode Personnalisé + Seed -->
         <div style="border:1px solid rgba(167,139,250,0.3);border-radius:12px;padding:10px 12px;background:rgba(167,139,250,0.04);">
-          <div style="font-family:'DM Mono',monospace;font-size:0.62em;color:var(--accent3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;" data-i18n="modeCustomLabel"></div>
           <div style="margin-bottom:10px;">
             <div style="font-family:'DM Mono',monospace;font-size:0.7em;color:var(--accent3);margin-bottom:6px;" data-i18n="seedLabel"></div>
             <div style="display:flex;gap:8px;">
@@ -621,6 +755,20 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
     <div class="feedback" id="feedback"></div>
+
+    <!-- REVERSE MODE: active category display -->
+    <div id="reverse-cat-display">
+      <div class="reverse-cat-icon" id="reverse-cat-icon">?</div>
+      <div class="reverse-cat-name" id="reverse-cat-name">—</div>
+      <div class="reverse-cat-info-row">
+        <span class="reverse-info-toggle" onclick="toggleReverseCatInfo()" data-i18n="reverseInfoBtn"></span>
+      </div>
+      <div class="reverse-cat-tooltip" id="reverse-cat-tooltip"></div>
+    </div>
+
+    <!-- REVERSE MODE: country selection grid -->
+    <div id="countries-grid"></div>
+
     <div class="country-block">
       <div class="country-flag" id="country-flag">&#127757;</div>
       <div class="country-info">
@@ -724,7 +872,7 @@ var TRANSLATIONS = {
     rule3:          'Chaque cat\u00e9gorie ne peut \u00eatre utilis\u00e9e qu\'\u003cstrong style="color:var(--text)"\u003eune seule fois\u003c/strong\u003e.',
     rule4:          'Vous avez \u003cstrong style="color:var(--text)"\u003e20 secondes\u003c/strong\u003e par pays. Sinon\u00a0: +200 points de p\u00e9nalit\u00e9\u00a0!',
     rule5:          'Objectif\u00a0: minimiser votre score total\u00a0!',
-    seedLabel:      '\uD83D\uDD11 JOUER AVEC UNE SEED (optionnel)',
+    seedLabel:      '\uD83D\uDD11 JOUER AVEC UNE SEED',
     seedPlaceholder:'ex: 3-12-45-..._0-5-11-...',
     seedLoad:       'Charger',
     newGame:        'Nouvelle partie \u2192',
@@ -742,8 +890,12 @@ var TRANSLATIONS = {
     draftCountries: 'Pays',
     customStart:    'Lancer la partie',
     back:           '\u2190 Retour',
-    btnNormal:      '\uD83C\uDF0D Partie Normale',
-    btnHardcore:    'Partie Hardcore',
+    btnReverse:     'Reverse',
+    modeReverseLabel:'Reverse',
+    reverseInfoBtn:  'En savoir plus',
+    reverseTurn:     'Cat\u00e9gorie',
+    btnNormal:      'Normale',
+    btnHardcore:    'Hardcore',
     score:          'Score',
     time:           'Temps',
     turn:           'Tour',
@@ -812,8 +964,12 @@ var TRANSLATIONS = {
     draftCountries: 'Countries',
     customStart:    'Start game',
     back:           '\u2190 Back',
-    btnNormal:      '\uD83C\uDF0D Normal Game',
-    btnHardcore:    'Hardcore Game',
+    btnReverse:     'Reverse',
+    modeReverseLabel:'Reverse',
+    reverseInfoBtn:  'Info',
+    reverseTurn:     'Category',
+    btnNormal:      'Normal',
+    btnHardcore:    'Hardcore',
     score:          'Score',
     time:           'Time',
     turn:           'Round',
@@ -867,7 +1023,11 @@ var TRANSLATIONS = {
     draftCountries: 'Країни',
     customStart:    '\u041f\u043e\u0447\u0430\u0442\u0438',
     back:           '\u2190 \u041d\u0430\u0437\u0430\u0434',
-    btnNormal:      '\uD83C\uDF0D \u041d\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u0430',
+    btnReverse:     '\u0420\u0435\u0432\u0435\u0440\u0441',
+    modeReverseLabel:'Reverse',
+    reverseInfoBtn:  '\u0406\u043d\u0444\u043e',
+    reverseTurn:     '\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044f',
+    btnNormal:      '\u041d\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u0430',
     btnHardcore:    'Hardcore',
     score:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
     time:           '\u0427\u0430\u0441',
@@ -964,7 +1124,19 @@ var ALL_CATEGORIES = [
   {id:'taux_tabagisme',icon:'🚬',fr:'Taux de tabagisme',en:'Smoking rate',ua:'Рівень куріння',desc:{fr:'Pourcentage de la population qui fume régulièrement.',en:'Percentage of the population that smokes regularly.',ua:'Відсоток населення, яке регулярно курить.'}},
   {id:'conso_alcool_par_habitant',icon:'🍺',fr:'Conso alcool/hab',en:'Alcohol consumption/capita',ua:'Споживання алкоголю',desc:{fr:"Quantité moyenne d'alcool pur consommée par personne et par an.",en:'Average amount of pure alcohol consumed per person per year.',ua:'Середня кількість чистого алкоголю на одну особу на рік.'}},
   {id:'travail_enfant',icon:'👶',fr:'Travail des enfants',en:'Child labour',ua:'Дитяча праця',desc:{fr:"Prévalence du travail des enfants dans une activité économique. Reflète les conditions sociales.",en:'Prevalence of child labor in economic activity. Reflects social conditions.',ua:'Поширеність дитячої праці. Відображає соціально-економічні умови.'}},
-  {id:'nb_militaire',icon:'🪖',fr:'Nb de militaires',en:'Military personnel',ua:'Військовий персонал',desc:{fr:"Effectif total des forces armées. Indicateur de la capacité militaire d'un pays.",en:"Total size of a country's armed forces. A military capacity indicator.",ua:'Загальна чисельність збройних сил. Показник військового потенціалу країни.'}}
+  {id:'nb_militaire',icon:'🪖',fr:'Nb de militaires',en:'Military personnel',ua:'Військовий персонал',desc:{fr:"Effectif total des forces armées. Indicateur de la capacité militaire d'un pays.",en:"Total size of a country's armed forces. A military capacity indicator.",ua:'Загальна чисельність збройних сил. Показник військового потенціалу країни.'}},
+  {id:'classement_fifa_H',icon:'⚽',fr:'Classement FIFA (H)',en:'FIFA Ranking (M)',ua:'Рейтинг ФІФА (Ч)',desc:{fr:"Position de l'équipe nationale masculine de football au classement mondial FIFA.",en:"Position of the men's national football team in the FIFA world rankings.",ua:'Позиція чоловічої збірної з футболу у світовому рейтингу ФІФА.'}},
+  {id:'classement_fifa_F',icon:'⚽',fr:'Classement FIFA (F)',en:'FIFA Ranking (W)',ua:'Рейтинг ФІФА (Ж)',desc:{fr:"Position de l'équipe nationale féminine de football au classement mondial FIFA.",en:"Position of the women's national football team in the FIFA world rankings.",ua:'Позиція жіночої збірної з футболу у світовому рейтингу ФІФА.'}},
+  {id:'classement_rugby_H',icon:'🏉',fr:'Classement Rugby (H)',en:'Rugby Ranking (M)',ua:'Рейтинг регбі (Ч)',desc:{fr:"Position de l'équipe nationale masculine de rugby au classement mondial World Rugby.",en:"Position of the men's national rugby team in the World Rugby rankings.",ua:'Позиція чоловічої збірної з регбі у світовому рейтингу World Rugby.'}},
+  {id:'point_culminant',icon:'🏔️',fr:'Point culminant',en:'Highest point',ua:'Найвища точка',desc:{fr:"Altitude du sommet le plus élevé du pays, reflétant le relief du territoire.",en:"Altitude of the country's highest peak, reflecting the terrain.",ua:'Висота найвищої вершини країни, що відображає рельєф території.'}},
+  {id:'ordre_alphabetique',icon:'🔤',fr:'Ordre alphabétique',en:'Alphabetical order',ua:'Алфавітний порядок',desc:{fr:"Position du pays dans une liste triée par nom (de A à Z).",en:"Position of the country in a list sorted by name (from A to Z).",ua:'Позиція країни у списку, відсортованому за назвою (від А до Я).'}},
+  {id:'medaille_jo',icon:'🏅',fr:'Médailles JO',en:'Olympic medals',ua:'Олімпійські медалі',desc:{fr:"Nombre total de médailles obtenues aux Jeux Olympiques. Reflète la puissance sportive.",en:"Total number of medals won at the Olympic Games. Reflects sporting prowess.",ua:'Загальна кількість медалей, здобутих на Олімпійських іграх. Відображає спортивну міць.'}},
+  {id:'taux_obesite',icon:'🍔',fr:"Taux d'obésité",en:'Obesity rate',ua:'Рівень ожиріння',desc:{fr:"Pourcentage de la population adulte souffrant d'obésité. Indicateur de santé publique.",en:"Percentage of the adult population suffering from obesity. A public health indicator.",ua:'Відсоток дорослого населення з ожирінням. Показник здоров’я нації.'}},
+  {id:'prevalence_cannabis_pctg',icon:'🌿',fr:'Prévalence cannabis',en:'Cannabis prevalence',ua:'Поширеність канабісу',desc:{fr:"Pourcentage de la population ayant consommé du cannabis au cours de l'année écoulée.",en:"Percentage of the population that has used cannabis in the past year.",ua:'Відсоток населення, яке вживало канабіс протягом останнього року.'}},
+  {id:'classement_bball_M',icon:'🏀',fr:'Classement Basket (M)',en:'Basketball ranking (M)',ua:'Рейтинг баскетболу (Ч)',desc:{fr:"Position de l'équipe nationale masculine de basketball au classement mondial FIBA.",en:"Position of the men's national basketball team in the FIBA world rankings.",ua:'Позиція чоловічої збірної з баскетболу у світовому рейтингу FIBA.'}},
+  {id:'heureux',icon:'😊',fr:'Indice de bonheur',en:'Happiness index',ua:'Індекс щастя',desc:{fr:"Mesure le bien-être subjectif et la satisfaction de vie globale des habitants.",en:"Measures subjective well-being and overall life satisfaction of residents.",ua:'Вимірює суб’єктивне благополуччя та загальну задоволеність життям мешканців.'}},
+  {id:'inegalite',icon:'⚖️',fr:'Indice d’inégalité',en:'Inequality index',ua:'Індекс нерівності',desc:{fr:"Mesure les écarts de revenus et la répartition des richesses au sein de la population.",en:"Measures income gaps and wealth distribution within the population.",ua:'Вимірює розрив у доходах та розподіл багатства серед населення.'}},
+  {id:'dictature',icon:'👮',fr:'Indice de dictature',en:'Dictatorship index',ua:'Індекс диктатури',desc:{fr:"Mesure le niveau de liberté politique et le type de régime (de dicature à démocratie).",en:"Measures the level of political freedom and regime type (from dictatorship to democracy).",ua:'Вимірює рівень політичної свободи та тип режиму (від диктатури до демократії).'}}
 ];
 
 function catName(cat) { return cat[currentLang] || cat.fr; }
@@ -1027,8 +1199,11 @@ var TIME_PER_TURN  = 20;
 var isRevealing    = false;
 var gameMode       = 'normal'; // 'normal' | 'hardcore' | 'custom'
 var N_TURNS        = 8;
+// hideScore : true en mode hardcore (le score est masque pendant la partie)
+function hideScore() { return gameMode === 'hardcore'; }
 var CUSTOM_TIME    = 20;
 var draftMode      = 'auto';  // 'auto'|'cats'|'countries'
+var reverseAssignments = {}; // countryIdx -> catId, for reverse mode
 var draftCounter   = 0;       // increments each game, used for alternating
 var lastDraftUsed  = '';      // 'cats' or 'countries' — set during generation
 
@@ -1232,28 +1407,39 @@ function showCountdown(onDone) {
 
 // ─── GAME START ───────────────────────────────────────────────────────────────
 function startGame(modeOrSeed, seedOverride) {
-  if (modeOrSeed === 'normal' || modeOrSeed === 'hardcore' || modeOrSeed === 'custom') {
+  if (modeOrSeed === 'normal' || modeOrSeed === 'hardcore' || modeOrSeed === 'custom' || modeOrSeed === 'reverse') {
     gameMode = modeOrSeed;
   } else if (typeof modeOrSeed === 'string' && modeOrSeed) {
     seedOverride = modeOrSeed;
   }
 
   // Apply N_TURNS and time per mode
+  document.body.classList.remove('hardcore', 'custom-mode', 'reverse-mode');
   if (gameMode === 'custom') {
-    N_TURNS = parseInt(document.getElementById('custom-n-slider').value, 10) || 8;
-    TIME_PER_TURN = customTimeSelected; // 0 = infinite
-    document.body.classList.remove('hardcore');
+    if (!seedOverride) {
+      N_TURNS = parseInt(document.getElementById('custom-n-slider').value, 10) || 8;
+    }
+    TIME_PER_TURN = customTimeSelected;
+    document.body.classList.add('custom-mode');
     document.getElementById('panel-custom').classList.add('hidden');
+    document.getElementById('panel-setup').classList.add('hidden');
+  } else if (gameMode === 'reverse') {
+    N_TURNS = 8;
+    TIME_PER_TURN = 20;
+    document.body.classList.add('reverse-mode');
+    document.getElementById('panel-setup').classList.add('hidden');
+    reverseAssignments = {};
   } else {
     N_TURNS = 8;
     TIME_PER_TURN = (gameMode === 'hardcore') ? 10 : 20;
     if (gameMode === 'hardcore') document.body.classList.add('hardcore');
-    else document.body.classList.remove('hardcore');
     document.getElementById('panel-setup').classList.add('hidden');
   }
 
   var seed = seedOverride || generateSeed();
   if (!applyGameFromSeed(seed)) return;
+  // Sync N_TURNS to actual game size (important when loading a seed)
+  N_TURNS = gameCountries.length;
   currentSeed    = seed;
   currentStep    = 0;
   totalScore     = 0;
@@ -1276,8 +1462,8 @@ function startWithSeedInput() {
   if (!raw) { alert(t('enterSeed')); return; }
   var match = raw.match(/(\d[\d-]*_[\d-]*\d)/);
   var seed = match ? match[1] : raw;
-  // keep current gameMode, just override seed
-  startGame(gameMode, seed);
+  // Seed games always use custom-mode (blue) so N_TURNS adapts to seed length
+  startGame('custom', seed);
 }
 
 // ─── CATEGORY BUTTONS ─────────────────────────────────────────────────────────
@@ -1338,6 +1524,8 @@ function attachInfoListeners() {
 // ─── TURN DISPLAY ─────────────────────────────────────────────────────────────
 function showTurn() {
   if (currentStep >= gameCountries.length) { endGame(); return; }
+  if (gameMode === 'reverse') { showTurnReverse(); return; }
+
   var c    = gameCountries[currentStep];
   var name = getCountryName(c);
   var flag = c.flag || c.emoji || '🌍';
@@ -1345,10 +1533,8 @@ function showTurn() {
   document.getElementById('country-flag').textContent = flag;
   applyEmoji(document.getElementById('country-flag'));
   document.getElementById('country-name').textContent = name;
-  document.getElementById('country-sub').textContent  = '';  // ISO code removed
+  document.getElementById('country-sub').textContent  = '';
 
-  // Country info button: show/hide based on description availability
-  // Hint buttons: show hint1 if desc available, hide hint2 until hint1 revealed
   var btn1 = document.getElementById('hint-btn-1');
   var desc1 = getCountryDesc(c);
   btn1.style.display = desc1 ? 'inline-flex' : 'none';
@@ -1383,6 +1569,150 @@ function showTurn() {
   attachInfoListeners();
   clearFeedback();
   startTimer();
+}
+
+
+// ─── REVERSE MODE TURN ────────────────────────────────────────────────────────
+function showTurnReverse() {
+  // In reverse: currentStep = which category is active
+  // All countries shown as buttons; user picks which country gets this category
+  var cat = gameCategories[currentStep];
+  document.getElementById('turn-label').textContent = t('reverseTurn') + ' ' + (currentStep+1) + ' ' + t('of') + ' ' + gameCategories.length;
+  document.getElementById('total-score').textContent = totalScore;
+
+  // Show the active category
+  document.getElementById('reverse-cat-icon').textContent = cat.icon;
+  applyEmoji(document.getElementById('reverse-cat-icon'));
+  document.getElementById('reverse-cat-name').textContent = catName(cat);
+  document.getElementById('reverse-cat-tooltip').textContent = catDesc(cat);
+  document.getElementById('reverse-cat-tooltip').classList.remove('open');
+
+  renderCountryButtons();
+  clearFeedback();
+  startTimer();
+}
+
+function toggleReverseCatInfo() {
+  var el = document.getElementById('reverse-cat-tooltip');
+  el.classList.toggle('open');
+  // refresh text in case lang changed
+  var cat = gameCategories[currentStep];
+  if (cat) el.textContent = catDesc(cat);
+}
+
+function renderCountryButtons() {
+  var grid = document.getElementById('countries-grid');
+  grid.innerHTML = '';
+  gameCountries.forEach(function(country, idx) {
+    var btn = document.createElement('button');
+    btn.className = 'country-btn';
+    btn.id = 'country-btn-' + idx;
+    var flag = country.flag || country.emoji || '🌍';
+    var name = getCountryName(country);
+    var assignedCatId = reverseAssignments[idx];
+    var catBadge = '';
+    if (assignedCatId) {
+      var assignedCat = gameCategories.find(function(c) { return c.id === assignedCatId; });
+      catBadge = assignedCat ? (assignedCat.icon + ' ' + catName(assignedCat)) : '';
+      btn.classList.add('assigned');
+      btn.disabled = true;
+    }
+    btn.innerHTML =
+      '<span class="cb-flag">' + flag + '</span>' +
+      '<span class="cb-info">' +
+        '<span class="cb-name">' + name + '</span>' +
+        (catBadge ? '<span class="cb-cat-badge">' + catBadge + '</span>' : '') +
+      '</span>';
+    applyEmoji(btn);
+    if (!assignedCatId) {
+      (function(i) {
+        btn.addEventListener('click', function() { handleCountryChoice(i); });
+      })(idx);
+    }
+    grid.appendChild(btn);
+  });
+}
+
+function handleCountryChoice(countryIdx) {
+  if (isRevealing) return;
+  if (timerInterval && timerInterval._raf) timerInterval._raf(); timerInterval = null;
+  var btn = document.getElementById('country-btn-' + countryIdx);
+  if (!btn || btn.disabled) return;
+
+  var cat     = gameCategories[currentStep];
+  var country = gameCountries[countryIdx];
+  var rawVal  = country[cat.id];
+  var points  = (rawVal === false || rawVal === null || rawVal === undefined) ? false : Number(rawVal);
+  var pts     = (points === false || isNaN(points)) ? 0 : Number(points);
+  var flag    = country.flag || country.emoji || '🌍';
+  var cName   = getCountryName(country);
+
+  reverseAssignments[countryIdx] = cat.id;
+  isRevealing = true;
+
+  // Mark chosen button
+  document.querySelectorAll('.country-btn').forEach(function(b) { b.disabled = true; });
+  btn.style.borderColor = '#f5c842';
+  btn.style.boxShadow = '0 0 14px rgba(245,200,66,0.35)';
+
+  var rsd = computeStarDataReverse(cat, countryIdx);
+  gameLog.push({flag:flag, name:cName, catObj:cat, points:pts, isPenalty:false, starData:rsd});
+
+  var bestHtmlR = buildBestCountriesPanel(cat, countryIdx);
+  showReveal(flag, cName, cat, points, function() {
+    isRevealing = false;
+    if (pts > 0) {
+      totalScore += pts;
+      document.getElementById('total-score').textContent = totalScore;
+    }
+    currentStep++;
+    showTurn();
+  }, rsd, bestHtmlR);
+}
+
+function autoPick_reverse() {
+  // Timeout in reverse: penalty, assign to first available country
+  var firstFree = -1;
+  for (var i = 0; i < gameCountries.length; i++) {
+    if (!reverseAssignments[i]) { firstFree = i; break; }
+  }
+  if (firstFree === -1) { currentStep++; showTurn(); return; }
+
+  var cat     = gameCategories[currentStep];
+  var country = gameCountries[firstFree];
+  var flag    = country.flag || country.emoji || '🌍';
+  var cName   = getCountryName(country);
+  var PENALTY = 200;
+  totalScore += PENALTY;
+  reverseAssignments[firstFree] = cat.id;
+  gameLog.push({flag:flag, name:cName, catObj:cat, points:PENALTY, isPenalty:true});
+
+  document.getElementById('total-score').textContent = totalScore;
+  var overlay = document.createElement('div');
+  overlay.id = 'reveal-overlay';
+  overlay.innerHTML =
+    '<div class="reveal-card" style="border-color:#ff9d00;">' +
+    '<div class="reveal-cat-label" style="color:#ff9d00;">' + t('timeUp') + '</div>' +
+    '<div class="reveal-cat-name" style="color:#f5c842;">' + cat.icon + ' ' + catName(cat) + '</div>' +
+    '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>' +
+    '<span class="reveal-country-name">' + cName + '</span></div>' +
+    '<div style="font-family:\'DM Mono\',monospace;font-size:4em;font-weight:700;color:#ff9d00;margin:16px 0;animation:penaltyPop 0.4s cubic-bezier(0.34,1.56,0.64,1);">+' + PENALTY + '</div>' +
+    '<div class="reveal-points-label" style="color:#ff9d00;">' + t('penalty') + '</div>' +
+    '<button class="reveal-skip" id="reveal-skip-btn" style="border-color:#f5c842;color:#f5c842;">' + t('skip') + '</button>' +
+    '</div>';
+  var s = document.createElement('style');
+  s.textContent = '@keyframes penaltyPop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}';
+  overlay.appendChild(s);
+  document.body.appendChild(overlay);
+  applyEmoji(overlay);
+  var closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    overlay.style.transition = 'opacity 0.3s'; overlay.style.opacity = '0';
+    setTimeout(function() { isRevealing = false; overlay.remove(); currentStep++; showTurn(); }, 300);
+  }
+  document.getElementById('reveal-skip-btn').onclick = close;
+  setTimeout(close, 2500);
 }
 
 // ─── TIMER ────────────────────────────────────────────────────────────────────
@@ -1454,6 +1784,7 @@ function autoPick() {
   if (isRevealing) return;
   isRevealing = true;
   if (timerInterval && timerInterval._raf) timerInterval._raf(); timerInterval = null;
+  if (gameMode === 'reverse') { autoPick_reverse(); return; }
   disableAllCatButtons();
   var PENALTY = 200;
   totalScore += PENALTY;
@@ -1529,22 +1860,21 @@ function handleChoice(catId) {
   var pts = (points === false || points === null || points === undefined || isNaN(points)) ? 0 : Number(points);
   gameLog.push({flag:flag, name:cName, catObj:catObj, points:pts, isPenalty:false});
 
+  var sd = computeStarData(country, catId);
+  var lastEntry = gameLog[gameLog.length - 1]; if (lastEntry) lastEntry.starData = sd;
+
   if (gameMode === 'hardcore') {
-    // Hardcore: no reveal overlay, accumulate score silently, advance quickly
     totalScore += pts;
-    setTimeout(function() {
-      isRevealing = false;
-      currentStep++;
-      showTurn();
-    }, 420);
+    setTimeout(function() { isRevealing = false; currentStep++; showTurn(); }, 420);
   } else {
+    var bestHtml = buildBestCatsPanel(country, catId);
     showReveal(flag, cName, catObj, points, function() {
       isRevealing = false;
       if (points !== false) totalScore += pts;
       document.getElementById('total-score').textContent = totalScore;
       currentStep++;
       showTurn();
-    });
+    }, sd, bestHtml);
   }
 }
 
@@ -1552,8 +1882,95 @@ function disableAllCatButtons() {
   document.querySelectorAll('.cat-btn').forEach(function(b) { b.disabled = true; });
 }
 
+
+// ─── STAR RATING HELPERS ─────────────────────────────────────────────────────
+function computeStarData(country, chosenCatId) {
+  // Le jeu = MINIMISER le score : etoile = valeur la plus BASSE choisie
+  var chosenRaw = country[chosenCatId];
+  var chosenVal = (chosenRaw === false || chosenRaw === null || chosenRaw === undefined || isNaN(Number(chosenRaw))) ? null : Number(chosenRaw);
+  if (chosenVal === null) return { chosenVal:0, gameBest:0, globalBest:0, isGameBest:false, isGlobalBest:false };
+  // gameBest = valeur minimale parmi les categories disponibles pour ce pays
+  var gb = Infinity;
+  gameCategories.forEach(function(cat) {
+    var v = country[cat.id];
+    if (v !== false && v !== null && v !== undefined && !isNaN(Number(v))) {
+      var n = Number(v); if (n < gb) gb = n;
+    }
+  });
+  // globalBest = valeur minimale sur TOUTES les categories connues
+  var ab = Infinity;
+  ALL_CATEGORIES.forEach(function(cat) {
+    var v = country[cat.id];
+    if (v !== false && v !== null && v !== undefined && !isNaN(Number(v))) {
+      var n = Number(v); if (n < ab) ab = n;
+    }
+  });
+  gb = gb === Infinity ? 0 : gb;
+  ab = ab === Infinity ? 0 : ab;
+  var isGameBest   = (chosenVal > 0 && chosenVal <= gb);
+  var isGlobalBest = (chosenVal > 0 && chosenVal <= ab);
+  return { chosenVal:chosenVal, gameBest:gb, globalBest:ab, isGameBest:isGameBest, isGlobalBest:isGlobalBest };
+}
+function computeStarDataReverse(cat, chosenIdx) {
+  // Mode reverse : etoile = pays avec la valeur la plus BASSE pour cette categorie
+  var country = gameCountries[chosenIdx];
+  var chosenRaw = country[cat.id];
+  var chosenVal = (chosenRaw===false||chosenRaw===null||chosenRaw===undefined||isNaN(Number(chosenRaw))) ? null : Number(chosenRaw);
+  if (chosenVal === null) return { chosenVal:0, gameBest:0, globalBest:0, isGameBest:false, isGlobalBest:false };
+  var gb = Infinity;
+  gameCountries.forEach(function(c) {
+    var v = c[cat.id];
+    if (v !== false && v !== null && v !== undefined && !isNaN(Number(v))) {
+      var n = Number(v); if (n < gb) gb = n;
+    }
+  });
+  var ab = Infinity;
+  countriesDB.forEach(function(c) {
+    var v = c[cat.id];
+    if (v !== false && v !== null && v !== undefined && !isNaN(Number(v))) {
+      var n = Number(v); if (n < ab) ab = n;
+    }
+  });
+  gb = gb === Infinity ? 0 : gb;
+  ab = ab === Infinity ? 0 : ab;
+  var isGameBest   = (chosenVal > 0 && chosenVal <= gb);
+  var isGlobalBest = (chosenVal > 0 && chosenVal <= ab);
+  return { chosenVal:chosenVal, gameBest:gb, globalBest:ab, isGameBest:isGameBest, isGlobalBest:isGlobalBest };
+}
+// Panneau 'meilleurs choix' : trier par valeur ASCENDANTE (bas = meilleur score)
+function buildBestCatsPanel(country, chosenCatId) {
+  var rows=[];
+  gameCategories.forEach(function(cat){var v=country[cat.id];if(v!==false&&v!==null&&v!==undefined&&!isNaN(Number(v)))rows.push({cat:cat,val:Number(v)});});
+  rows.sort(function(a,b){return a.val-b.val;});
+  return rows.slice(0,3).map(function(r){
+    var mark=r.cat.id===chosenCatId?' <span style="color:var(--accent)">&#10003;</span>':'';
+    return '<div class="reveal-best-row"><span class="rbr-cat">'+r.cat.icon+' '+catName(r.cat)+mark+'</span><span class="rbr-val">'+r.val+'</span></div>';
+  }).join('');
+}
+function buildBestCountriesPanel(cat, chosenIdx) {
+  var rows=[];
+  gameCountries.forEach(function(c,i){var v=c[cat.id];if(v!==false&&v!==null&&v!==undefined&&!isNaN(Number(v)))rows.push({c:c,i:i,val:Number(v)});});
+  rows.sort(function(a,b){return a.val-b.val;});
+  return rows.slice(0,3).map(function(r){
+    var flag=r.c.flag||r.c.emoji||'';
+    var mark=r.i===chosenIdx?' <span style="color:var(--accent)">&#10003;</span>':'';
+    return '<div class="reveal-best-row"><span class="rbr-cat">'+flag+' '+getCountryName(r.c)+mark+'</span><span class="rbr-val">'+r.val+'</span></div>';
+  }).join('');
+}
+function burstStars(cx,cy){
+  var burst=document.createElement('div'); burst.className='star-burst'; document.body.appendChild(burst);
+  for(var i=0;i<12;i++){
+    var p=document.createElement('div'); p.className='star-particle'; p.textContent='⭐';
+    var angle=Math.random()*360,dist=90+Math.random()*140;
+    var tx=Math.round(Math.cos(angle*Math.PI/180)*dist),ty=Math.round(Math.sin(angle*Math.PI/180)*dist);
+    p.style.cssText='left:'+cx+'px;top:'+cy+'px;--tx:'+tx+'px;--ty:'+ty+'px;--rot:'+Math.round(Math.random()*360)+'deg;animation-delay:'+(Math.random()*0.18)+'s';
+    burst.appendChild(p);
+  }
+  setTimeout(function(){burst.remove();},1400);
+}
+
 // ─── ODOMETER REVEAL ──────────────────────────────────────────────────────────
-function showReveal(flag, cName, catObj, finalValue, onDone) {
+function showReveal(flag, cName, catObj, finalValue, onDone, starData, bestPanelHtml) {
   var overlay = document.createElement('div');
   overlay.id = 'reveal-overlay';
   var isFalse = finalValue === false;
@@ -1592,9 +2009,19 @@ function showReveal(flag, cName, catObj, finalValue, onDone) {
   function onComplete() {
     animDone = true;
     wrap.querySelectorAll('.odo-digit-wrap').forEach(function(d) { d.classList.add('done'); });
-    // Auto-close after brief pause — no button text change (avoids the "Passer→Continuer" look)
+    var slot = document.getElementById('reveal-star-slot');
+    if (slot && starData && !hideScore()) {
+      if (starData.isGlobalBest) {
+        slot.innerHTML = '<div class="reveal-star mega">🌟</div>';
+        var rect = slot.getBoundingClientRect();
+        burstStars(rect.left + rect.width/2, rect.top + rect.height/2);
+      } else if (starData.isGameBest) {
+        slot.innerHTML = '<div class="reveal-star">⭐</div>';
+      }
+    }
     skipBtn.onclick = closeReveal;
-    setTimeout(function() { if (document.getElementById('reveal-overlay')) closeReveal(); }, 1800);
+    var autoDelay = (starData && !hideScore() && (starData.isGlobalBest || starData.isGameBest)) ? 2800 : 1800;
+    setTimeout(function() { if (document.getElementById('reveal-overlay')) closeReveal(); }, autoDelay);
   }
 
   function onSkip() {
@@ -1718,7 +2145,7 @@ function endGame() {
   if (timerInterval && timerInterval._raf) timerInterval._raf(); timerInterval = null;
 
   // Apply ended theme
-  document.body.classList.remove('hardcore');
+  document.body.classList.remove('hardcore','custom-mode','reverse-mode');
   if (gameMode === 'hardcore') document.body.classList.add('hardcore-ended');
 
   document.getElementById('panel-game').classList.add('hidden');
@@ -1787,6 +2214,11 @@ function showEndReveal(onDone) {
 
     var ptsVal = entry.isPenalty ? '+' + entry.points : (entry.points === false ? '—' : entry.points);
     var ptsClass = entry.isPenalty ? 'rr-pts penalty' : 'rr-pts';
+    var starHtml = '';
+    if (!entry.isPenalty && !entry.isHint && entry.starData) {
+      if (entry.starData.isGlobalBest) starHtml = '<span class="rr-star">🌟</span>';
+      else if (entry.starData.isGameBest) starHtml = '<span class="rr-star">⭐</span>';
+    }
 
     row.innerHTML =
       '<span class="rr-flag">' + entry.flag + '</span>' +
@@ -1794,7 +2226,7 @@ function showEndReveal(onDone) {
         '<div class="rr-name">' + entry.name + '</div>' +
         '<div class="rr-cat">' + catLabel + '</div>' +
       '</div>' +
-      '<span class="' + ptsClass + '">' + ptsVal + '</span>';
+      '<span class="' + ptsClass + '">' + ptsVal + starHtml + '</span>';
 
     container.appendChild(row);
     applyEmoji(row);
@@ -1911,7 +2343,7 @@ document.getElementById('opt-modal').addEventListener('click', function(e) {
 });
 
 function resetToMenu() {
-  document.body.classList.remove('hardcore','hardcore-ended');
+  document.body.classList.remove('hardcore','hardcore-ended','custom-mode','reverse-mode');
   TIME_PER_TURN = 20;
   N_TURNS = 8;
   gameMode = 'normal';
@@ -1928,12 +2360,30 @@ function resetToMenu() {
 }
 
 function copySeed() {
-  navigator.clipboard.writeText(currentSeed).then(function() {
-    var btn = document.querySelector('[onclick="copySeed()"]');
-    var orig = btn.textContent;
-    btn.textContent = '✓ OK!';
-    setTimeout(function() { btn.textContent = orig; }, 2000);
-  });
+  var btn = document.querySelector('[onclick="copySeed()"]');
+  var orig = btn ? btn.textContent : '';
+  var text = currentSeed || '';
+  if (!text) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+    }).catch(function() {
+      // fallback
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+  }
 }
 
 
@@ -2528,6 +2978,7 @@ function revealHint2(e) {
 
 function resetHints() {
   hintState = { hint1Revealed: false, hint2Revealed: false };
+  if (gameMode === 'reverse') { var tt = document.getElementById('reverse-cat-tooltip'); if(tt) tt.classList.remove('open'); }
   var panel = document.getElementById('hint-panel');
   panel.classList.remove('open');
   document.getElementById('hint-block-2').style.display = 'none';

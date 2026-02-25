@@ -1109,6 +1109,18 @@ body.reverse-mode #countries-grid { display:grid; }
               <span class="p-icon">🇫🇷🤝</span>
               <span class="p-name">Voisins France</span>
             </button>
+            <button class="preset-btn" onclick="applyPreset('landlocked',this)">
+              <span class="p-icon">🏔️</span>
+              <span class="p-name">Enclavés</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('islands',this)">
+              <span class="p-icon">🏝️</span>
+              <span class="p-name">Îles seulement</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('flag-guesser',this)">
+              <span class="p-icon">🚩</span>
+              <span class="p-name">Flag Guesser</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1206,7 +1218,10 @@ body.reverse-mode #countries-grid { display:grid; }
     </div>
 
     <div class="seed-box" id="seed-display"></div>
-    <button class="btn-secondary" style="margin-top:0;margin-bottom:16px;width:100%;font-size:0.85em;" onclick="copySeed()" data-i18n="copySeed"></button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <button class="btn-secondary" style="margin:0;font-size:0.8em;" onclick="copySeed()" id="btn-copy-seed" data-i18n="copySeed"></button>
+      <button class="btn-secondary" style="margin:0;font-size:0.8em;border-color:rgba(79,255,176,0.4);color:var(--accent);" onclick="copyUrl()" id="btn-copy-url" data-i18n="copyUrl"></button>
+    </div>
     <button class="btn-primary" onclick="resetToMenu()" data-i18n="playAgain"></button>
   </div>
 
@@ -1283,6 +1298,7 @@ var TRANSLATIONS = {
     finalScore:     'Score',
     final:          'Final',
     copySeed:       '\uD83D\uDCCB Copier la seed',
+    copyUrl:        '🔗 Partager l\'URL',
     playAgain:      'Rejouer',
     seedShare:      '\uD83D\uDD11 SEED \u2014 partagez cette partie\u00a0!',
     catSelected:    'cat\u00e9gorie s\u00e9lectionn\u00e9e',
@@ -1358,6 +1374,7 @@ var TRANSLATIONS = {
     finalScore:     'Final',
     final:          'Score',
     copySeed:       '\uD83D\uDCCB Copy seed',
+    copyUrl:        '🔗 Share URL',
     playAgain:      'Play again',
     seedShare:      '\uD83D\uDD11 SEED \u2014 share this game!',
     catSelected:    'selected category',
@@ -1418,6 +1435,7 @@ var TRANSLATIONS = {
     finalScore:     '\u0424\u0456\u043d\u0430\u043b\u044c\u043d\u0438\u0439',
     final:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
     copySeed:       '\uD83D\uDCCB \u041a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0441\u0456\u0434',
+    copyUrl:        '🔗 Поділитися URL',
     playAgain:      '\u0413\u0440\u0430\u0442\u0438 \u0437\u043d\u043e\u0432\u0443',
     seedShare:      '\uD83D\uDD11 \u0421\u0406\u0414 \u2014 \u043f\u043e\u0434\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0446\u0456\u0454\u044e \u0433\u0440\u043e\u044e!',
     catSelected:    '\u043e\u0431\u0440\u0430\u043d\u0430 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044f',
@@ -1603,6 +1621,17 @@ async function initApp() {
   document.getElementById('loader').classList.add('hidden');
   document.getElementById('setup-ready').classList.remove('hidden');
   applyTranslations();
+
+  // ── Lecture du hash URL : #seed=XXXX ──────────────────────────────────────
+  var hash = window.location.hash;
+  var match = hash.match(/[#&]seed=([^&]+)/);
+  if (match) {
+    var seedFromUrl = decodeURIComponent(match[1]);
+    // Petit délai pour que le DOM soit prêt
+    setTimeout(function() {
+      startGame('custom', seedFromUrl);
+    }, 100);
+  }
 }
 
 function getFallbackData() {
@@ -1623,20 +1652,118 @@ function getFallbackData() {
 // ─── SEED ─────────────────────────────────────────────────────────────────────
 function shuffle(arr) { return arr.slice().sort(function() { return Math.random() - 0.5; }); }
 
-function encodeSeed(ci, ki) { return ci.join('-') + '_' + ki.join('-'); }
+// ─── SEED ENGINE v2 ───────────────────────────────────────────────────────────
+// Format interne (avant encodage) :
+//   [version:1][mode:1][time:2][n:1][countries:n*2][cats:n*2][checksum:2]
+//   mode : 0=normal 1=hardcore 2=reverse
+//   time : secondes (0=infini)
+//   Encodage : Base62 → chaîne opaque, non-lisible, non-modifiable à la main
 
-function decodeSeed(seed) {
-  var parts = seed.split('_');
-  if (parts.length !== 2) return null;
-  var ci = parts[0].split('-').map(Number);
-  var ki = parts[1].split('-').map(Number);
-  if (ci.length !== ki.length || ci.length < 2) return null;
-  if (ci.some(isNaN) || ki.some(isNaN)) return null;
-  return {countryIndices:ci, catIndices:ki};
+var SEED_VERSION = 2;
+var BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function bytesToBase62(bytes) {
+  var digits = [0];
+  for (var b = 0; b < bytes.length; b++) {
+    var carry = bytes[b];
+    for (var d = 0; d < digits.length; d++) {
+      carry += digits[d] * 256;
+      digits[d] = carry % 62;
+      carry = Math.floor(carry / 62);
+    }
+    while (carry > 0) { digits.push(carry % 62); carry = Math.floor(carry / 62); }
+  }
+  var result = '';
+  for (var d = digits.length - 1; d >= 0; d--) result += BASE62[digits[d]];
+  return result || '0';
+}
+
+function base62ToBytes(str, expectedLen) {
+  var digits = [];
+  for (var i = 0; i < str.length; i++) {
+    var v = BASE62.indexOf(str[i]);
+    if (v < 0) return null;
+    digits.push(v);
+  }
+  var bytes = [0];
+  for (var d = 0; d < digits.length; d++) {
+    var carry = digits[d];
+    for (var b = 0; b < bytes.length; b++) {
+      carry += bytes[b] * 62;
+      bytes[b] = carry & 0xFF;
+      carry >>= 8;
+    }
+    while (carry > 0) { bytes.push(carry & 0xFF); carry >>= 8; }
+  }
+  bytes.reverse();
+  while (bytes.length < expectedLen) bytes.unshift(0);
+  if (bytes.length > expectedLen) bytes = bytes.slice(bytes.length - expectedLen);
+  return bytes;
+}
+
+function encodeSeed(countryIdxs, catIdxs, mode, timeSecs) {
+  var modeCode = (mode === 'hardcore') ? 1 : (mode === 'reverse') ? 2 : 0;
+  var time = (timeSecs === undefined || timeSecs === null) ? 20 : timeSecs;
+  var n = countryIdxs.length;
+  var bytes = [];
+  bytes.push(SEED_VERSION);
+  bytes.push(modeCode);
+  bytes.push(time & 0xFF);
+  bytes.push((time >> 8) & 0xFF);
+  bytes.push(n);
+  for (var i = 0; i < n; i++) { bytes.push(countryIdxs[i] & 0xFF); bytes.push((countryIdxs[i] >> 8) & 0xFF); }
+  for (var i = 0; i < n; i++) { bytes.push(catIdxs[i] & 0xFF); bytes.push((catIdxs[i] >> 8) & 0xFF); }
+  var checksum = 0;
+  for (var b = 0; b < bytes.length; b++) checksum = (checksum + bytes[b]) & 0xFFFF;
+  bytes.push(checksum & 0xFF);
+  bytes.push((checksum >> 8) & 0xFF);
+  return bytesToBase62(bytes);
+}
+
+function decodeSeed(str) {
+  if (!str || typeof str !== 'string') return null;
+  str = str.trim();
+
+  // Rétrocompatibilité ancien format "12-45_0-5"
+  if (/^\d[\d-]*_[\d-]*\d$/.test(str)) {
+    var parts = str.split('_');
+    if (parts.length !== 2) return null;
+    var ci = parts[0].split('-').map(Number);
+    var ki = parts[1].split('-').map(Number);
+    if (ci.length !== ki.length || ci.length < 2) return null;
+    if (ci.some(isNaN) || ki.some(isNaN)) return null;
+    return { countryIndices: ci, catIndices: ki, mode: 'normal', timeSecs: 20, legacy: true };
+  }
+
+  // Format v2 Base62 — taille header = 5 + n*4 + 2
+  // On essaie n=2..16 jusqu'à trouver un checksum valide
+  for (var n = 2; n <= 16; n++) {
+    var expectedLen = 5 + n * 4 + 2;
+    var bytes = base62ToBytes(str, expectedLen);
+    if (!bytes || bytes.length !== expectedLen) continue;
+    if (bytes[0] !== SEED_VERSION) continue;
+    if (bytes[4] !== n) continue;
+    var checksumStored = bytes[expectedLen - 2] + (bytes[expectedLen - 1] << 8);
+    var checksumCalc = 0;
+    for (var b = 0; b < expectedLen - 2; b++) checksumCalc = (checksumCalc + bytes[b]) & 0xFFFF;
+    if (checksumStored !== checksumCalc) continue;
+    var modeCode = bytes[1];
+    var timeSecs = bytes[2] + (bytes[3] << 8);
+    var ci = [], ki = [], offset = 5;
+    for (var i = 0; i < n; i++) { ci.push(bytes[offset] + (bytes[offset+1] << 8)); offset += 2; }
+    for (var i = 0; i < n; i++) { ki.push(bytes[offset] + (bytes[offset+1] << 8)); offset += 2; }
+    var mode = modeCode === 1 ? 'hardcore' : modeCode === 2 ? 'reverse' : 'normal';
+    return { countryIndices: ci, catIndices: ki, mode: mode, timeSecs: timeSecs, legacy: false };
+  }
+  return null;
+}
+
+function _currentGameMode() {
+  if (gameMode === 'custom') return customSubMode || 'normal';
+  return gameMode;
 }
 
 function generateSeedCatsFirst() {
-  // ── Ribbon-aware category pool
   var cp = getCatRibbonPool();
   var forcedCatIdxs   = cp.included.slice();
   var possibleCatIdxs = cp.possible;
@@ -1647,18 +1774,13 @@ function generateSeedCatsFirst() {
     catPool = catPool.concat(shuffle(allCi.filter(function(i){return catPool.indexOf(i)===-1;}))).slice(0, N_TURNS);
   }
   var catIds = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
-
-  // ── Ribbon-aware country pool
   var pool = getRibbonCountryPool();
   var forcedIdxs = pool.included.slice();
   var available  = pool.possible;
   var nRandom = Math.max(0, N_TURNS - forcedIdxs.length);
-
   var eligible = available.filter(function(i){ return catIds.every(function(id){
-    var v = countriesDB[i][id];
-    return v !== false && v !== null && v !== undefined;
+    var v = countriesDB[i][id]; return v !== false && v !== null && v !== undefined;
   });});
-
   var randomPool;
   if (eligible.length >= nRandom) {
     randomPool = shuffle(eligible).slice(0, nRandom);
@@ -1668,7 +1790,6 @@ function generateSeedCatsFirst() {
     }).sort(function(a,b){return b.score-a.score;});
     randomPool = shuffle(scored.slice(0, Math.min(nRandom*2+4, scored.length))).slice(0, nRandom).map(function(x){return x.i;});
   }
-
   var validForced = forcedIdxs.filter(function(i){
     return catIds.every(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;});
   });
@@ -1676,24 +1797,19 @@ function generateSeedCatsFirst() {
   var extra = shortage > 0 ? shuffle(eligible.filter(function(i){return validForced.indexOf(i)===-1;})).slice(0,shortage) : [];
   var finalIdxs = shuffle(validForced.concat(extra).concat(randomPool)).slice(0, N_TURNS);
   lastDraftUsed = 'cats';
-  return encodeSeed(finalIdxs, catPool);
+  return encodeSeed(finalIdxs, catPool, _currentGameMode(), TIME_PER_TURN);
 }
 
 function generateSeedCountriesFirst() {
-  // ── Ribbon-aware country pool
   var pool = getRibbonCountryPool();
   var forcedIdxs = pool.included.slice();
   var available  = shuffle(pool.possible);
   var nRandom    = Math.max(0, N_TURNS - forcedIdxs.length);
   var finalIdxs  = forcedIdxs.concat(available.slice(0, nRandom)).slice(0, N_TURNS);
   var chosenCountries = finalIdxs.map(function(i){ return {c: countriesDB[i], i: i}; });
-
-  // ── Ribbon-aware category pool
   var cp = getCatRibbonPool();
   var forcedCatIdxs   = cp.included.slice();
   var possibleCatIdxs = cp.possible;
-
-  // Find cats valid for ALL chosen countries — respecting forced cats first
   var validPossible = possibleCatIdxs.map(function(i){return {cat:ALL_CATEGORIES[i],i:i};}).filter(function(x){
     return chosenCountries.every(function(co){var v=co.c[x.cat.id];return v!==false&&v!==null&&v!==undefined;});
   });
@@ -1704,10 +1820,8 @@ function generateSeedCountriesFirst() {
   if (validForced.length + validPossible.length >= N_TURNS) {
     var catPool = validForced.concat(shuffle(validPossible).slice(0, nCatRandom).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(finalIdxs, catPool);
+    return encodeSeed(finalIdxs, catPool, _currentGameMode(), TIME_PER_TURN);
   }
-
-  // Relax: best countries from possible pool
   var allCatIds2 = ALL_CATEGORIES.map(function(c){return c.id;});
   var relaxPool = shuffle(available.map(function(i){
     return {i:i, score:allCatIds2.filter(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;}).length};
@@ -1724,31 +1838,47 @@ function generateSeedCountriesFirst() {
     var nRCatRand = Math.max(0, N_TURNS - relaxValidForced.length);
     var catPool2 = relaxValidForced.concat(shuffle(relaxValidPoss).slice(0, nRCatRand).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(relaxIdxs, catPool2);
+    return encodeSeed(relaxIdxs, catPool2, _currentGameMode(), TIME_PER_TURN);
   }
   return generateSeedCatsFirst();
 }
 
 function generateSeed() {
   var useCats;
-  if (draftMode === 'cats')      { useCats = true; }
+  if (draftMode === 'cats')           { useCats = true; }
   else if (draftMode === 'countries') { useCats = false; }
-  else { useCats = (draftCounter % 2 === 0); } // alternate
+  else                                { useCats = (draftCounter % 2 === 0); }
   draftCounter++;
   return useCats ? generateSeedCatsFirst() : generateSeedCountriesFirst();
 }
 
-function applyGameFromSeed(seed) {
-  var decoded = decodeSeed(seed);
+function applyGameFromSeed(str) {
+  var decoded = decodeSeed(str);
   if (!decoded) { alert(t('invalidSeed')); return false; }
   var ci = decoded.countryIndices, ki = decoded.catIndices;
   if (ci.some(function(i){return i<0||i>=countriesDB.length;}))  { alert(t('invalidSeedIdx')); return false; }
   if (ki.some(function(i){return i<0||i>=ALL_CATEGORIES.length;})) { alert(t('invalidSeedIdx')); return false; }
   gameCountries  = ci.map(function(i){return countriesDB[i];});
   gameCategories = ki.map(function(i){return ALL_CATEGORIES[i];});
-  currentSeed = seed;
+  currentSeed    = str;
+  if (!decoded.legacy) {
+    var m = decoded.mode;
+    document.body.classList.remove('hardcore','reverse-mode');
+    if (m === 'hardcore') {
+      document.body.classList.add('hardcore');
+      if (gameMode === 'custom') customSubMode = 'hardcore'; else gameMode = 'hardcore';
+    } else if (m === 'reverse') {
+      document.body.classList.add('reverse-mode');
+      reverseAssignments = {};
+      if (gameMode === 'custom') customSubMode = 'reverse'; else gameMode = 'reverse';
+    } else {
+      if (gameMode === 'custom') customSubMode = 'normal';
+    }
+    TIME_PER_TURN = decoded.timeSecs;
+  }
   return true;
 }
+
 
 
 // ─── CUSTOM MODE ──────────────────────────────────────────────────────────────
@@ -1874,6 +2004,22 @@ var FRANCE_NEIGHBORS_CODES = [
   'GB',                                      // tunnel sous la Manche
   'BR','SR','SX'                             // Guyane française + Saint-Martin
 ];
+// Pays enclavés (sans accès à la mer)
+var LANDLOCKED_CODES = [
+  'AF','AM','AZ','BY','BT','BO','BW','BF','BI','CF',
+  'TD','CZ','ET','HU','KZ','KG','LA','LS','LI','LU',
+  'MW','ML','MD','MN','NP','NE','MK','PY','RW','SM',
+  'RS','SK','SS','SZ','TJ','TM','UG','UZ','ZM','ZW',
+  'AT','XK'
+];
+// Pays insulaires (entièrement entourés d'eau)
+var ISLANDS_CODES = [
+  'AG','AU','BS','BB','CV','KM','CU','DM','FJ','GD',
+  'HT','IS','ID','JM','JP','KI','MV','MT','MH','MU',
+  'FM','NR','NZ','PW','PG','PH','KN','LC','VC','WS',
+  'ST','SC','SB','LK','TO','TT','TV','VU','CY','BN',
+  'TL','SG','GB','IE','MG','TW'
+];
 
 function togglePresets() {
   var toggle = document.getElementById('presets-toggle');
@@ -1922,6 +2068,20 @@ function applyPreset(name, btn) {
   } else if (name === 'top100pib'){ setCountryByList(TOP100_PIB_CODES);resetCats(); setPresetDefaults();
   } else if (name === 'small')    { setCountryByList(SMALL_COUNTRIES_CODES); resetCats(); setPresetDefaults();
   } else if (name === 'france-neighbors') { setCountryByList(FRANCE_NEIGHBORS_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'landlocked') { setCountryByList(LANDLOCKED_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'islands')    { setCountryByList(ISLANDS_CODES);    resetCats(); setPresetDefaults();
+
+  } else if (name === 'flag-guesser') {
+    resetCountries(); resetCats();
+    // 10 tours
+    document.getElementById('custom-n-slider').value = 10;
+    ribbonOnSliderChange(10);
+    // 60 secondes (index 6)
+    document.getElementById('time-slider').value = 6; selectTimeSlider(6);
+    // Mode Hardcore (drapeau seul, pas de nom)
+    selectSubModePill('hardcore');
+    // Ordre : pays d'abord
+    selectDraftPill('countries');
 
   } else if (name === 'sport') {
     resetCountries();
@@ -2376,6 +2536,8 @@ function startGame(modeOrSeed, seedOverride) {
   showCountdown(function() {
     document.getElementById('panel-game').classList.remove('hidden');
     document.getElementById('game-seed-display').textContent = currentSeed;
+    // Mettre à jour le hash URL pour permettre le partage
+    history.replaceState(null, '', '#seed=' + encodeURIComponent(currentSeed));
     renderCategoryButtons();
     showTurn();
   });
@@ -2384,9 +2546,10 @@ function startGame(modeOrSeed, seedOverride) {
 function startWithSeedInput() {
   var raw = document.getElementById('seed-input').value.trim();
   if (!raw) { alert(t('enterSeed')); return; }
-  var match = raw.match(/(\d[\d-]*_[\d-]*\d)/);
-  var seed = match ? match[1] : raw;
-  // Seed games always use custom-mode (blue) so N_TURNS adapts to seed length
+  // Support ancien format legacy (12-45_0-5) et nouveau format Base62
+  var seed = raw;
+  // Si l'utilisateur a collé du texte avec une seed entourée d'espaces, on nettoie
+  seed = seed.replace(/\s+/g, '');
   startGame('custom', seed);
 }
 
@@ -3396,6 +3559,8 @@ document.getElementById('opt-modal').addEventListener('click', function(e) {
 });
 
 function resetToMenu() {
+  // Nettoyer le hash URL
+  history.replaceState(null, '', window.location.pathname + window.location.search);
   document.body.classList.remove('hardcore','hardcore-ended','custom-mode','reverse-mode');
   TIME_PER_TURN = 20;
   N_TURNS = 8;
@@ -3419,31 +3584,41 @@ function resetToMenu() {
   applyTranslations();
 }
 
-function copySeed() {
-  var btn = document.querySelector('[onclick="copySeed()"]');
+function getShareUrl() {
+  var base = window.location.href.split('#')[0];
+  return base + '#seed=' + encodeURIComponent(currentSeed);
+}
+
+function _copyToClipboard(text, btn, successMsg) {
   var orig = btn ? btn.textContent : '';
-  var text = currentSeed || '';
-  if (!text) return;
+  var done = function() {
+    if (btn) { btn.textContent = successMsg; setTimeout(function() { btn.textContent = orig; }, 2000); }
+  };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
-    }).catch(function() {
-      // fallback
+    navigator.clipboard.writeText(text).then(done).catch(function() {
       var ta = document.createElement('textarea');
       ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+      document.execCommand('copy'); document.body.removeChild(ta);
+      done();
     });
   } else {
     var ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+    document.execCommand('copy'); document.body.removeChild(ta);
+    done();
   }
+}
+
+function copySeed() {
+  var btn = document.getElementById('btn-copy-seed');
+  _copyToClipboard(currentSeed || '', btn, '✓ Copié !');
+}
+
+function copyUrl() {
+  var btn = document.getElementById('btn-copy-url');
+  _copyToClipboard(getShareUrl(), btn, '✓ Lien copié !');
 }
 
 

@@ -101,6 +101,11 @@ body::before {
 }
 #app { position: relative; z-index: 1; width: 100%; max-width: 640px; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; animation: fadeIn 0.4s ease; }
+/* Custom panel scrollable for larger content */
+#panel-custom { padding: 24px 28px; max-height: 92vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#panel-custom::-webkit-scrollbar { width: 4px; }
+#panel-custom::-webkit-scrollbar-track { background: transparent; }
+#panel-custom::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
 /* lang switcher */
@@ -340,9 +345,17 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
 .custom-slider { width:100%; -webkit-appearance:none; appearance:none; height:4px; border-radius:99px; background:var(--border); outline:none; cursor:pointer; }
 .custom-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--accent3); cursor:pointer; box-shadow:0 0 8px rgba(167,139,250,0.4); }
 .custom-slider::-moz-range-thumb { width:20px; height:20px; border-radius:50%; border:none; background:var(--accent3); cursor:pointer; }
-.time-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-.time-pill { padding:6px 14px; border-radius:99px; cursor:pointer; font-family:'DM Mono',monospace; font-size:0.75em; font-weight:700; border:1px solid var(--border); color:var(--muted); background:var(--surface); transition:all 0.15s; }
-.time-pill.active { border-color:var(--accent3); color:var(--accent3); background:rgba(167,139,250,0.1); box-shadow:0 0 8px rgba(167,139,250,0.2); }
+.time-slider-wrap { margin-top:10px; }
+.time-slider-val {
+  font-family:'Syne',sans-serif; font-size:1.6em; font-weight:800;
+  color:var(--accent3); text-align:center; margin-bottom:6px; letter-spacing:-.02em;
+}
+.time-slider-ticks {
+  display:flex; justify-content:space-between;
+  font-family:'DM Mono',monospace; font-size:0.58em; color:var(--muted);
+  margin-top:4px; padding:0 2px;
+}
+.time-slider-ticks span.active-tick { color:var(--accent3); font-weight:700; }
 
 
 /* ── Draft mode selector in custom panel ── */
@@ -404,6 +417,133 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
   background:rgba(245,200,66,0.08);
   box-shadow:0 0 10px rgba(245,200,66,0.2);
 }
+
+
+/* ── Presets accordion ── */
+.presets-section { margin-top:4px; }
+.presets-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:8px 12px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface2);
+  color:var(--muted); font-family:'DM Mono',monospace; font-size:0.72em;
+  font-weight:700; text-align:left; transition:all 0.15s;
+}
+.presets-toggle:hover { border-color:var(--accent3); color:var(--accent3); }
+.presets-toggle .pt-arrow { transition:transform 0.2s; font-style:normal; }
+.presets-toggle.open { border-color:var(--accent3); color:var(--accent3); background:rgba(167,139,250,0.06); }
+.presets-toggle.open .pt-arrow { transform:rotate(180deg); }
+.presets-body {
+  display:none; padding-top:8px;
+}
+.presets-body.open { display:block; }
+.presets-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
+}
+.preset-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:8px 4px; border-radius:8px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); font-family:'DM Mono',monospace;
+  transition:all 0.15s; text-align:center;
+}
+.preset-btn:hover { border-color:var(--accent3); background:rgba(167,139,250,0.08); }
+.preset-btn.active { border-color:var(--accent); background:rgba(79,255,176,0.07); }
+.preset-btn .p-icon { font-size:1.3em; line-height:1.2; }
+.preset-btn .p-name { font-size:0.58em; font-weight:700; color:var(--text); line-height:1.3; }
+
+/* ── Country Ribbon Selector ── */
+.ribbon-section { margin-top:4px; }
+.ribbon-section-label {
+  font-family:'DM Mono',monospace; font-size:0.68em; font-weight:700;
+  color:var(--accent3); text-transform:uppercase; letter-spacing:.08em;
+  margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;
+}
+.ribbon-section-label .ribbon-count {
+  font-size:0.85em; color:var(--muted); font-weight:400;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:99px; padding:1px 8px;
+}
+.ribbon-search {
+  width:100%; box-sizing:border-box;
+  padding:7px 10px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-family:'DM Mono',monospace; font-size:0.72em;
+  outline:none; margin-bottom:6px; transition:border-color 0.15s;
+}
+.ribbon-search:focus { border-color:var(--accent3); }
+.ribbon-search::placeholder { color:var(--muted); }
+
+/* 3-column ribbon layout */
+.ribbon-wrap {
+  display:grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap:6px; align-items:stretch;
+}
+.ribbon-col { display:flex; flex-direction:column; min-width:0; }
+.ribbon-col-title {
+  font-family:'DM Mono',monospace; font-size:0.62em; font-weight:700;
+  text-transform:uppercase; letter-spacing:.08em; text-align:center;
+  padding:4px 6px; border-radius:6px 6px 0 0;
+  margin-bottom:0;
+}
+.ribbon-col-title.excl  { background:rgba(255,61,90,0.15);  color:#ff6b6b; border:1px solid rgba(255,61,90,0.25);  border-bottom:none; }
+.ribbon-col-title.poss  { background:rgba(167,139,250,0.12); color:var(--accent3); border:1px solid rgba(167,139,250,0.25); border-bottom:none; }
+.ribbon-col-title.incl  { background:rgba(79,255,176,0.1);  color:var(--accent); border:1px solid rgba(79,255,176,0.2);  border-bottom:none; }
+.ribbon-list {
+  flex:1; min-height:120px; max-height:160px; overflow-y:auto;
+  border-radius:0 0 6px 6px; padding:4px;
+  scrollbar-width:thin; scrollbar-color: var(--border) transparent;
+}
+.ribbon-list::-webkit-scrollbar { width:3px; }
+.ribbon-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.ribbon-list.excl { background:rgba(255,61,90,0.06);  border:1px solid rgba(255,61,90,0.2);  border-top:none; }
+.ribbon-list.poss { background:rgba(167,139,250,0.06); border:1px solid rgba(167,139,250,0.2); border-top:none; }
+.ribbon-list.incl { background:rgba(79,255,176,0.05);  border:1px solid rgba(79,255,176,0.15); border-top:none; }
+.ribbon-item {
+  display:flex; align-items:center; gap:5px;
+  padding:3px 5px; border-radius:5px; cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:0.68em; color:var(--muted);
+  transition:all 0.1s; user-select:none; line-height:1.4;
+}
+.ribbon-item:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+.ribbon-item.selected { background:rgba(167,139,250,0.2); color:var(--accent3); }
+.ribbon-item.selected.excl { background:rgba(255,61,90,0.15); color:#ff6b6b; }
+.ribbon-item.selected.incl { background:rgba(79,255,176,0.12); color:var(--accent); }
+.ribbon-item-flag { font-size:1.1em; flex-shrink:0; }
+.ribbon-item-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Transfer buttons column */
+.ribbon-btns {
+  display:flex; flex-direction:column; justify-content:center;
+  gap:4px; padding:0 2px;
+}
+.ribbon-btn {
+  font-family:'DM Mono',monospace; font-size:0.6em; font-weight:700;
+  padding:4px 6px; border-radius:5px; cursor:pointer; white-space:nowrap;
+  border:1px solid var(--border); background:var(--surface2); color:var(--muted);
+  transition:all 0.15s; line-height:1;
+}
+.ribbon-btn:hover { border-color:var(--accent3); color:var(--accent3); background:rgba(167,139,250,0.1); }
+.ribbon-btn.danger:hover { border-color:#ff6b6b; color:#ff6b6b; background:rgba(255,61,90,0.1); }
+.ribbon-btn.success:hover { border-color:var(--accent); color:var(--accent); background:rgba(79,255,176,0.08); }
+.ribbon-btn-sep { height:6px; }
+
+/* Slots indicator */
+.ribbon-slots {
+  margin-top:8px; padding:6px 10px;
+  background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+  font-family:'DM Mono',monospace; font-size:0.7em; color:var(--muted);
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.ribbon-slots-bar {
+  flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden;
+}
+.ribbon-slots-fill {
+  height:100%; border-radius:3px; transition:width 0.2s;
+  background:linear-gradient(90deg, var(--accent3), #c084fc);
+}
+.ribbon-slots-fill.full { background:linear-gradient(90deg, var(--accent), #4fc3f7); }
+.ribbon-slots-fill.over { background:linear-gradient(90deg, #ff3d5a, #ff8800); }
 
 
 /* ── Custom mode in-game theme (violet accents) ── */
@@ -767,16 +907,19 @@ body.reverse-mode #countries-grid { display:grid; }
       <span class="custom-label" data-i18n="customCountLabel"></span>
       <div class="custom-value-display"><span id="custom-n-display">8</span> <span data-i18n="customCountUnit"></span></div>
       <input type="range" class="custom-slider" id="custom-n-slider" min="2" max="16" value="8"
-        oninput="document.getElementById('custom-n-display').textContent=this.value">
+        oninput="ribbonOnSliderChange(this.value)">
     </div>
     <div class="custom-section">
       <span class="custom-label" data-i18n="customTimeLabel"></span>
-      <div class="time-pills" id="time-pills">
-        <div class="time-pill" data-secs="10" onclick="selectTimePill(this)">10s</div>
-        <div class="time-pill active" data-secs="20" onclick="selectTimePill(this)">20s</div>
-        <div class="time-pill" data-secs="30" onclick="selectTimePill(this)">30s</div>
-        <div class="time-pill" data-secs="60" onclick="selectTimePill(this)">60s</div>
-        <div class="time-pill" data-secs="0" onclick="selectTimePill(this)" data-i18n="customTimeInf"></div>
+      <div class="time-slider-wrap">
+        <div class="time-slider-val" id="time-slider-val">20s</div>
+        <input type="range" class="custom-slider" id="time-slider"
+          min="0" max="7" value="4"
+          oninput="selectTimeSlider(this.value)">
+        <div class="time-slider-ticks">
+          <span>1s</span><span>5s</span><span>10s</span><span>15s</span>
+          <span class="active-tick">20s</span><span>30s</span><span>60s</span><span>∞</span>
+        </div>
       </div>
     </div>
     <div class="custom-section">
@@ -803,11 +946,11 @@ body.reverse-mode #countries-grid { display:grid; }
       </span>
       <div class="draft-tooltip" id="draft-tooltip" data-i18n="customDraftInfo"></div>
       <div class="draft-pills">
-        <div class="draft-pill" id="draft-pill-auto" onclick="selectDraftPill('auto')">
+        <div class="draft-pill active" id="draft-pill-auto" onclick="selectDraftPill('auto')">
           <span class="dp-icon">🔀</span>
           <span class="dp-label" data-i18n="draftAuto"></span>
         </div>
-        <div class="draft-pill active" id="draft-pill-cats" onclick="selectDraftPill('cats')">
+        <div class="draft-pill" id="draft-pill-cats" onclick="selectDraftPill('cats')">
           <span class="dp-icon">📊</span>
           <span class="dp-label" data-i18n="draftCats"></span>
         </div>
@@ -818,6 +961,170 @@ body.reverse-mode #countries-grid { display:grid; }
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+      <!-- Country ribbon selector -->
+      <div class="ribbon-section">
+        <div class="ribbon-section-label">
+          <span>🌍 Sélection des pays</span>
+          <span class="ribbon-count" id="ribbon-incl-count">0 forcés</span>
+        </div>
+        <input type="text" class="ribbon-search" id="ribbon-search" placeholder="🔍 Rechercher un pays…" oninput="ribbonFilter(this.value)">
+        <div class="ribbon-wrap">
+          <!-- EXCLUSION -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title excl">❌ Exclus</div>
+            <div class="ribbon-list excl" id="ribbon-excl" ondragover="ribbonDragOver(event)" ondrop="ribbonDrop(event,'excl')"></div>
+          </div>
+          <!-- Buttons Excl ↔ Poss -->
+          <div class="ribbon-btns" id="ribbon-btns-ep">
+            <button class="ribbon-btn danger"   onclick="ribbonMove('excl','poss',false)" title="Remettre dans Possible">›</button>
+            <button class="ribbon-btn danger"   onclick="ribbonMove('excl','poss',true)"  title="Tout remettre dans Possible">»</button>
+            <div class="ribbon-btn-sep"></div>
+            <button class="ribbon-btn"          onclick="ribbonMove('poss','excl',false)" title="Exclure la sélection">‹</button>
+            <button class="ribbon-btn"          onclick="ribbonMove('poss','excl',true)"  title="Tout exclure">«</button>
+          </div>
+          <!-- POSSIBLE -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title poss">🎲 Possible</div>
+            <div class="ribbon-list poss" id="ribbon-poss" ondragover="ribbonDragOver(event)" ondrop="ribbonDrop(event,'poss')"></div>
+          </div>
+          <!-- Buttons Poss ↔ Incl -->
+          <div class="ribbon-btns" id="ribbon-btns-pi">
+            <button class="ribbon-btn success" onclick="ribbonMove('poss','incl',false)" title="Inclure la sélection">›</button>
+            <div class="ribbon-btn-sep"></div>
+            <button class="ribbon-btn"         onclick="ribbonMove('incl','poss',false)" title="Retirer de l'inclusion">‹</button>
+          </div>
+          <!-- INCLUSION -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title incl">✅ Inclus</div>
+            <div class="ribbon-list incl" id="ribbon-incl" ondragover="ribbonDragOver(event)" ondrop="ribbonDrop(event,'incl')"></div>
+          </div>
+        </div>
+        <div class="ribbon-slots">
+          <span id="ribbon-slots-txt">0 / 8 slots forcés</span>
+          <div class="ribbon-slots-bar">
+            <div class="ribbon-slots-fill" id="ribbon-slots-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category ribbon selector -->
+      <div class="ribbon-section">
+        <div class="ribbon-section-label">
+          <span>📊 Sélection des catégories</span>
+          <span class="ribbon-count" id="catribbon-incl-count">0 forcées</span>
+        </div>
+        <input type="text" class="ribbon-search" id="catribbon-search" placeholder="🔍 Rechercher une catégorie…" oninput="catRibbonFilter(this.value)">
+        <div class="ribbon-wrap">
+          <!-- EXCLUSION -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title excl">❌ Excluses</div>
+            <div class="ribbon-list excl" id="catribbon-excl" ondragover="catRibbonDragOver(event)" ondrop="catRibbonDrop(event,'excl')"></div>
+          </div>
+          <!-- Buttons Excl ↔ Poss -->
+          <div class="ribbon-btns">
+            <button class="ribbon-btn danger"  onclick="catRibbonMove('excl','poss',false)" title="Remettre dans Possible">›</button>
+            <button class="ribbon-btn danger"  onclick="catRibbonMove('excl','poss',true)"  title="Tout remettre dans Possible">»</button>
+            <div class="ribbon-btn-sep"></div>
+            <button class="ribbon-btn"         onclick="catRibbonMove('poss','excl',false)" title="Exclure la sélection">‹</button>
+            <button class="ribbon-btn"         onclick="catRibbonMove('poss','excl',true)"  title="Tout exclure">«</button>
+          </div>
+          <!-- POSSIBLE -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title poss">🎲 Possible</div>
+            <div class="ribbon-list poss" id="catribbon-poss" ondragover="catRibbonDragOver(event)" ondrop="catRibbonDrop(event,'poss')"></div>
+          </div>
+          <!-- Buttons Poss ↔ Incl -->
+          <div class="ribbon-btns">
+            <button class="ribbon-btn success" onclick="catRibbonMove('poss','incl',false)" title="Inclure la sélection">›</button>
+            <div class="ribbon-btn-sep"></div>
+            <button class="ribbon-btn"         onclick="catRibbonMove('incl','poss',false)" title="Retirer de l'inclusion">‹</button>
+          </div>
+          <!-- INCLUSION -->
+          <div class="ribbon-col">
+            <div class="ribbon-col-title incl">✅ Incluses</div>
+            <div class="ribbon-list incl" id="catribbon-incl" ondragover="catRibbonDragOver(event)" ondrop="catRibbonDrop(event,'incl')"></div>
+          </div>
+        </div>
+        <div class="ribbon-slots">
+          <span id="catribbon-slots-txt">0 / 8 slots forcés</span>
+          <div class="ribbon-slots-bar">
+            <div class="ribbon-slots-fill" id="catribbon-slots-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets accordion -->
+      <div class="presets-section">
+        <button class="presets-toggle" id="presets-toggle" onclick="togglePresets()">
+          <span>⚡ Presets</span>
+          <span class="pt-arrow">▾</span>
+        </button>
+        <div class="presets-body" id="presets-body">
+          <div class="presets-grid">
+            <button class="preset-btn" onclick="applyPreset('no-russia',this)">
+              <span class="p-icon">🚫🇷🇺</span>
+              <span class="p-name">No Russia</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('europe',this)">
+              <span class="p-icon">🇪🇺</span>
+              <span class="p-name">European</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('africa',this)">
+              <span class="p-icon">🌍</span>
+              <span class="p-name">African</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('americas',this)">
+              <span class="p-icon">🌎</span>
+              <span class="p-name">Americas</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('asia',this)">
+              <span class="p-icon">🌏</span>
+              <span class="p-name">Asian</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('oceania',this)">
+              <span class="p-icon">🏝️</span>
+              <span class="p-name">Oceania</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('top100pib',this)">
+              <span class="p-icon">💰</span>
+              <span class="p-name">Top 100 PIB</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('sport',this)">
+              <span class="p-icon">🏆</span>
+              <span class="p-name">Sport Enjoyer</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('chill',this)">
+              <span class="p-icon">😌</span>
+              <span class="p-name">Chill</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('ultra',this)">
+              <span class="p-icon">💀🔥</span>
+              <span class="p-name">Ultra Hardcore</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('small',this)">
+              <span class="p-icon">🔬</span>
+              <span class="p-name">− 1M hab.</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('france-neighbors',this)">
+              <span class="p-icon">🇫🇷🤝</span>
+              <span class="p-name">Voisins France</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('landlocked',this)">
+              <span class="p-icon">🏔️</span>
+              <span class="p-name">Enclavés</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('islands',this)">
+              <span class="p-icon">🏝️</span>
+              <span class="p-name">Îles seulement</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('flag-guesser',this)">
+              <span class="p-icon">🚩</span>
+              <span class="p-name">Flag Guesser</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-custom" style="background:rgba(167,139,250,0.1);" onclick="startGame('custom')" data-i18n="customStart"></button>
       <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomPanel()" data-i18n="back"></button>
     </div>
@@ -1341,59 +1648,96 @@ function decodeSeed(seed) {
 }
 
 function generateSeedCatsFirst() {
-  // Classic: pick N categories, then find countries that cover them all
-  var catPool = shuffle(ALL_CATEGORIES.map(function(_,i){return i;})).slice(0,N_TURNS);
-  var catIds  = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
-  var eligible = countriesDB
-    .map(function(c,i){return {c:c,i:i};})
-    .filter(function(x){ return catIds.every(function(id){
-      return x.c[id] !== false && x.c[id] !== null && x.c[id] !== undefined;
-    });});
-  var countryPool;
-  if (eligible.length >= N_TURNS) {
-    countryPool = shuffle(eligible).slice(0,N_TURNS);
-  } else {
-    var scored = countriesDB.map(function(c,i){
-      return {c:c,i:i,score:catIds.filter(function(id){return c[id]!==false&&c[id]!==null&&c[id]!==undefined;}).length};
-    }).sort(function(a,b){return b.score-a.score;});
-    countryPool = shuffle(scored.slice(0, Math.min(N_TURNS*2+4,scored.length))).slice(0,N_TURNS);
+  // ── Ribbon-aware category pool
+  var cp = getCatRibbonPool();
+  var forcedCatIdxs   = cp.included.slice();
+  var possibleCatIdxs = cp.possible;
+  var nCatRandom = Math.max(0, N_TURNS - forcedCatIdxs.length);
+  var catPool = shuffle(forcedCatIdxs.concat(shuffle(possibleCatIdxs).slice(0, nCatRandom * 2))).slice(0, N_TURNS);
+  if (catPool.length < N_TURNS) {
+    var allCi = ALL_CATEGORIES.map(function(_,i){return i;});
+    catPool = catPool.concat(shuffle(allCi.filter(function(i){return catPool.indexOf(i)===-1;}))).slice(0, N_TURNS);
   }
+  var catIds = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
+
+  // ── Ribbon-aware country pool
+  var pool = getRibbonCountryPool();
+  var forcedIdxs = pool.included.slice();
+  var available  = pool.possible;
+  var nRandom = Math.max(0, N_TURNS - forcedIdxs.length);
+
+  var eligible = available.filter(function(i){ return catIds.every(function(id){
+    var v = countriesDB[i][id];
+    return v !== false && v !== null && v !== undefined;
+  });});
+
+  var randomPool;
+  if (eligible.length >= nRandom) {
+    randomPool = shuffle(eligible).slice(0, nRandom);
+  } else {
+    var scored = available.map(function(i){
+      return {i:i, score:catIds.filter(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;}).length};
+    }).sort(function(a,b){return b.score-a.score;});
+    randomPool = shuffle(scored.slice(0, Math.min(nRandom*2+4, scored.length))).slice(0, nRandom).map(function(x){return x.i;});
+  }
+
+  var validForced = forcedIdxs.filter(function(i){
+    return catIds.every(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;});
+  });
+  var shortage = forcedIdxs.length - validForced.length;
+  var extra = shortage > 0 ? shuffle(eligible.filter(function(i){return validForced.indexOf(i)===-1;})).slice(0,shortage) : [];
+  var finalIdxs = shuffle(validForced.concat(extra).concat(randomPool)).slice(0, N_TURNS);
   lastDraftUsed = 'cats';
-  return encodeSeed(countryPool.map(function(x){return x.i;}), catPool);
+  return encodeSeed(finalIdxs, catPool);
 }
 
 function generateSeedCountriesFirst() {
-  // New: pick N countries freely, then pick N categories they all share
-  var countryPool = shuffle(countriesDB.map(function(c,i){return {c:c,i:i};})).slice(0, Math.min(N_TURNS*3, countriesDB.length));
-  // Find categories that are valid for ALL chosen countries
-  var chosenCountries = countryPool.slice(0, N_TURNS);
-  var validCats = ALL_CATEGORIES.map(function(cat,i){return {cat:cat,i:i};}).filter(function(x){
-    return chosenCountries.every(function(co){
-      var v = co.c[x.cat.id];
-      return v !== false && v !== null && v !== undefined;
-    });
+  // ── Ribbon-aware country pool
+  var pool = getRibbonCountryPool();
+  var forcedIdxs = pool.included.slice();
+  var available  = shuffle(pool.possible);
+  var nRandom    = Math.max(0, N_TURNS - forcedIdxs.length);
+  var finalIdxs  = forcedIdxs.concat(available.slice(0, nRandom)).slice(0, N_TURNS);
+  var chosenCountries = finalIdxs.map(function(i){ return {c: countriesDB[i], i: i}; });
+
+  // ── Ribbon-aware category pool
+  var cp = getCatRibbonPool();
+  var forcedCatIdxs   = cp.included.slice();
+  var possibleCatIdxs = cp.possible;
+
+  // Find cats valid for ALL chosen countries — respecting forced cats first
+  var validPossible = possibleCatIdxs.map(function(i){return {cat:ALL_CATEGORIES[i],i:i};}).filter(function(x){
+    return chosenCountries.every(function(co){var v=co.c[x.cat.id];return v!==false&&v!==null&&v!==undefined;});
   });
-  if (validCats.length >= N_TURNS) {
-    // Enough shared categories — pick N randomly
-    var catPool = shuffle(validCats).slice(0,N_TURNS).map(function(x){return x.i;});
+  var validForced = forcedCatIdxs.filter(function(i){
+    return chosenCountries.every(function(co){var v=co.c[ALL_CATEGORIES[i].id];return v!==false&&v!==null&&v!==undefined;});
+  });
+  var nCatRandom = Math.max(0, N_TURNS - validForced.length);
+  if (validForced.length + validPossible.length >= N_TURNS) {
+    var catPool = validForced.concat(shuffle(validPossible).slice(0, nCatRandom).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(chosenCountries.map(function(x){return x.i;}), catPool);
+    return encodeSeed(finalIdxs, catPool);
   }
-  // Not enough shared cats — relax: pick best countries coverage-wise
-  var allCatIds = ALL_CATEGORIES.map(function(c){return c.id;});
-  var relaxPool = shuffle(countriesDB.map(function(c,i){
-    return {c:c, i:i, score:allCatIds.filter(function(id){var v=c[id];return v!==false&&v!==null&&v!==undefined;}).length};
-  }).sort(function(a,b){return b.score-a.score;}).slice(0, Math.min(N_TURNS*4, countriesDB.length)));
-  var relaxCountries = relaxPool.slice(0, N_TURNS);
-  var relaxCats = ALL_CATEGORIES.map(function(cat,i){return {cat:cat,i:i};}).filter(function(x){
+
+  // Relax: best countries from possible pool
+  var allCatIds2 = ALL_CATEGORIES.map(function(c){return c.id;});
+  var relaxPool = shuffle(available.map(function(i){
+    return {i:i, score:allCatIds2.filter(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;}).length};
+  }).sort(function(a,b){return b.score-a.score;}).slice(0, Math.min(N_TURNS*4, available.length)));
+  var relaxIdxs = forcedIdxs.concat(relaxPool.slice(0,nRandom).map(function(x){return x.i;})).slice(0,N_TURNS);
+  var relaxCountries = relaxIdxs.map(function(i){return {c:countriesDB[i],i:i};});
+  var relaxValidPoss = possibleCatIdxs.map(function(i){return {cat:ALL_CATEGORIES[i],i:i};}).filter(function(x){
     return relaxCountries.every(function(co){var v=co.c[x.cat.id];return v!==false&&v!==null&&v!==undefined;});
   });
-  if (relaxCats.length >= N_TURNS) {
-    var catPool2 = shuffle(relaxCats).slice(0,N_TURNS).map(function(x){return x.i;});
+  var relaxValidForced = forcedCatIdxs.filter(function(i){
+    return relaxCountries.every(function(co){var v=co.c[ALL_CATEGORIES[i].id];return v!==false&&v!==null&&v!==undefined;});
+  });
+  if (relaxValidForced.length + relaxValidPoss.length >= N_TURNS) {
+    var nRCatRand = Math.max(0, N_TURNS - relaxValidForced.length);
+    var catPool2 = relaxValidForced.concat(shuffle(relaxValidPoss).slice(0, nRCatRand).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(relaxCountries.map(function(x){return x.i;}), catPool2);
+    return encodeSeed(relaxIdxs, catPool2);
   }
-  // Fallback: cats-first
   return generateSeedCatsFirst();
 }
 
@@ -1433,10 +1777,18 @@ function selectSubModePill(mode) {
   });
 }
 
-function selectTimePill(el) {
-  document.querySelectorAll('.time-pill').forEach(function(p) { p.classList.remove('active'); });
-  el.classList.add('active');
-  customTimeSelected = parseInt(el.dataset.secs, 10);
+var TIME_STEPS = [1, 5, 10, 15, 20, 30, 60, 0]; // 0 = infini
+
+function selectTimeSlider(idx) {
+  idx = parseInt(idx, 10);
+  customTimeSelected = TIME_STEPS[idx];
+  var labels = ['1s','5s','10s','15s','20s','30s','60s','∞'];
+  document.getElementById('time-slider-val').textContent = labels[idx];
+  // Update tick highlights
+  var ticks = document.querySelectorAll('.time-slider-ticks span');
+  ticks.forEach(function(t, i) {
+    t.classList.toggle('active-tick', i === idx);
+  });
 }
 
 function selectDraftPill(mode) {
@@ -1457,6 +1809,14 @@ function toggleDraftInfo() {
 function openCustomPanel() {
   document.getElementById('panel-setup').classList.add('hidden');
   document.getElementById('panel-custom').classList.remove('hidden');
+  if (countriesDB.length > 0 && Object.keys(ribbonState).length === 0) {
+    ribbonInit();
+  }
+  if (ALL_CATEGORIES.length > 0 && Object.keys(catRibbonState).length === 0) {
+    catRibbonInit();
+  }
+  ribbonUpdateSlots();
+  catRibbonUpdateSlots();
 }
 
 function closeCustomPanel() {
@@ -1464,7 +1824,508 @@ function closeCustomPanel() {
   document.getElementById('panel-setup').classList.remove('hidden');
 }
 
-// ─── COUNTDOWN ────────────────────────────────────────────────────────────────
+// ─── PRESETS ──────────────────────────────────────────────────────────────────
+var EUROPEAN_CODES = [
+  'AL','AD','AT','BY','BE','BA','BG','HR','CZ','DK',
+  'EE','FI','FR','DE','GR','HU','IS','IE','IT','XK',
+  'LV','LI','LT','LU','MT','MD','MC','ME','NL','MK',
+  'NO','PL','PT','RO','SM','RS','SK','SI','ES','SE',
+  'CH','UA','GB','VA','CY','AZ','GE','AM'
+];
+var AFRICAN_CODES = [
+  'DZ','AO','BJ','BW','BF','BI','CM','CV','CF','TD',
+  'KM','CG','CD','CI','DJ','EG','GQ','ER','SZ','ET',
+  'GA','GM','GH','GN','GW','KE','LS','LR','LY','MG',
+  'MW','ML','MR','MU','MA','MZ','NA','NE','NG','RE',
+  'RW','ST','SN','SL','SO','ZA','SS','SD','TZ','TG',
+  'TN','UG','ZM','ZW','SH'
+];
+var AMERICAS_CODES = [
+  'AG','AR','BS','BB','BZ','BO','BR','CA','CL','CO',
+  'CR','CU','DM','DO','EC','SV','GD','GT','GY','HT',
+  'HN','JM','MX','NI','PA','PY','PE','KN','LC','VC',
+  'SR','TT','US','UY','VE','PR','GP','MQ','GF'
+];
+var ASIAN_CODES = [
+  'AF','AM','AZ','BH','BD','BT','BN','KH','CN','CY',
+  'GE','IN','ID','IR','IQ','IL','JP','JO','KZ','KW',
+  'KG','LA','LB','MY','MV','MN','MM','NP','KP','OM',
+  'PK','PS','PH','QA','SA','SG','KR','LK','SY','TW',
+  'TJ','TH','TL','TM','AE','UZ','VN','YE','HK','MO'
+];
+var OCEANIA_CODES = [
+  'AU','FJ','KI','MH','FM','NR','NZ','PW','PG','WS',
+  'SB','TO','TV','VU','CK','PF','GU','NC','NU','NF',
+  'MP','AS','TK','WF'
+];
+var TOP100_PIB_CODES = [
+  'US','CN','JP','DE','IN','GB','FR','RU','CA','IT',
+  'BR','AU','KR','MX','ES','ID','SA','NL','TR','CH',
+  'TW','PL','AR','NO','SE','BE','IE','IL','AE','TH',
+  'EG','NG','AT','SG','BD','IR','VN','MY','ZA','PH',
+  'DK','PK','HK','CO','CL','RO','CZ','FI','IQ','PT',
+  'NZ','PE','QA','KZ','GR','DZ','HU','KW','UA','MA',
+  'ET','SK','EC','OM','DO','PR','KE','CU','AO','GT',
+  'VE','BG','LU','UZ','AZ','PA','TZ','LK','GH','BY',
+  'HR','UY','LT','CI','CR','CD','RS','MM','SI','TM',
+  'SD','JO','TN','LY','UG','BH','BO','CM','PY','LV'
+];
+var SPORT_CAT_IDS = ['classement_fifa_H','classement_fifa_F','classement_rugby_H','classement_bball_M'];
+// Pays < ~1M habitants (rang nb_habitant >= 162 dans la DB)
+var SMALL_COUNTRIES_CODES = [
+  'FJ','KM','GY','BT','SB','MO','LU','ME','SR','CV',
+  'MT','MV','BN','BS','BZ','IS','VU','PF','NC','BB',
+  'ST','WS','CW','LC','GU','KI','GD','FM','JE','TO',
+  'SC','AW','VC','VI','AG','IM','AD','DM','KY','BM',
+  'GG','GL','FO','MP','KN','TC','SX','AS','MH','LI',
+  'MC','SM','MF','BQ','PW','NR','TV'
+];
+// Pays partageant une frontière avec la France (métropole + DOM)
+var FRANCE_NEIGHBORS_CODES = [
+  'BE','LU','DE','CH','IT','MC','AD','ES', // métropole
+  'GB',                                      // tunnel sous la Manche
+  'BR','SR','SX'                             // Guyane française + Saint-Martin
+];
+// Pays enclavés (sans accès à la mer)
+var LANDLOCKED_CODES = [
+  'AF','AM','AZ','BY','BT','BO','BW','BF','BI','CF',
+  'TD','CZ','ET','HU','KZ','KG','LA','LS','LI','LU',
+  'MW','ML','MD','MN','NP','NE','MK','PY','RW','SM',
+  'RS','SK','SS','SZ','TJ','TM','UG','UZ','ZM','ZW',
+  'AT','XK'
+];
+// Pays insulaires (entièrement entourés d'eau)
+var ISLANDS_CODES = [
+  'AG','AU','BS','BB','CV','KM','CU','DM','FJ','GD',
+  'HT','IS','ID','JM','JP','KI','MV','MT','MH','MU',
+  'FM','NR','NZ','PW','PG','PH','KN','LC','VC','WS',
+  'ST','SC','SB','LK','TO','TT','TV','VU','CY','BN',
+  'TL','SG','GB','IE','MG','TW'
+];
+
+function togglePresets() {
+  var toggle = document.getElementById('presets-toggle');
+  var body   = document.getElementById('presets-body');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function applyPreset(name, btn) {
+  // S'assurer que les ribbons sont initialisés
+  if (Object.keys(ribbonState).length === 0)    ribbonInit();
+  if (Object.keys(catRibbonState).length === 0) catRibbonInit();
+
+  // Helper : set country ribbon by code whitelist
+  function setCountryByList(allowedCodes) {
+    for (var i = 0; i < countriesDB.length; i++) {
+      var code = (countriesDB[i].country_code || '').toUpperCase();
+      ribbonState[i] = (allowedCodes.indexOf(code) !== -1) ? 'poss' : 'excl';
+    }
+    ribbonSelected = {};
+  }
+  // Helper : reset all countries to possible
+  function resetCountries() {
+    for (var i = 0; i < countriesDB.length; i++) ribbonState[i] = 'poss';
+    ribbonSelected = {};
+  }
+  // Helper : reset all cats to possible
+  function resetCats() {
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) catRibbonState[i] = 'poss';
+    catRibbonSelected = {};
+  }
+
+  if (name === 'no-russia') {
+    resetCountries();
+    for (var i = 0; i < countriesDB.length; i++) {
+      if ((countriesDB[i].country_code || '').toUpperCase() === 'RU') { ribbonState[i] = 'excl'; break; }
+    }
+    resetCats();
+    setPresetDefaults();
+
+  } else if (name === 'europe')   { setCountryByList(EUROPEAN_CODES);  resetCats(); setPresetDefaults();
+  } else if (name === 'africa')   { setCountryByList(AFRICAN_CODES);   resetCats(); setPresetDefaults();
+  } else if (name === 'americas') { setCountryByList(AMERICAS_CODES);  resetCats(); setPresetDefaults();
+  } else if (name === 'asia')     { setCountryByList(ASIAN_CODES);     resetCats(); setPresetDefaults();
+  } else if (name === 'oceania')  { setCountryByList(OCEANIA_CODES);   resetCats(); setPresetDefaults();
+  } else if (name === 'top100pib'){ setCountryByList(TOP100_PIB_CODES);resetCats(); setPresetDefaults();
+  } else if (name === 'small')    { setCountryByList(SMALL_COUNTRIES_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'france-neighbors') { setCountryByList(FRANCE_NEIGHBORS_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'landlocked') { setCountryByList(LANDLOCKED_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'islands')    { setCountryByList(ISLANDS_CODES);    resetCats(); setPresetDefaults();
+
+  } else if (name === 'flag-guesser') {
+    resetCountries(); resetCats();
+    // 10 tours
+    document.getElementById('custom-n-slider').value = 10;
+    ribbonOnSliderChange(10);
+    // 60 secondes (index 6)
+    document.getElementById('time-slider').value = 6; selectTimeSlider(6);
+    // Mode Hardcore (drapeau seul, pas de nom)
+    selectSubModePill('hardcore');
+    // Ordre : pays d'abord
+    selectDraftPill('countries');
+
+  } else if (name === 'sport') {
+    resetCountries();
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+      catRibbonState[i] = (SPORT_CAT_IDS.indexOf(ALL_CATEGORIES[i].id) !== -1) ? 'incl' : 'poss';
+    }
+    catRibbonSelected = {};
+    setPresetDefaults();
+
+  } else if (name === 'chill') {
+    resetCountries(); resetCats();
+    document.getElementById('custom-n-slider').value = 8;
+    document.getElementById('custom-n-display').textContent = 8;
+    document.getElementById('time-slider').value = 7; selectTimeSlider(7); // ∞
+    selectSubModePill('normal');
+    selectDraftPill('auto');
+
+  } else if (name === 'ultra') {
+    resetCountries(); resetCats();
+    // 16 tours
+    document.getElementById('custom-n-slider').value = 16;
+    ribbonOnSliderChange(16);
+    // 1 seconde (index 0)
+    document.getElementById('time-slider').value = 0; selectTimeSlider(0);
+    // Hardcore
+    selectSubModePill('hardcore');
+    // Ordre par pays
+    selectDraftPill('countries');
+  }
+
+  // Re-render
+  ribbonRender();
+  catRibbonRender();
+  ribbonUpdateSlots();
+  catRibbonUpdateSlots();
+
+  // Highlight actif
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+
+function setPresetDefaults() {
+  document.getElementById('custom-n-slider').value = 8;
+  ribbonOnSliderChange(8);
+  document.getElementById('time-slider').value = 4; selectTimeSlider(4); // 20s
+  selectSubModePill('normal');
+  selectDraftPill('auto');
+}
+
+// ─── COUNTRY RIBBON SELECTOR ──────────────────────────────────────────────────
+// State: each country is in exactly one of 3 buckets
+// ribbonState[i] = 'excl' | 'poss' | 'incl'  (i = index in countriesDB)
+var ribbonState    = {};   // countriesDB index → 'excl'|'poss'|'incl'
+var ribbonSelected = {};   // countriesDB index → true (multi-select)
+var ribbonDragSrc  = null; // {idx, fromCol}
+
+function ribbonInit() {
+  // Called when openCustomPanel — reset to default state
+  ribbonState    = {};
+  ribbonSelected = {};
+  for (var i = 0; i < countriesDB.length; i++) {
+    ribbonState[i] = 'poss';
+  }
+  ribbonFilter('');
+  ribbonRender();
+}
+
+function ribbonFilter(query) {
+  document.getElementById('ribbon-search').value = query;
+  ribbonRender(query.toLowerCase().trim());
+}
+
+function ribbonRender(filter) {
+  filter = filter || '';
+  var cols = { excl: [], poss: [], incl: [] };
+  for (var i = 0; i < countriesDB.length; i++) {
+    var c    = countriesDB[i];
+    var name = (currentLang === 'en' ? (c.country_EN || c.country_FR) :
+                currentLang === 'ua' ? (c.country_UA || c.country_FR) :
+                (c.country_FR || c.country_EN)) || '';
+    if (filter && name.toLowerCase().indexOf(filter) === -1) continue;
+    cols[ribbonState[i]].push({ i: i, name: name, flag: c.flag || '' });
+  }
+
+  // Sort each column alphabetically
+  ['excl','poss','incl'].forEach(function(col) {
+    cols[col].sort(function(a,b){ return a.name.localeCompare(b.name); });
+    var el = document.getElementById('ribbon-' + col);
+    el.innerHTML = '';
+    cols[col].forEach(function(item) {
+      var div = document.createElement('div');
+      div.className = 'ribbon-item' + (ribbonSelected[item.i] ? ' selected ' + col : '');
+      div.dataset.idx = item.i;
+      div.draggable   = true;
+      div.innerHTML   =
+        '<span class="ribbon-item-flag">' + item.flag + '</span>' +
+        '<span class="ribbon-item-name"  title="' + item.name + '">' + item.name + '</span>';
+      div.addEventListener('click', function(e) { ribbonToggleSelect(parseInt(this.dataset.idx)); });
+      div.addEventListener('dragstart', function(e) {
+        ribbonDragSrc = { idx: parseInt(this.dataset.idx), fromCol: ribbonState[parseInt(this.dataset.idx)] };
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.appendChild(div);
+    });
+  });
+
+  applyEmoji(document.getElementById('ribbon-excl'));
+  applyEmoji(document.getElementById('ribbon-poss'));
+  applyEmoji(document.getElementById('ribbon-incl'));
+  ribbonUpdateSlots();
+}
+
+function ribbonToggleSelect(idx) {
+  if (ribbonSelected[idx]) {
+    delete ribbonSelected[idx];
+  } else {
+    ribbonSelected[idx] = true;
+  }
+  ribbonRender(document.getElementById('ribbon-search').value.toLowerCase().trim());
+}
+
+function ribbonMove(fromCol, toCol, all) {
+  var moved = false;
+  if (all) {
+    // Only move between excl ↔ poss (the Add All / Remove All restriction)
+    if ((fromCol === 'excl' && toCol === 'poss') || (fromCol === 'poss' && toCol === 'excl')) {
+      for (var i = 0; i < countriesDB.length; i++) {
+        if (ribbonState[i] === fromCol) { ribbonState[i] = toCol; moved = true; }
+      }
+    }
+  } else {
+    // Move selected items; if none selected, move all visible in fromCol
+    var hasSelection = Object.keys(ribbonSelected).some(function(k) {
+      return ribbonState[parseInt(k)] === fromCol;
+    });
+    if (hasSelection) {
+      Object.keys(ribbonSelected).forEach(function(k) {
+        var idx = parseInt(k);
+        if (ribbonState[idx] === fromCol) {
+          ribbonState[idx] = toCol; delete ribbonSelected[idx]; moved = true;
+        }
+      });
+    } else {
+      // No selection: move all visible (filtered) items from fromCol
+      var filter = document.getElementById('ribbon-search').value.toLowerCase().trim();
+      for (var i = 0; i < countriesDB.length; i++) {
+        if (ribbonState[i] !== fromCol) continue;
+        var c = countriesDB[i];
+        var name = (currentLang === 'en' ? (c.country_EN || c.country_FR) :
+                    currentLang === 'ua' ? (c.country_UA || c.country_FR) :
+                    (c.country_FR || c.country_EN)) || '';
+        if (!filter || name.toLowerCase().indexOf(filter) !== -1) {
+          ribbonState[i] = toCol; moved = true;
+        }
+      }
+    }
+  }
+  if (moved) ribbonRender(document.getElementById('ribbon-search').value.toLowerCase().trim());
+}
+
+function ribbonDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function ribbonDrop(e, toCol) {
+  e.preventDefault();
+  if (!ribbonDragSrc) return;
+  var idx = ribbonDragSrc.idx;
+  var fromCol = ribbonDragSrc.fromCol;
+  ribbonDragSrc = null;
+  // Only allow valid moves: excl↔poss and poss→incl and incl→poss
+  var validMoves = {
+    'excl-poss':true, 'poss-excl':true,
+    'poss-incl':true, 'incl-poss':true,
+    'excl-incl':false, 'incl-excl':false
+  };
+  if (validMoves[fromCol + '-' + toCol]) {
+    ribbonState[idx] = toCol;
+    delete ribbonSelected[idx];
+    ribbonRender(document.getElementById('ribbon-search').value.toLowerCase().trim());
+  }
+}
+
+function ribbonUpdateSlots() {
+  var n      = parseInt(document.getElementById('custom-n-slider').value, 10) || 8;
+  var nIncl  = Object.keys(ribbonState).filter(function(k){ return ribbonState[k]==='incl'; }).length;
+  var pct    = Math.min(nIncl / n * 100, 100);
+  var fill   = document.getElementById('ribbon-slots-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'ribbon-slots-fill' + (nIncl > n ? ' over' : nIncl === n ? ' full' : '');
+  document.getElementById('ribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' slots forcés';
+  document.getElementById('ribbon-incl-count').textContent = nIncl + ' forcé' + (nIncl > 1 ? 's' : '');
+}
+
+// Called by the N slider to update the slots indicator live
+function ribbonOnSliderChange(val) {
+  document.getElementById('custom-n-display').textContent = val;
+  ribbonUpdateSlots();
+  catRibbonUpdateSlots();
+}
+
+// ─── RIBBON-AWARE SEED GENERATION ────────────────────────────────────────────
+// Returns a pool of countriesDB indices filtered according to ribbon state
+function getRibbonCountryPool() {
+  var included = [], possible = [];
+  // If ribbon never initialized (normal game), all countries are possible
+  if (Object.keys(ribbonState).length === 0) {
+    for (var i = 0; i < countriesDB.length; i++) possible.push(i);
+    return { included: included, possible: possible };
+  }
+  for (var i = 0; i < countriesDB.length; i++) {
+    if (ribbonState[i] === 'incl') included.push(i);
+    else if (ribbonState[i] === 'poss') possible.push(i);
+    // 'excl' → ignored
+  }
+  // Safety: if possible+included is too small, open all
+  if (included.length + possible.length < 2) {
+    for (var i = 0; i < countriesDB.length; i++) possible.push(i);
+  }
+  return { included: included, possible: possible };
+}
+
+// ─── CATEGORY RIBBON SELECTOR ─────────────────────────────────────────────────
+// catRibbonState[i] = 'excl'|'poss'|'incl'  (i = index in ALL_CATEGORIES)
+var catRibbonState    = {};
+var catRibbonSelected = {};
+var catRibbonDragSrc  = null;
+
+function catRibbonInit() {
+  catRibbonState    = {};
+  catRibbonSelected = {};
+  for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+    catRibbonState[i] = 'poss';
+  }
+  catRibbonRender();
+}
+
+function catRibbonFilter(query) {
+  document.getElementById('catribbon-search').value = query;
+  catRibbonRender(query.toLowerCase().trim());
+}
+
+function catRibbonRender(filter) {
+  filter = filter || '';
+  var cols = { excl: [], poss: [], incl: [] };
+  for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+    var cat  = ALL_CATEGORIES[i];
+    var name = catName(cat);
+    if (filter && name.toLowerCase().indexOf(filter) === -1) continue;
+    cols[catRibbonState[i]].push({ i: i, name: name, icon: cat.icon || '📊' });
+  }
+
+  ['excl','poss','incl'].forEach(function(col) {
+    cols[col].sort(function(a,b){ return a.name.localeCompare(b.name); });
+    var el = document.getElementById('catribbon-' + col);
+    el.innerHTML = '';
+    cols[col].forEach(function(item) {
+      var div = document.createElement('div');
+      div.className = 'ribbon-item' + (catRibbonSelected[item.i] ? ' selected ' + col : '');
+      div.dataset.idx = item.i;
+      div.draggable   = true;
+      div.innerHTML   =
+        '<span class="ribbon-item-flag">' + item.icon + '</span>' +
+        '<span class="ribbon-item-name" title="' + item.name + '">' + item.name + '</span>';
+      div.addEventListener('click', function() { catRibbonToggleSelect(parseInt(this.dataset.idx)); });
+      div.addEventListener('dragstart', function(e) {
+        catRibbonDragSrc = { idx: parseInt(this.dataset.idx), fromCol: catRibbonState[parseInt(this.dataset.idx)] };
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.appendChild(div);
+    });
+  });
+
+  applyEmoji(document.getElementById('catribbon-excl'));
+  applyEmoji(document.getElementById('catribbon-poss'));
+  applyEmoji(document.getElementById('catribbon-incl'));
+  catRibbonUpdateSlots();
+}
+
+function catRibbonToggleSelect(idx) {
+  if (catRibbonSelected[idx]) { delete catRibbonSelected[idx]; }
+  else { catRibbonSelected[idx] = true; }
+  catRibbonRender(document.getElementById('catribbon-search').value.toLowerCase().trim());
+}
+
+function catRibbonMove(fromCol, toCol, all) {
+  var moved = false;
+  if (all) {
+    if ((fromCol === 'excl' && toCol === 'poss') || (fromCol === 'poss' && toCol === 'excl')) {
+      for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+        if (catRibbonState[i] === fromCol) { catRibbonState[i] = toCol; moved = true; }
+      }
+    }
+  } else {
+    var hasSelection = Object.keys(catRibbonSelected).some(function(k) {
+      return catRibbonState[parseInt(k)] === fromCol;
+    });
+    if (hasSelection) {
+      Object.keys(catRibbonSelected).forEach(function(k) {
+        var idx = parseInt(k);
+        if (catRibbonState[idx] === fromCol) {
+          catRibbonState[idx] = toCol; delete catRibbonSelected[idx]; moved = true;
+        }
+      });
+    } else {
+      var filter = document.getElementById('catribbon-search').value.toLowerCase().trim();
+      for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+        if (catRibbonState[i] !== fromCol) continue;
+        var name = catName(ALL_CATEGORIES[i]);
+        if (!filter || name.toLowerCase().indexOf(filter) !== -1) {
+          catRibbonState[i] = toCol; moved = true;
+        }
+      }
+    }
+  }
+  if (moved) catRibbonRender(document.getElementById('catribbon-search').value.toLowerCase().trim());
+}
+
+function catRibbonDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function catRibbonDrop(e, toCol) {
+  e.preventDefault();
+  if (!catRibbonDragSrc) return;
+  var idx = catRibbonDragSrc.idx;
+  var fromCol = catRibbonDragSrc.fromCol;
+  catRibbonDragSrc = null;
+  var validMoves = {
+    'excl-poss':true, 'poss-excl':true,
+    'poss-incl':true, 'incl-poss':true,
+    'excl-incl':false, 'incl-excl':false
+  };
+  if (validMoves[fromCol + '-' + toCol]) {
+    catRibbonState[idx] = toCol;
+    delete catRibbonSelected[idx];
+    catRibbonRender(document.getElementById('catribbon-search').value.toLowerCase().trim());
+  }
+}
+
+function catRibbonUpdateSlots() {
+  var n     = parseInt(document.getElementById('custom-n-slider').value, 10) || 8;
+  var nIncl = Object.keys(catRibbonState).filter(function(k){ return catRibbonState[k]==='incl'; }).length;
+  var pct   = Math.min(nIncl / n * 100, 100);
+  var fill  = document.getElementById('catribbon-slots-fill');
+  if (!fill) return;
+  fill.style.width = pct + '%';
+  fill.className   = 'ribbon-slots-fill' + (nIncl > n ? ' over' : nIncl === n ? ' full' : '');
+  document.getElementById('catribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' slots forcés';
+  document.getElementById('catribbon-incl-count').textContent = nIncl + ' forcée' + (nIncl > 1 ? 's' : '');
+}
+
+// Returns a pool of ALL_CATEGORIES indices filtered according to catRibbon state
+function getCatRibbonPool() {
+  var included = [], possible = [];
+  if (Object.keys(catRibbonState).length === 0) {
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) possible.push(i);
+    return { included: included, possible: possible };
+  }
+  for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+    if (catRibbonState[i] === 'incl') included.push(i);
+    else if (catRibbonState[i] === 'poss') possible.push(i);
+  }
+  if (included.length + possible.length < 2) {
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) possible.push(i);
+  }
+  return { included: included, possible: possible };
+}
 function showCountdown(onDone) {
   var overlay = document.getElementById('countdown-overlay');
   var numEl   = document.getElementById('countdown-num');

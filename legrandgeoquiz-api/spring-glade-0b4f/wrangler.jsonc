@@ -1,0 +1,15 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "legrandgeoquiz-api",
+	"main": "src/index.js",
+	"compatibility_date": "2026-02-25",
+	"kv_namespaces": [
+		{
+			"binding": "QUIZ_DATA",
+			"id": "3ee9d1240956477c809a0bb1b15205dc"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
+}

@@ -345,9 +345,17 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
 .custom-slider { width:100%; -webkit-appearance:none; appearance:none; height:4px; border-radius:99px; background:var(--border); outline:none; cursor:pointer; }
 .custom-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--accent3); cursor:pointer; box-shadow:0 0 8px rgba(167,139,250,0.4); }
 .custom-slider::-moz-range-thumb { width:20px; height:20px; border-radius:50%; border:none; background:var(--accent3); cursor:pointer; }
-.time-pills { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-.time-pill { padding:6px 14px; border-radius:99px; cursor:pointer; font-family:'DM Mono',monospace; font-size:0.75em; font-weight:700; border:1px solid var(--border); color:var(--muted); background:var(--surface); transition:all 0.15s; }
-.time-pill.active { border-color:var(--accent3); color:var(--accent3); background:rgba(167,139,250,0.1); box-shadow:0 0 8px rgba(167,139,250,0.2); }
+.time-slider-wrap { margin-top:10px; }
+.time-slider-val {
+  font-family:'Syne',sans-serif; font-size:1.6em; font-weight:800;
+  color:var(--accent3); text-align:center; margin-bottom:6px; letter-spacing:-.02em;
+}
+.time-slider-ticks {
+  display:flex; justify-content:space-between;
+  font-family:'DM Mono',monospace; font-size:0.58em; color:var(--muted);
+  margin-top:4px; padding:0 2px;
+}
+.time-slider-ticks span.active-tick { color:var(--accent3); font-weight:700; }
 
 
 /* ── Draft mode selector in custom panel ── */
@@ -410,6 +418,38 @@ body.hardcore .countdown-num { color:#ff3d5a; text-shadow:0 0 40px rgba(255,61,9
   box-shadow:0 0 10px rgba(245,200,66,0.2);
 }
 
+
+/* ── Presets accordion ── */
+.presets-section { margin-top:4px; }
+.presets-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%; padding:8px 12px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface2);
+  color:var(--muted); font-family:'DM Mono',monospace; font-size:0.72em;
+  font-weight:700; text-align:left; transition:all 0.15s;
+}
+.presets-toggle:hover { border-color:var(--accent3); color:var(--accent3); }
+.presets-toggle .pt-arrow { transition:transform 0.2s; font-style:normal; }
+.presets-toggle.open { border-color:var(--accent3); color:var(--accent3); background:rgba(167,139,250,0.06); }
+.presets-toggle.open .pt-arrow { transform:rotate(180deg); }
+.presets-body {
+  display:none; padding-top:8px;
+}
+.presets-body.open { display:block; }
+.presets-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
+}
+.preset-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:8px 4px; border-radius:8px; cursor:pointer;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); font-family:'DM Mono',monospace;
+  transition:all 0.15s; text-align:center;
+}
+.preset-btn:hover { border-color:var(--accent3); background:rgba(167,139,250,0.08); }
+.preset-btn.active { border-color:var(--accent); background:rgba(79,255,176,0.07); }
+.preset-btn .p-icon { font-size:1.3em; line-height:1.2; }
+.preset-btn .p-name { font-size:0.58em; font-weight:700; color:var(--text); line-height:1.3; }
 
 /* ── Country Ribbon Selector ── */
 .ribbon-section { margin-top:4px; }
@@ -797,6 +837,90 @@ body.reverse-mode #countries-grid { display:grid; }
 /* Country tooltip not used anymore but keep for compat */
 #country-tooltip { display:none; }
 
+
+/* ── Daily Mode ─────────────────────────────────────────────────────────────── */
+.btn-daily {
+  display:block; width:100%; padding:14px 20px;
+  background:linear-gradient(135deg,#f5c842,#f0a500);
+  color:#1a1200; font-family:'Syne',sans-serif; font-weight:800;
+  font-size:1em; border:none; border-radius:8px; cursor:pointer;
+  letter-spacing:0.04em; transition:all 0.15s; margin-top:0;
+}
+.btn-daily:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,200,66,0.35); }
+.btn-daily:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.daily-badge {
+  display:inline-block; background:rgba(0,0,0,0.18); border-radius:4px;
+  font-size:0.62em; padding:1px 6px; margin-left:6px; vertical-align:middle;
+  font-family:'DM Mono',monospace; font-weight:700; letter-spacing:.06em;
+}
+.daily-played-msg {
+  font-family:'DM Mono',monospace; font-size:0.7em; color:#f5c842;
+  text-align:center; margin-top:6px; opacity:0.85;
+}
+/* Leaderboard modal */
+#daily-lb-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.78); backdrop-filter:blur(5px);
+  z-index:2000; align-items:center; justify-content:center;
+}
+#daily-lb-overlay.open { display:flex; }
+.daily-modal-box {
+  background:var(--surface); border:1px solid #f5c842;
+  border-radius:16px; padding:28px 22px; width:min(420px,94vw);
+  max-height:88vh; overflow-y:auto;
+}
+.daily-modal-title {
+  font-family:'Syne',sans-serif; font-size:1.25em; font-weight:800;
+  color:#f5c842; margin-bottom:3px; display:flex; align-items:center; gap:8px;
+}
+.daily-modal-date {
+  font-family:'DM Mono',monospace; font-size:0.65em; color:var(--muted); margin-bottom:16px;
+}
+.lb-header {
+  display:grid; grid-template-columns:28px 1fr 72px;
+  font-family:'DM Mono',monospace; font-size:0.6em; font-weight:700;
+  color:var(--muted); letter-spacing:.08em; text-transform:uppercase;
+  padding:0 8px 6px; border-bottom:1px solid var(--border);
+}
+.lb-row {
+  display:grid; grid-template-columns:28px 1fr 72px;
+  align-items:center; padding:7px 8px; border-radius:8px;
+  font-family:'DM Mono',monospace; font-size:0.8em;
+  margin-top:3px; background:var(--surface2);
+}
+.lb-row.me  { border:1px solid rgba(245,200,66,0.5); background:rgba(245,200,66,0.07); }
+.lb-rank { font-weight:700; color:var(--muted); font-size:0.9em; }
+.lb-rank.gold   { color:#f5c842; }
+.lb-rank.silver { color:#b0b8c1; }
+.lb-rank.bronze { color:#cd7f32; }
+.lb-pseudo { font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 6px; }
+.lb-score  { text-align:right; font-weight:700; color:var(--accent); }
+.lb-empty  { text-align:center; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.78em; padding:24px 0; }
+.lb-total  { font-family:'DM Mono',monospace; font-size:0.63em; color:var(--muted); text-align:center; margin-top:10px; }
+/* Submit modal */
+#daily-submit-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.78); backdrop-filter:blur(5px);
+  z-index:2001; align-items:center; justify-content:center;
+}
+#daily-submit-overlay.open { display:flex; }
+.daily-pseudo-input {
+  padding:11px 14px; background:var(--surface2);
+  border:1px solid #f5c842; border-radius:8px;
+  color:var(--text); font-family:'DM Mono',monospace; font-size:0.88em;
+  outline:none; width:100%; box-sizing:border-box;
+}
+.daily-pseudo-input:focus { box-shadow:0 0 0 2px rgba(245,200,66,0.22); }
+.btn-daily-submit {
+  padding:11px; background:linear-gradient(135deg,#f5c842,#f0a500);
+  color:#1a1200; font-family:'Syne',sans-serif; font-weight:800;
+  font-size:0.9em; border:none; border-radius:8px; cursor:pointer;
+  transition:all 0.15s; width:100%; margin-top:6px;
+}
+.btn-daily-submit:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(245,200,66,0.3); }
+.daily-submit-msg { font-family:'DM Mono',monospace; font-size:0.73em; text-align:center; min-height:16px; margin-top:4px; }
+.daily-submit-msg.ok  { color:var(--accent); }
+.daily-submit-msg.err { color:#ff3d5a; }
 </style>
 </head>
 <body>
@@ -827,6 +951,18 @@ body.reverse-mode #countries-grid { display:grid; }
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
 
+        <!-- Mode Daily ⚡ -->
+        <div style="border:1px solid rgba(245,200,66,0.4);border-radius:12px;padding:10px 12px;background:rgba(245,200,66,0.04);">
+          <button class="btn-daily" id="btn-daily" onclick="startDailyGame()">
+            🏆 <span data-i18n="btnDaily"></span>
+            <span class="daily-badge" id="daily-date-badge"></span>
+          </button>
+          <div class="daily-played-msg hidden" id="daily-played-msg" data-i18n="dailyAlreadyPlayed"></div>
+          <div style="text-align:center;margin-top:6px;">
+            <button onclick="openLeaderboard()" style="background:none;border:none;color:#f5c842;font-family:'DM Mono',monospace;font-size:0.67em;cursor:pointer;opacity:0.8;text-decoration:underline;" data-i18n="dailyLeaderboardLink"></button>
+          </div>
+        </div>
+
         <!-- Mode Normal -->
         <div style="border:1px solid rgba(79,255,176,0.25);border-radius:12px;padding:10px 12px;background:rgba(79,255,176,0.04);">
           <button class="btn-primary" style="display:block;width:100%;margin-top:0;" onclick="startGame('normal')" data-i18n="btnNormal"></button>
@@ -856,6 +992,20 @@ body.reverse-mode #countries-grid { display:grid; }
         </div>
 
       </div>
+
+      <!-- GitHub link -->
+      <div style="margin-top:18px;text-align:center;">
+        <a href="https://github.com/mathieuviart/legrandgeoquiz" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:0.68em;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid var(--border);transition:all 0.15s;"
+          onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent3)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+          github.com/mathieuviart/legrandgeoquiz
+        </a>
+      </div>
+
     </div>
   </div>
 
@@ -871,12 +1021,15 @@ body.reverse-mode #countries-grid { display:grid; }
     </div>
     <div class="custom-section">
       <span class="custom-label" data-i18n="customTimeLabel"></span>
-      <div class="time-pills" id="time-pills">
-        <div class="time-pill" data-secs="10" onclick="selectTimePill(this)">10s</div>
-        <div class="time-pill active" data-secs="20" onclick="selectTimePill(this)">20s</div>
-        <div class="time-pill" data-secs="30" onclick="selectTimePill(this)">30s</div>
-        <div class="time-pill" data-secs="60" onclick="selectTimePill(this)">60s</div>
-        <div class="time-pill" data-secs="0" onclick="selectTimePill(this)" data-i18n="customTimeInf"></div>
+      <div class="time-slider-wrap">
+        <div class="time-slider-val" id="time-slider-val">20s</div>
+        <input type="range" class="custom-slider" id="time-slider"
+          min="0" max="7" value="4"
+          oninput="selectTimeSlider(this.value)">
+        <div class="time-slider-ticks">
+          <span>1s</span><span>5s</span><span>10s</span><span>15s</span>
+          <span class="active-tick">20s</span><span>30s</span><span>60s</span><span>∞</span>
+        </div>
       </div>
     </div>
     <div class="custom-section">
@@ -903,11 +1056,11 @@ body.reverse-mode #countries-grid { display:grid; }
       </span>
       <div class="draft-tooltip" id="draft-tooltip" data-i18n="customDraftInfo"></div>
       <div class="draft-pills">
-        <div class="draft-pill" id="draft-pill-auto" onclick="selectDraftPill('auto')">
+        <div class="draft-pill active" id="draft-pill-auto" onclick="selectDraftPill('auto')">
           <span class="dp-icon">🔀</span>
           <span class="dp-label" data-i18n="draftAuto"></span>
         </div>
-        <div class="draft-pill active" id="draft-pill-cats" onclick="selectDraftPill('cats')">
+        <div class="draft-pill" id="draft-pill-cats" onclick="selectDraftPill('cats')">
           <span class="dp-icon">📊</span>
           <span class="dp-label" data-i18n="draftCats"></span>
         </div>
@@ -1010,6 +1163,78 @@ body.reverse-mode #countries-grid { display:grid; }
         </div>
       </div>
 
+      <!-- Presets accordion -->
+      <div class="presets-section">
+        <button class="presets-toggle" id="presets-toggle" onclick="togglePresets()">
+          <span>⚡ Presets</span>
+          <span class="pt-arrow">▾</span>
+        </button>
+        <div class="presets-body" id="presets-body">
+          <div class="presets-grid">
+            <button class="preset-btn" onclick="applyPreset('no-russia',this)">
+              <span class="p-icon">🚫🇷🇺</span>
+              <span class="p-name">No Russia</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('europe',this)">
+              <span class="p-icon">🇪🇺</span>
+              <span class="p-name">European</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('africa',this)">
+              <span class="p-icon">🌍</span>
+              <span class="p-name">African</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('americas',this)">
+              <span class="p-icon">🌎</span>
+              <span class="p-name">Americas</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('asia',this)">
+              <span class="p-icon">🌏</span>
+              <span class="p-name">Asian</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('oceania',this)">
+              <span class="p-icon">🏝️</span>
+              <span class="p-name">Oceania</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('top100pib',this)">
+              <span class="p-icon">💰</span>
+              <span class="p-name">Top 100 PIB</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('sport',this)">
+              <span class="p-icon">🏆</span>
+              <span class="p-name">Sport Enjoyer</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('chill',this)">
+              <span class="p-icon">😌</span>
+              <span class="p-name">Chill</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('ultra',this)">
+              <span class="p-icon">💀🔥</span>
+              <span class="p-name">Ultra Hardcore</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('small',this)">
+              <span class="p-icon">🔬</span>
+              <span class="p-name">− 1M hab.</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('france-neighbors',this)">
+              <span class="p-icon">🇫🇷🤝</span>
+              <span class="p-name">Voisins France</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('landlocked',this)">
+              <span class="p-icon">🏔️</span>
+              <span class="p-name">Enclavés</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('islands',this)">
+              <span class="p-icon">🏝️</span>
+              <span class="p-name">Îles seulement</span>
+            </button>
+            <button class="preset-btn" onclick="applyPreset('flag-guesser',this)">
+              <span class="p-icon">🚩</span>
+              <span class="p-name">Flag Guesser</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <button class="btn-custom" style="background:rgba(167,139,250,0.1);" onclick="startGame('custom')" data-i18n="customStart"></button>
       <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomPanel()" data-i18n="back"></button>
     </div>
@@ -1103,10 +1328,42 @@ body.reverse-mode #countries-grid { display:grid; }
     </div>
 
     <div class="seed-box" id="seed-display"></div>
-    <button class="btn-secondary" style="margin-top:0;margin-bottom:16px;width:100%;font-size:0.85em;" onclick="copySeed()" data-i18n="copySeed"></button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <button class="btn-secondary" style="margin:0;font-size:0.8em;" onclick="copySeed()" id="btn-copy-seed" data-i18n="copySeed"></button>
+      <button class="btn-secondary" style="margin:0;font-size:0.8em;border-color:rgba(79,255,176,0.4);color:var(--accent);" onclick="copyUrl()" id="btn-copy-url" data-i18n="copyUrl"></button>
+    </div>
     <button class="btn-primary" onclick="resetToMenu()" data-i18n="playAgain"></button>
   </div>
 
+</div>
+
+
+<!-- ── Daily leaderboard modal ─────────────────────────────────────────────── -->
+<div id="daily-lb-overlay" onclick="if(event.target===this)closeLbModal()">
+  <div class="daily-modal-box">
+    <div class="daily-modal-title">🏆 <span data-i18n="dailyLbTitle"></span></div>
+    <div class="daily-modal-date" id="daily-lb-date"></div>
+    <div class="lb-header">
+      <span>#</span><span data-i18n="dailyLbColPlayer"></span><span style="text-align:right" data-i18n="dailyLbColScore"></span>
+    </div>
+    <div id="daily-lb-rows"><div class="lb-empty" data-i18n="dailyLbEmpty"></div></div>
+    <div class="lb-total" id="daily-lb-total"></div>
+    <button onclick="closeLbModal()" style="margin-top:16px;width:100%;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.78em;cursor:pointer;" data-i18n="optClose"></button>
+  </div>
+</div>
+
+<!-- ── Daily submit score modal ─────────────────────────────────────────────── -->
+<div id="daily-submit-overlay" onclick="if(event.target===this)skipDailySubmit()">
+  <div class="daily-modal-box">
+    <div class="daily-modal-title" style="margin-bottom:6px;">🏆 <span data-i18n="dailySubmitTitle"></span></div>
+    <div style="font-family:'DM Mono',monospace;font-size:0.73em;color:var(--muted);margin-bottom:14px;" data-i18n="dailySubmitDesc"></div>
+    <div style="font-family:'Syne',sans-serif;font-size:2.2em;font-weight:800;color:#f5c842;text-align:center;margin-bottom:16px;" id="daily-score-display">—</div>
+    <input class="daily-pseudo-input" id="daily-pseudo-input" type="text" maxlength="20" data-i18n-placeholder="dailyPseudoPlaceholder"
+      onkeydown="if(event.key==='Enter')submitDailyScore()">
+    <button class="btn-daily-submit" onclick="submitDailyScore()" data-i18n="dailySubmitBtn"></button>
+    <div class="daily-submit-msg" id="daily-submit-msg"></div>
+    <button onclick="skipDailySubmit()" style="margin-top:8px;width:100%;padding:7px;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.7em;cursor:pointer;text-decoration:underline;" data-i18n="dailySkip"></button>
+  </div>
 </div>
 
 <div id="country-tooltip"></div>
@@ -1180,6 +1437,7 @@ var TRANSLATIONS = {
     finalScore:     'Score',
     final:          'Final',
     copySeed:       '\uD83D\uDCCB Copier la seed',
+    copyUrl:        '🔗 Partager l\'URL',
     playAgain:      'Rejouer',
     seedShare:      '\uD83D\uDD11 SEED \u2014 partagez cette partie\u00a0!',
     catSelected:    'cat\u00e9gorie s\u00e9lectionn\u00e9e',
@@ -1255,6 +1513,7 @@ var TRANSLATIONS = {
     finalScore:     'Final',
     final:          'Score',
     copySeed:       '\uD83D\uDCCB Copy seed',
+    copyUrl:        '🔗 Share URL',
     playAgain:      'Play again',
     seedShare:      '\uD83D\uDD11 SEED \u2014 share this game!',
     catSelected:    'selected category',
@@ -1315,6 +1574,7 @@ var TRANSLATIONS = {
     finalScore:     '\u0424\u0456\u043d\u0430\u043b\u044c\u043d\u0438\u0439',
     final:          '\u0420\u0430\u0445\u0443\u043d\u043e\u043a',
     copySeed:       '\uD83D\uDCCB \u041a\u043e\u043f\u0456\u044e\u0432\u0430\u0442\u0438 \u0441\u0456\u0434',
+    copyUrl:        '🔗 Поділитися URL',
     playAgain:      '\u0413\u0440\u0430\u0442\u0438 \u0437\u043d\u043e\u0432\u0443',
     seedShare:      '\uD83D\uDD11 \u0421\u0406\u0414 \u2014 \u043f\u043e\u0434\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0446\u0456\u0454\u044e \u0433\u0440\u043e\u044e!',
     catSelected:    '\u043e\u0431\u0440\u0430\u043d\u0430 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0456\u044f',
@@ -1347,7 +1607,25 @@ var TRANSLATIONS = {
     invalidSeed:    '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434!',
     invalidSeedIdx: '\u041d\u0435\u0434\u0456\u0439\u0441\u043d\u0438\u0439 \u0441\u0456\u0434 \u2014 \u0456\u043d\u0434\u0435\u043a\u0441\u0438 \u043f\u043e\u0437\u0430 \u043c\u0435\u0436\u0430\u043c\u0438.',
     enterSeed:      '\u0421\u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0432\u0432\u0435\u0434\u0456\u0442\u044c \u0441\u0456\u0434!',
-    taglines:       ['\uD83C\uDFC6 \u0412\u0438\u043a\u043b\u044e\u0447\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83C\uDF1F \u0427\u0443\u0434\u043e\u0432\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDC4D \u041d\u0435\u043f\u043e\u0433\u0430\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDE2C \u0421\u0435\u0440\u0435\u0434\u043d\u0456\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDCDA \u0412\u0438\u0441\u043e\u043a\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!']
+    taglines:       ['\uD83C\uDFC6 \u0412\u0438\u043a\u043b\u044e\u0447\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83C\uDF1F \u0427\u0443\u0434\u043e\u0432\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDC4D \u041d\u0435\u043f\u043e\u0433\u0430\u043d\u0438\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDE2C \u0421\u0435\u0440\u0435\u0434\u043d\u0456\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!','\uD83D\uDCDA \u0412\u0438\u0441\u043e\u043a\u0438\u0439 \u0440\u0430\u0445\u0443\u043d\u043e\u043a!'],
+    btnDaily:              'Daily Challenge',
+    dailyAlreadyPlayed:    'Ви вже грали сьогодні! Поверніться завтра ★',
+    dailyLeaderboardLink:  'Переглянути таблицю лідерів →',
+    dailyLbTitle:          'Таблиця лідерів',
+    dailyLbColPlayer:      'Гравець',
+    dailyLbColScore:       'Рахунок',
+    dailyLbEmpty:          'Сьогодні ще немає результатів.',
+    dailySubmitTitle:      'Зберегти результат',
+    dailySubmitDesc:       'Введіть псевдонім для запису в таблицю.',
+    dailyPseudoPlaceholder:'Ваш псевдонім (20 симв.)',
+    dailySubmitBtn:        'Підтвердити',
+    dailySkip:             'Не зберігати',
+    dailyRank:             'Ваше місце:',
+    dailyOf:               'з',
+    dailyErrNetwork:       'Помилка мережі.',
+    dailyErrPlayed:        'Ви вже надіслали результат сьогодні.',
+    dailyErrPseudo:        'Невірний псевдонім (1–20 символів).',
+
   }
 };
 
@@ -1500,6 +1778,23 @@ async function initApp() {
   document.getElementById('loader').classList.add('hidden');
   document.getElementById('setup-ready').classList.remove('hidden');
   applyTranslations();
+
+  // ── Patch showEndPanel pour le mode Daily ──────────────────────────────────
+  _origShowEndPanel = showEndPanel;
+  showEndPanel = _dailyShowEndPanel;
+
+  // ── Initialiser le bloc Daily (vérif already-played, date badge) ───────────
+  initDailyBlock();
+
+  // ── Lecture du hash URL : #seed=XXXX ──────────────────────────────────────
+  var hash = window.location.hash;
+  var match = hash.match(/[#&]seed=([^&]+)/);
+  if (match) {
+    var seedFromUrl = decodeURIComponent(match[1]);
+    setTimeout(function() {
+      startGame('custom', seedFromUrl);
+    }, 100);
+  }
 }
 
 function getFallbackData() {
@@ -1520,20 +1815,118 @@ function getFallbackData() {
 // ─── SEED ─────────────────────────────────────────────────────────────────────
 function shuffle(arr) { return arr.slice().sort(function() { return Math.random() - 0.5; }); }
 
-function encodeSeed(ci, ki) { return ci.join('-') + '_' + ki.join('-'); }
+// ─── SEED ENGINE v2 ───────────────────────────────────────────────────────────
+// Format interne (avant encodage) :
+//   [version:1][mode:1][time:2][n:1][countries:n*2][cats:n*2][checksum:2]
+//   mode : 0=normal 1=hardcore 2=reverse
+//   time : secondes (0=infini)
+//   Encodage : Base62 → chaîne opaque, non-lisible, non-modifiable à la main
 
-function decodeSeed(seed) {
-  var parts = seed.split('_');
-  if (parts.length !== 2) return null;
-  var ci = parts[0].split('-').map(Number);
-  var ki = parts[1].split('-').map(Number);
-  if (ci.length !== ki.length || ci.length < 2) return null;
-  if (ci.some(isNaN) || ki.some(isNaN)) return null;
-  return {countryIndices:ci, catIndices:ki};
+var SEED_VERSION = 2;
+var BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function bytesToBase62(bytes) {
+  var digits = [0];
+  for (var b = 0; b < bytes.length; b++) {
+    var carry = bytes[b];
+    for (var d = 0; d < digits.length; d++) {
+      carry += digits[d] * 256;
+      digits[d] = carry % 62;
+      carry = Math.floor(carry / 62);
+    }
+    while (carry > 0) { digits.push(carry % 62); carry = Math.floor(carry / 62); }
+  }
+  var result = '';
+  for (var d = digits.length - 1; d >= 0; d--) result += BASE62[digits[d]];
+  return result || '0';
+}
+
+function base62ToBytes(str, expectedLen) {
+  var digits = [];
+  for (var i = 0; i < str.length; i++) {
+    var v = BASE62.indexOf(str[i]);
+    if (v < 0) return null;
+    digits.push(v);
+  }
+  var bytes = [0];
+  for (var d = 0; d < digits.length; d++) {
+    var carry = digits[d];
+    for (var b = 0; b < bytes.length; b++) {
+      carry += bytes[b] * 62;
+      bytes[b] = carry & 0xFF;
+      carry >>= 8;
+    }
+    while (carry > 0) { bytes.push(carry & 0xFF); carry >>= 8; }
+  }
+  bytes.reverse();
+  while (bytes.length < expectedLen) bytes.unshift(0);
+  if (bytes.length > expectedLen) bytes = bytes.slice(bytes.length - expectedLen);
+  return bytes;
+}
+
+function encodeSeed(countryIdxs, catIdxs, mode, timeSecs) {
+  var modeCode = (mode === 'hardcore') ? 1 : (mode === 'reverse') ? 2 : 0;
+  var time = (timeSecs === undefined || timeSecs === null) ? 20 : timeSecs;
+  var n = countryIdxs.length;
+  var bytes = [];
+  bytes.push(SEED_VERSION);
+  bytes.push(modeCode);
+  bytes.push(time & 0xFF);
+  bytes.push((time >> 8) & 0xFF);
+  bytes.push(n);
+  for (var i = 0; i < n; i++) { bytes.push(countryIdxs[i] & 0xFF); bytes.push((countryIdxs[i] >> 8) & 0xFF); }
+  for (var i = 0; i < n; i++) { bytes.push(catIdxs[i] & 0xFF); bytes.push((catIdxs[i] >> 8) & 0xFF); }
+  var checksum = 0;
+  for (var b = 0; b < bytes.length; b++) checksum = (checksum + bytes[b]) & 0xFFFF;
+  bytes.push(checksum & 0xFF);
+  bytes.push((checksum >> 8) & 0xFF);
+  return bytesToBase62(bytes);
+}
+
+function decodeSeed(str) {
+  if (!str || typeof str !== 'string') return null;
+  str = str.trim();
+
+  // Rétrocompatibilité ancien format "12-45_0-5"
+  if (/^\d[\d-]*_[\d-]*\d$/.test(str)) {
+    var parts = str.split('_');
+    if (parts.length !== 2) return null;
+    var ci = parts[0].split('-').map(Number);
+    var ki = parts[1].split('-').map(Number);
+    if (ci.length !== ki.length || ci.length < 2) return null;
+    if (ci.some(isNaN) || ki.some(isNaN)) return null;
+    return { countryIndices: ci, catIndices: ki, mode: 'normal', timeSecs: 20, legacy: true };
+  }
+
+  // Format v2 Base62 — taille header = 5 + n*4 + 2
+  // On essaie n=2..16 jusqu'à trouver un checksum valide
+  for (var n = 2; n <= 16; n++) {
+    var expectedLen = 5 + n * 4 + 2;
+    var bytes = base62ToBytes(str, expectedLen);
+    if (!bytes || bytes.length !== expectedLen) continue;
+    if (bytes[0] !== SEED_VERSION) continue;
+    if (bytes[4] !== n) continue;
+    var checksumStored = bytes[expectedLen - 2] + (bytes[expectedLen - 1] << 8);
+    var checksumCalc = 0;
+    for (var b = 0; b < expectedLen - 2; b++) checksumCalc = (checksumCalc + bytes[b]) & 0xFFFF;
+    if (checksumStored !== checksumCalc) continue;
+    var modeCode = bytes[1];
+    var timeSecs = bytes[2] + (bytes[3] << 8);
+    var ci = [], ki = [], offset = 5;
+    for (var i = 0; i < n; i++) { ci.push(bytes[offset] + (bytes[offset+1] << 8)); offset += 2; }
+    for (var i = 0; i < n; i++) { ki.push(bytes[offset] + (bytes[offset+1] << 8)); offset += 2; }
+    var mode = modeCode === 1 ? 'hardcore' : modeCode === 2 ? 'reverse' : 'normal';
+    return { countryIndices: ci, catIndices: ki, mode: mode, timeSecs: timeSecs, legacy: false };
+  }
+  return null;
+}
+
+function _currentGameMode() {
+  if (gameMode === 'custom') return customSubMode || 'normal';
+  return gameMode;
 }
 
 function generateSeedCatsFirst() {
-  // ── Ribbon-aware category pool
   var cp = getCatRibbonPool();
   var forcedCatIdxs   = cp.included.slice();
   var possibleCatIdxs = cp.possible;
@@ -1544,18 +1937,13 @@ function generateSeedCatsFirst() {
     catPool = catPool.concat(shuffle(allCi.filter(function(i){return catPool.indexOf(i)===-1;}))).slice(0, N_TURNS);
   }
   var catIds = catPool.map(function(i){return ALL_CATEGORIES[i].id;});
-
-  // ── Ribbon-aware country pool
   var pool = getRibbonCountryPool();
   var forcedIdxs = pool.included.slice();
   var available  = pool.possible;
   var nRandom = Math.max(0, N_TURNS - forcedIdxs.length);
-
   var eligible = available.filter(function(i){ return catIds.every(function(id){
-    var v = countriesDB[i][id];
-    return v !== false && v !== null && v !== undefined;
+    var v = countriesDB[i][id]; return v !== false && v !== null && v !== undefined;
   });});
-
   var randomPool;
   if (eligible.length >= nRandom) {
     randomPool = shuffle(eligible).slice(0, nRandom);
@@ -1565,7 +1953,6 @@ function generateSeedCatsFirst() {
     }).sort(function(a,b){return b.score-a.score;});
     randomPool = shuffle(scored.slice(0, Math.min(nRandom*2+4, scored.length))).slice(0, nRandom).map(function(x){return x.i;});
   }
-
   var validForced = forcedIdxs.filter(function(i){
     return catIds.every(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;});
   });
@@ -1573,24 +1960,19 @@ function generateSeedCatsFirst() {
   var extra = shortage > 0 ? shuffle(eligible.filter(function(i){return validForced.indexOf(i)===-1;})).slice(0,shortage) : [];
   var finalIdxs = shuffle(validForced.concat(extra).concat(randomPool)).slice(0, N_TURNS);
   lastDraftUsed = 'cats';
-  return encodeSeed(finalIdxs, catPool);
+  return encodeSeed(finalIdxs, catPool, _currentGameMode(), TIME_PER_TURN);
 }
 
 function generateSeedCountriesFirst() {
-  // ── Ribbon-aware country pool
   var pool = getRibbonCountryPool();
   var forcedIdxs = pool.included.slice();
   var available  = shuffle(pool.possible);
   var nRandom    = Math.max(0, N_TURNS - forcedIdxs.length);
   var finalIdxs  = forcedIdxs.concat(available.slice(0, nRandom)).slice(0, N_TURNS);
   var chosenCountries = finalIdxs.map(function(i){ return {c: countriesDB[i], i: i}; });
-
-  // ── Ribbon-aware category pool
   var cp = getCatRibbonPool();
   var forcedCatIdxs   = cp.included.slice();
   var possibleCatIdxs = cp.possible;
-
-  // Find cats valid for ALL chosen countries — respecting forced cats first
   var validPossible = possibleCatIdxs.map(function(i){return {cat:ALL_CATEGORIES[i],i:i};}).filter(function(x){
     return chosenCountries.every(function(co){var v=co.c[x.cat.id];return v!==false&&v!==null&&v!==undefined;});
   });
@@ -1601,10 +1983,8 @@ function generateSeedCountriesFirst() {
   if (validForced.length + validPossible.length >= N_TURNS) {
     var catPool = validForced.concat(shuffle(validPossible).slice(0, nCatRandom).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(finalIdxs, catPool);
+    return encodeSeed(finalIdxs, catPool, _currentGameMode(), TIME_PER_TURN);
   }
-
-  // Relax: best countries from possible pool
   var allCatIds2 = ALL_CATEGORIES.map(function(c){return c.id;});
   var relaxPool = shuffle(available.map(function(i){
     return {i:i, score:allCatIds2.filter(function(id){var v=countriesDB[i][id];return v!==false&&v!==null&&v!==undefined;}).length};
@@ -1621,31 +2001,47 @@ function generateSeedCountriesFirst() {
     var nRCatRand = Math.max(0, N_TURNS - relaxValidForced.length);
     var catPool2 = relaxValidForced.concat(shuffle(relaxValidPoss).slice(0, nRCatRand).map(function(x){return x.i;}));
     lastDraftUsed = 'countries';
-    return encodeSeed(relaxIdxs, catPool2);
+    return encodeSeed(relaxIdxs, catPool2, _currentGameMode(), TIME_PER_TURN);
   }
   return generateSeedCatsFirst();
 }
 
 function generateSeed() {
   var useCats;
-  if (draftMode === 'cats')      { useCats = true; }
+  if (draftMode === 'cats')           { useCats = true; }
   else if (draftMode === 'countries') { useCats = false; }
-  else { useCats = (draftCounter % 2 === 0); } // alternate
+  else                                { useCats = (draftCounter % 2 === 0); }
   draftCounter++;
   return useCats ? generateSeedCatsFirst() : generateSeedCountriesFirst();
 }
 
-function applyGameFromSeed(seed) {
-  var decoded = decodeSeed(seed);
+function applyGameFromSeed(str) {
+  var decoded = decodeSeed(str);
   if (!decoded) { alert(t('invalidSeed')); return false; }
   var ci = decoded.countryIndices, ki = decoded.catIndices;
   if (ci.some(function(i){return i<0||i>=countriesDB.length;}))  { alert(t('invalidSeedIdx')); return false; }
   if (ki.some(function(i){return i<0||i>=ALL_CATEGORIES.length;})) { alert(t('invalidSeedIdx')); return false; }
   gameCountries  = ci.map(function(i){return countriesDB[i];});
   gameCategories = ki.map(function(i){return ALL_CATEGORIES[i];});
-  currentSeed = seed;
+  currentSeed    = str;
+  if (!decoded.legacy) {
+    var m = decoded.mode;
+    document.body.classList.remove('hardcore','reverse-mode');
+    if (m === 'hardcore') {
+      document.body.classList.add('hardcore');
+      if (gameMode === 'custom') customSubMode = 'hardcore'; else gameMode = 'hardcore';
+    } else if (m === 'reverse') {
+      document.body.classList.add('reverse-mode');
+      reverseAssignments = {};
+      if (gameMode === 'custom') customSubMode = 'reverse'; else gameMode = 'reverse';
+    } else {
+      if (gameMode === 'custom') customSubMode = 'normal';
+    }
+    TIME_PER_TURN = decoded.timeSecs;
+  }
   return true;
 }
+
 
 
 // ─── CUSTOM MODE ──────────────────────────────────────────────────────────────
@@ -1662,10 +2058,18 @@ function selectSubModePill(mode) {
   });
 }
 
-function selectTimePill(el) {
-  document.querySelectorAll('.time-pill').forEach(function(p) { p.classList.remove('active'); });
-  el.classList.add('active');
-  customTimeSelected = parseInt(el.dataset.secs, 10);
+var TIME_STEPS = [1, 5, 10, 15, 20, 30, 60, 0]; // 0 = infini
+
+function selectTimeSlider(idx) {
+  idx = parseInt(idx, 10);
+  customTimeSelected = TIME_STEPS[idx];
+  var labels = ['1s','5s','10s','15s','20s','30s','60s','∞'];
+  document.getElementById('time-slider-val').textContent = labels[idx];
+  // Update tick highlights
+  var ticks = document.querySelectorAll('.time-slider-ticks span');
+  ticks.forEach(function(t, i) {
+    t.classList.toggle('active-tick', i === idx);
+  });
 }
 
 function selectDraftPill(mode) {
@@ -1699,6 +2103,195 @@ function openCustomPanel() {
 function closeCustomPanel() {
   document.getElementById('panel-custom').classList.add('hidden');
   document.getElementById('panel-setup').classList.remove('hidden');
+}
+
+// ─── PRESETS ──────────────────────────────────────────────────────────────────
+var EUROPEAN_CODES = [
+  'AL','AD','AT','BY','BE','BA','BG','HR','CZ','DK',
+  'EE','FI','FR','DE','GR','HU','IS','IE','IT','XK',
+  'LV','LI','LT','LU','MT','MD','MC','ME','NL','MK',
+  'NO','PL','PT','RO','SM','RS','SK','SI','ES','SE',
+  'CH','UA','GB','VA','CY','AZ','GE','AM'
+];
+var AFRICAN_CODES = [
+  'DZ','AO','BJ','BW','BF','BI','CM','CV','CF','TD',
+  'KM','CG','CD','CI','DJ','EG','GQ','ER','SZ','ET',
+  'GA','GM','GH','GN','GW','KE','LS','LR','LY','MG',
+  'MW','ML','MR','MU','MA','MZ','NA','NE','NG','RE',
+  'RW','ST','SN','SL','SO','ZA','SS','SD','TZ','TG',
+  'TN','UG','ZM','ZW','SH'
+];
+var AMERICAS_CODES = [
+  'AG','AR','BS','BB','BZ','BO','BR','CA','CL','CO',
+  'CR','CU','DM','DO','EC','SV','GD','GT','GY','HT',
+  'HN','JM','MX','NI','PA','PY','PE','KN','LC','VC',
+  'SR','TT','US','UY','VE','PR','GP','MQ','GF'
+];
+var ASIAN_CODES = [
+  'AF','AM','AZ','BH','BD','BT','BN','KH','CN','CY',
+  'GE','IN','ID','IR','IQ','IL','JP','JO','KZ','KW',
+  'KG','LA','LB','MY','MV','MN','MM','NP','KP','OM',
+  'PK','PS','PH','QA','SA','SG','KR','LK','SY','TW',
+  'TJ','TH','TL','TM','AE','UZ','VN','YE','HK','MO'
+];
+var OCEANIA_CODES = [
+  'AU','FJ','KI','MH','FM','NR','NZ','PW','PG','WS',
+  'SB','TO','TV','VU','CK','PF','GU','NC','NU','NF',
+  'MP','AS','TK','WF'
+];
+var TOP100_PIB_CODES = [
+  'US','CN','JP','DE','IN','GB','FR','RU','CA','IT',
+  'BR','AU','KR','MX','ES','ID','SA','NL','TR','CH',
+  'TW','PL','AR','NO','SE','BE','IE','IL','AE','TH',
+  'EG','NG','AT','SG','BD','IR','VN','MY','ZA','PH',
+  'DK','PK','HK','CO','CL','RO','CZ','FI','IQ','PT',
+  'NZ','PE','QA','KZ','GR','DZ','HU','KW','UA','MA',
+  'ET','SK','EC','OM','DO','PR','KE','CU','AO','GT',
+  'VE','BG','LU','UZ','AZ','PA','TZ','LK','GH','BY',
+  'HR','UY','LT','CI','CR','CD','RS','MM','SI','TM',
+  'SD','JO','TN','LY','UG','BH','BO','CM','PY','LV'
+];
+var SPORT_CAT_IDS = ['classement_fifa_H','classement_fifa_F','classement_rugby_H','classement_bball_M'];
+// Pays < ~1M habitants (rang nb_habitant >= 162 dans la DB)
+var SMALL_COUNTRIES_CODES = [
+  'FJ','KM','GY','BT','SB','MO','LU','ME','SR','CV',
+  'MT','MV','BN','BS','BZ','IS','VU','PF','NC','BB',
+  'ST','WS','CW','LC','GU','KI','GD','FM','JE','TO',
+  'SC','AW','VC','VI','AG','IM','AD','DM','KY','BM',
+  'GG','GL','FO','MP','KN','TC','SX','AS','MH','LI',
+  'MC','SM','MF','BQ','PW','NR','TV'
+];
+// Pays partageant une frontière avec la France (métropole + DOM)
+var FRANCE_NEIGHBORS_CODES = [
+  'BE','LU','DE','CH','IT','MC','AD','ES', // métropole
+  'GB',                                      // tunnel sous la Manche
+  'BR','SR','SX'                             // Guyane française + Saint-Martin
+];
+// Pays enclavés (sans accès à la mer)
+var LANDLOCKED_CODES = [
+  'AF','AM','AZ','BY','BT','BO','BW','BF','BI','CF',
+  'TD','CZ','ET','HU','KZ','KG','LA','LS','LI','LU',
+  'MW','ML','MD','MN','NP','NE','MK','PY','RW','SM',
+  'RS','SK','SS','SZ','TJ','TM','UG','UZ','ZM','ZW',
+  'AT','XK'
+];
+// Pays insulaires (entièrement entourés d'eau)
+var ISLANDS_CODES = [
+  'AG','AU','BS','BB','CV','KM','CU','DM','FJ','GD',
+  'HT','IS','ID','JM','JP','KI','MV','MT','MH','MU',
+  'FM','NR','NZ','PW','PG','PH','KN','LC','VC','WS',
+  'ST','SC','SB','LK','TO','TT','TV','VU','CY','BN',
+  'TL','SG','GB','IE','MG','TW'
+];
+
+function togglePresets() {
+  var toggle = document.getElementById('presets-toggle');
+  var body   = document.getElementById('presets-body');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function applyPreset(name, btn) {
+  // S'assurer que les ribbons sont initialisés
+  if (Object.keys(ribbonState).length === 0)    ribbonInit();
+  if (Object.keys(catRibbonState).length === 0) catRibbonInit();
+
+  // Helper : set country ribbon by code whitelist
+  function setCountryByList(allowedCodes) {
+    for (var i = 0; i < countriesDB.length; i++) {
+      var code = (countriesDB[i].country_code || '').toUpperCase();
+      ribbonState[i] = (allowedCodes.indexOf(code) !== -1) ? 'poss' : 'excl';
+    }
+    ribbonSelected = {};
+  }
+  // Helper : reset all countries to possible
+  function resetCountries() {
+    for (var i = 0; i < countriesDB.length; i++) ribbonState[i] = 'poss';
+    ribbonSelected = {};
+  }
+  // Helper : reset all cats to possible
+  function resetCats() {
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) catRibbonState[i] = 'poss';
+    catRibbonSelected = {};
+  }
+
+  if (name === 'no-russia') {
+    resetCountries();
+    for (var i = 0; i < countriesDB.length; i++) {
+      if ((countriesDB[i].country_code || '').toUpperCase() === 'RU') { ribbonState[i] = 'excl'; break; }
+    }
+    resetCats();
+    setPresetDefaults();
+
+  } else if (name === 'europe')   { setCountryByList(EUROPEAN_CODES);  resetCats(); setPresetDefaults();
+  } else if (name === 'africa')   { setCountryByList(AFRICAN_CODES);   resetCats(); setPresetDefaults();
+  } else if (name === 'americas') { setCountryByList(AMERICAS_CODES);  resetCats(); setPresetDefaults();
+  } else if (name === 'asia')     { setCountryByList(ASIAN_CODES);     resetCats(); setPresetDefaults();
+  } else if (name === 'oceania')  { setCountryByList(OCEANIA_CODES);   resetCats(); setPresetDefaults();
+  } else if (name === 'top100pib'){ setCountryByList(TOP100_PIB_CODES);resetCats(); setPresetDefaults();
+  } else if (name === 'small')    { setCountryByList(SMALL_COUNTRIES_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'france-neighbors') { setCountryByList(FRANCE_NEIGHBORS_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'landlocked') { setCountryByList(LANDLOCKED_CODES); resetCats(); setPresetDefaults();
+  } else if (name === 'islands')    { setCountryByList(ISLANDS_CODES);    resetCats(); setPresetDefaults();
+
+  } else if (name === 'flag-guesser') {
+    resetCountries(); resetCats();
+    // 10 tours
+    document.getElementById('custom-n-slider').value = 10;
+    ribbonOnSliderChange(10);
+    // 60 secondes (index 6)
+    document.getElementById('time-slider').value = 6; selectTimeSlider(6);
+    // Mode Hardcore (drapeau seul, pas de nom)
+    selectSubModePill('hardcore');
+    // Ordre : pays d'abord
+    selectDraftPill('countries');
+
+  } else if (name === 'sport') {
+    resetCountries();
+    for (var i = 0; i < ALL_CATEGORIES.length; i++) {
+      catRibbonState[i] = (SPORT_CAT_IDS.indexOf(ALL_CATEGORIES[i].id) !== -1) ? 'incl' : 'poss';
+    }
+    catRibbonSelected = {};
+    setPresetDefaults();
+
+  } else if (name === 'chill') {
+    resetCountries(); resetCats();
+    document.getElementById('custom-n-slider').value = 8;
+    document.getElementById('custom-n-display').textContent = 8;
+    document.getElementById('time-slider').value = 7; selectTimeSlider(7); // ∞
+    selectSubModePill('normal');
+    selectDraftPill('auto');
+
+  } else if (name === 'ultra') {
+    resetCountries(); resetCats();
+    // 16 tours
+    document.getElementById('custom-n-slider').value = 16;
+    ribbonOnSliderChange(16);
+    // 1 seconde (index 0)
+    document.getElementById('time-slider').value = 0; selectTimeSlider(0);
+    // Hardcore
+    selectSubModePill('hardcore');
+    // Ordre par pays
+    selectDraftPill('countries');
+  }
+
+  // Re-render
+  ribbonRender();
+  catRibbonRender();
+  ribbonUpdateSlots();
+  catRibbonUpdateSlots();
+
+  // Highlight actif
+  document.querySelectorAll('.preset-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+}
+
+function setPresetDefaults() {
+  document.getElementById('custom-n-slider').value = 8;
+  ribbonOnSliderChange(8);
+  document.getElementById('time-slider').value = 4; selectTimeSlider(4); // 20s
+  selectSubModePill('normal');
+  selectDraftPill('auto');
 }
 
 // ─── COUNTRY RIBBON SELECTOR ──────────────────────────────────────────────────
@@ -2106,6 +2699,8 @@ function startGame(modeOrSeed, seedOverride) {
   showCountdown(function() {
     document.getElementById('panel-game').classList.remove('hidden');
     document.getElementById('game-seed-display').textContent = currentSeed;
+    // Mettre à jour le hash URL pour permettre le partage
+    history.replaceState(null, '', '#seed=' + encodeURIComponent(currentSeed));
     renderCategoryButtons();
     showTurn();
   });
@@ -2114,9 +2709,10 @@ function startGame(modeOrSeed, seedOverride) {
 function startWithSeedInput() {
   var raw = document.getElementById('seed-input').value.trim();
   if (!raw) { alert(t('enterSeed')); return; }
-  var match = raw.match(/(\d[\d-]*_[\d-]*\d)/);
-  var seed = match ? match[1] : raw;
-  // Seed games always use custom-mode (blue) so N_TURNS adapts to seed length
+  // Support ancien format legacy (12-45_0-5) et nouveau format Base62
+  var seed = raw;
+  // Si l'utilisateur a collé du texte avec une seed entourée d'espaces, on nettoie
+  seed = seed.replace(/\s+/g, '');
   startGame('custom', seed);
 }
 
@@ -3126,10 +3722,23 @@ document.getElementById('opt-modal').addEventListener('click', function(e) {
 });
 
 function resetToMenu() {
+  // Nettoyer le hash URL
+  history.replaceState(null, '', window.location.pathname + window.location.search);
   document.body.classList.remove('hardcore','hardcore-ended','custom-mode','reverse-mode');
   TIME_PER_TURN = 20;
   N_TURNS = 8;
   gameMode = 'normal';
+
+  // Réinitialiser les éléments daily
+  isDailyMode = false;
+  dailyScore  = null;
+  document.getElementById('game-seed-display').style.display = '';
+  var optBlock = document.getElementById('opt-block');
+  if (optBlock) optBlock.style.display = '';
+  var seedBox = document.getElementById('seed-display');
+  if (seedBox) seedBox.style.display = '';
+  var copyBtnsParent = document.getElementById('btn-copy-seed');
+  if (copyBtnsParent && copyBtnsParent.parentElement) copyBtnsParent.parentElement.style.display = '';
   draftMode = 'auto';
   customSubMode = 'normal';
   ['normal','hardcore','reverse'].forEach(function(m) {
@@ -3149,33 +3758,352 @@ function resetToMenu() {
   applyTranslations();
 }
 
-function copySeed() {
-  var btn = document.querySelector('[onclick="copySeed()"]');
+function getShareUrl() {
+  var base = window.location.href.split('#')[0];
+  return base + '#seed=' + encodeURIComponent(currentSeed);
+}
+
+function _copyToClipboard(text, btn, successMsg) {
   var orig = btn ? btn.textContent : '';
-  var text = currentSeed || '';
-  if (!text) return;
+  var done = function() {
+    if (btn) { btn.textContent = successMsg; setTimeout(function() { btn.textContent = orig; }, 2000); }
+  };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
-    }).catch(function() {
-      // fallback
+    navigator.clipboard.writeText(text).then(done).catch(function() {
       var ta = document.createElement('textarea');
       ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+      document.execCommand('copy'); document.body.removeChild(ta);
+      done();
     });
   } else {
     var ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    if (btn) { btn.textContent = '✓ Copié !'; setTimeout(function() { btn.textContent = orig; }, 2000); }
+    document.execCommand('copy'); document.body.removeChild(ta);
+    done();
   }
 }
 
+function copySeed() {
+  var btn = document.getElementById('btn-copy-seed');
+  _copyToClipboard(currentSeed || '', btn, '✓ Copié !');
+}
+
+function copyUrl() {
+  var btn = document.getElementById('btn-copy-url');
+  _copyToClipboard(getShareUrl(), btn, '✓ Lien copié !');
+}
+
+
+
+// ─── DAILY MODE ───────────────────────────────────────────────────────────────
+var DAILY_API = 'https://legrandgeoquiz-api.mathieu-viart73.workers.dev';
+var dailyDate   = '';   // "YYYY-MM-DD" du jour courant
+var dailyToken  = '';   // seed token reçu de l'API
+var dailyScore  = null; // score de la partie daily en cours
+var isDailyMode = false;
+
+// ── Initialisation : vérifie si déjà joué + affiche la date ──────────────────
+async function initDailyBlock() {
+  // Date locale en YYYY-MM-DD
+  var now = new Date();
+  dailyDate = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0');
+
+  // Afficher la date sur le badge
+  var badge = document.getElementById('daily-date-badge');
+  if (badge) badge.textContent = dailyDate;
+
+  // Vérifier si déjà joué aujourd'hui via l'API
+  try {
+    var res = await fetch(DAILY_API + '/api/played', { method: 'GET' });
+    if (res.ok) {
+      var data = await res.json();
+      if (data.played) {
+        _setDailyPlayed();
+      }
+    }
+  } catch(e) {
+    // Pas de connexion ? On laisse jouer, le serveur rejettera si besoin
+    console.warn('Daily check failed (offline?)', e);
+  }
+}
+
+function _setDailyPlayed() {
+  var btn = document.getElementById('btn-daily');
+  var msg = document.getElementById('daily-played-msg');
+  if (btn) { btn.disabled = true; }
+  if (msg) { msg.classList.remove('hidden'); }
+}
+
+// ── Lancer la partie Daily ────────────────────────────────────────────────────
+async function startDailyGame() {
+  var btn = document.getElementById('btn-daily');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+  try {
+    // Récupérer le token du jour
+    var res = await fetch(DAILY_API + '/api/seed');
+    if (!res.ok) throw new Error('API error ' + res.status);
+    var data = await res.json();
+    dailyDate  = data.date;
+    dailyToken = data.token;
+  } catch(e) {
+    alert('Impossible de récupérer la partie du jour. Vérifiez votre connexion.');
+    if (btn) { btn.disabled = false; btn.textContent = '🏆 Daily'; }
+    return;
+  }
+
+  // Générer une seed déterministe depuis le token
+  // On utilise le token comme graine pour mélanger les pays/catégories
+  var seed = _generateDailySeed(dailyToken);
+  if (!seed) {
+    alert('Erreur lors de la génération de la partie.');
+    if (btn) { btn.disabled = false; }
+    return;
+  }
+
+  isDailyMode = true;
+  dailyScore  = null;
+
+  // Lancer en mode custom / normal / 20s
+  gameMode      = 'custom';
+  customSubMode = 'normal';
+  N_TURNS       = 8;
+  TIME_PER_TURN = 20;
+
+  // Masquer le score et la seed pendant la partie (anti-triche)
+  document.getElementById('game-seed-display').style.display = 'none';
+
+  startGame('custom', seed);
+}
+
+// Génère une seed déterministe depuis le token du jour
+function _generateDailySeed(token) {
+  // Utilise le token comme générateur pseudo-aléatoire déterministe
+  // On dérive un état RNG depuis le token, puis on tire pays et catégories
+  var rng = _makeRng(token);
+
+  // Pool complet
+  var countryPool = [];
+  for (var i = 0; i < countriesDB.length; i++) countryPool.push(i);
+  var catPool = [];
+  for (var i = 0; i < ALL_CATEGORIES.length; i++) catPool.push(i);
+
+  // Fisher-Yates shuffle déterministe
+  _shuffle(countryPool, rng);
+  _shuffle(catPool, rng);
+
+  // Prendre les 8 premiers pays et catégories compatibles
+  var n = 8;
+  var chosenCats = catPool.slice(0, n);
+  var catIds = chosenCats.map(function(i) { return ALL_CATEGORIES[i].id; });
+
+  // Filtrer les pays qui ont toutes les catégories
+  var eligible = countryPool.filter(function(ci) {
+    return catIds.every(function(id) {
+      var v = countriesDB[ci][id];
+      return v !== false && v !== null && v !== undefined;
+    });
+  });
+
+  if (eligible.length < n) {
+    // Fallback : on prend les meilleurs pays même si incomplets
+    eligible = countryPool;
+  }
+
+  var chosenCountries = eligible.slice(0, n);
+
+  // Re-mélanger l'ordre pour que les pays n'arrivent pas triés par index
+  _shuffle(chosenCountries, rng);
+  _shuffle(chosenCats, rng);
+
+  return encodeSeed(chosenCountries, chosenCats, 'normal', 20);
+}
+
+// LCG simple — suffisant pour une seed déterministe non-cryptographique
+function _makeRng(token) {
+  // Hash du token → seed numérique
+  var seed = 0;
+  for (var i = 0; i < token.length; i++) {
+    seed = (seed * 31 + token.charCodeAt(i)) & 0x7FFFFFFF;
+  }
+  seed = seed || 12345;
+  return function() {
+    seed = (seed * 1664525 + 1013904223) & 0x7FFFFFFF;
+    return seed / 0x7FFFFFFF;
+  };
+}
+
+function _shuffle(arr, rng) {
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(rng() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+// ── Fin de partie Daily : intercepte showEndPanel ─────────────────────────────
+var _origShowEndPanel = null;
+
+function _dailyShowEndPanel() {
+  // Appeler l'original
+  _origShowEndPanel();
+
+  if (!isDailyMode) return;
+
+  // Cacher la combinaison optimale et la seed (anti-triche daily)
+  var optBlock = document.getElementById('opt-block');
+  if (optBlock) optBlock.style.display = 'none';
+  var seedBox = document.getElementById('seed-display');
+  if (seedBox) seedBox.style.display = 'none';
+  var copyBtns = document.querySelector('[id="btn-copy-seed"]');
+  if (copyBtns) copyBtns.parentElement.style.display = 'none';
+
+  // Sauvegarder le score et ouvrir le modal submit
+  dailyScore = totalScore;
+  setTimeout(function() { openSubmitModal(); }, 600);
+}
+
+// ── Modal submit ──────────────────────────────────────────────────────────────
+function openSubmitModal() {
+  var overlay = document.getElementById('daily-submit-overlay');
+  var display = document.getElementById('daily-score-display');
+  var input   = document.getElementById('daily-pseudo-input');
+  var msg     = document.getElementById('daily-submit-msg');
+  if (display) display.textContent = dailyScore !== null ? dailyScore + ' pts' : '—';
+  if (msg)     msg.textContent = '';
+  if (input)   input.value = '';
+  if (overlay) { overlay.style.display = 'flex'; setTimeout(function(){ if(input) input.focus(); }, 100); }
+  applyTranslations();
+}
+
+function skipDailySubmit() {
+  var overlay = document.getElementById('daily-submit-overlay');
+  if (overlay) overlay.style.display = 'none';
+  isDailyMode = false;
+  _setDailyPlayed();
+  // Ouvrir le leaderboard
+  setTimeout(openLeaderboard, 200);
+}
+
+async function submitDailyScore() {
+  var pseudo = (document.getElementById('daily-pseudo-input').value || '').trim();
+  var msg    = document.getElementById('daily-submit-msg');
+
+  if (!pseudo || pseudo.length < 1 || pseudo.length > 20) {
+    msg.textContent = t('dailyErrPseudo');
+    msg.className   = 'daily-submit-msg err';
+    return;
+  }
+
+  msg.textContent = '⏳';
+  msg.className   = 'daily-submit-msg';
+
+  try {
+    var res = await fetch(DAILY_API + '/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pseudo: pseudo, score: dailyScore, seed_date: dailyDate })
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      if (data.already_played) {
+        msg.textContent = t('dailyErrPlayed');
+      } else {
+        msg.textContent = data.error || t('dailyErrNetwork');
+      }
+      msg.className = 'daily-submit-msg err';
+      return;
+    }
+
+    // Succès
+    var rankStr = t('dailyRank') + ' ' + data.rank + ' ' + t('dailyOf') + ' ' + data.total;
+    msg.textContent = '✓ ' + rankStr;
+    msg.className   = 'daily-submit-msg ok';
+    _setDailyPlayed();
+    isDailyMode = false;
+
+    // Fermer et ouvrir le leaderboard après 1.5s
+    setTimeout(function() {
+      document.getElementById('daily-submit-overlay').style.display = 'none';
+      openLeaderboard();
+    }, 1500);
+
+  } catch(e) {
+    msg.textContent = t('dailyErrNetwork');
+    msg.className   = 'daily-submit-msg err';
+  }
+}
+
+// ── Leaderboard modal ─────────────────────────────────────────────────────────
+async function openLeaderboard() {
+  var overlay = document.getElementById('daily-lb-overlay');
+  var dateEl  = document.getElementById('daily-lb-date');
+  var rowsEl  = document.getElementById('daily-lb-rows');
+  var totalEl = document.getElementById('daily-lb-total');
+
+  if (!overlay) return;
+  overlay.classList.add('open');
+  if (dateEl) dateEl.textContent = dailyDate || new Date().toISOString().slice(0,10);
+  if (rowsEl) rowsEl.innerHTML   = '<div class="lb-empty">⏳</div>';
+  if (totalEl) totalEl.textContent = '';
+  applyTranslations();
+
+  try {
+    var date = dailyDate || new Date().toISOString().slice(0,10);
+    var res  = await fetch(DAILY_API + '/api/leaderboard?date=' + date);
+    var data = await res.json();
+    _renderLeaderboard(data.scores || [], data.total || 0);
+  } catch(e) {
+    if (rowsEl) rowsEl.innerHTML = '<div class="lb-empty">' + t('dailyErrNetwork') + '</div>';
+  }
+}
+
+function _renderLeaderboard(scores, total) {
+  var rowsEl  = document.getElementById('daily-lb-rows');
+  var totalEl = document.getElementById('daily-lb-total');
+
+  if (!scores || scores.length === 0) {
+    rowsEl.innerHTML = '<div class="lb-empty">' + t('dailyLbEmpty') + '</div>';
+    if (totalEl) totalEl.textContent = '';
+    return;
+  }
+
+  var medals = ['🥇', '🥈', '🥉'];
+  var rankClasses = ['gold', 'silver', 'bronze'];
+
+  var html = '';
+  scores.forEach(function(s, i) {
+    var rank    = i + 1;
+    var rankStr = rank <= 3 ? medals[rank - 1] : rank;
+    var cls     = rank <= 3 ? rankClasses[rank - 1] : '';
+    html += '<div class="lb-row">' +
+      '<span class="lb-rank ' + cls + '">' + rankStr + '</span>' +
+      '<span class="lb-pseudo">' + _escHtml(s.pseudo) + '</span>' +
+      '<span class="lb-score">' + s.score + '</span>' +
+      '</div>';
+  });
+
+  rowsEl.innerHTML = html;
+  if (totalEl && total > scores.length) {
+    totalEl.textContent = 'Top ' + scores.length + ' / ' + total + ' joueurs';
+  }
+}
+
+function closeLbModal() {
+  var overlay = document.getElementById('daily-lb-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function _escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ─── COUNTRY DESCRIPTIONS ─────────────────────────────────────────────────────
 // Keyed by ISO2 country_code ; fallback matching by country_FR name

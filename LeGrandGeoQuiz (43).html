@@ -1871,15 +1871,6 @@ var TRANSLATIONS = {
     noAnswer:       '\u041d\u0435\u043c\u0430\u0454 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0456',
     penalty:        '\u0448\u0442\u0440\u0430\u0444 \u0434\u043e\u0434\u0430\u043d\u043e \u0434\u043e \u0440\u0430\u0445\u0443\u043d\u043a\u0443',
     hint1btn:       '\u041f\u0456\u0434\u043a\u0430\u0437\u043a\u0430 +25',
-    copied:         '\u2713 \u0421\u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043e!',
-    copiedUrl:      '\u2713 \u041f\u043e\u0441\u0438\u043b\u0430\u043d\u043d\u044f \u0441\u043a\u043e\u043f\u0456\u044c\u043e\u0432\u0430\u043d\u043e!',
-    revealTitleHC:  '\u2014 \u0420\u041e\u0417\u041a\u0420\u0418\u0422\u0422\u042f \u2014',
-    catLabelTimeUp: '\u0427\u0430\u0441 \u0432\u0438\u0439\u0448\u043e\u0432 (+200)',
-    catLabelHint1:  '\uD83D\uDCA1 \u041f\u0456\u0434\u043a\u0430\u0437\u043a\u0430 (+25)',
-    catLabelHint2:  '\uD83D\uDD0D \u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0456\u044f (+50)',
-    optColOptimal:  '\u041e\u043f\u0442\u0438\u043c\u0430\u043b',
-    optColMine:     '\u041c\u043e\u0454',
-    optColDiff:     '\u0420\u0456\u0437\u043d.',
     modeNormalBadge:'\u041a\u043b\u0430\u0441\u0438\u043a\u0430',
     modeNormalTitle:'\u041d\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u0438\u0439',
     modeNormalDesc: '8 \u043a\u0440\u0430\u0457\u043d · 8 \u043a\u0430\u0442\u0435\u0433 · 20\u0441 · \u041f\u0456\u0434\u043a\u0430\u0437\u043a\u0438',
@@ -1978,9 +1969,6 @@ function applyTranslations() {
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
     el.placeholder = t(el.dataset.i18nPlaceholder);
-  });
-  document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
-    el.title = t(el.dataset.i18nTitle);
   });
 }
 
@@ -2767,8 +2755,8 @@ function ribbonUpdateSlots() {
   var fill   = document.getElementById('ribbon-slots-fill');
   fill.style.width = pct + '%';
   fill.className   = 'ribbon-slots-fill' + (nIncl > n ? ' over' : nIncl === n ? ' full' : '');
-  document.getElementById('ribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' ' + t('ribbonSlotsTxt');
-  document.getElementById('ribbon-incl-count').textContent = nIncl + ' ' + (nIncl > 1 ? t('ribbonSlotsForcedP') : t('ribbonSlotsForced'));
+  document.getElementById('ribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' slots forcés';
+  document.getElementById('ribbon-incl-count').textContent = nIncl + ' forcé' + (nIncl > 1 ? 's' : '');
 }
 
 // Called by the N slider to update the slots indicator live
@@ -2922,8 +2910,8 @@ function catRibbonUpdateSlots() {
   if (!fill) return;
   fill.style.width = pct + '%';
   fill.className   = 'ribbon-slots-fill' + (nIncl > n ? ' over' : nIncl === n ? ' full' : '');
-  document.getElementById('catribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' ' + t('ribbonSlotsTxt');
-  document.getElementById('catribbon-incl-count').textContent = nIncl + ' ' + (nIncl > 1 ? t('ribbonCatForcedP') : t('ribbonCatForced'));
+  document.getElementById('catribbon-slots-txt').textContent  = nIncl + ' / ' + n + ' slots forcés';
+  document.getElementById('catribbon-incl-count').textContent = nIncl + ' forcée' + (nIncl > 1 ? 's' : '');
 }
 
 // Returns a pool of ALL_CATEGORIES indices filtered according to catRibbon state
@@ -3620,8 +3608,8 @@ function showReveal(flag, cName, catObj, finalValue, onDone, starData, bestPanel
     + '<div class="reveal-cat-name">' + catObj.icon + ' ' + catName(catObj) + '</div>'
     + '<div class="reveal-country"><span class="reveal-flag">' + flag + '</span>'
     + '<span class="reveal-country-name">' + cName + '</span></div>'
-    + '<div class="odometer-wrap" id="odo-wrap" style="' + (isHardcoreActive() ? 'display:none' : '') + '"></div>'
-    + '<div class="reveal-points-label" style="' + (isHardcoreActive() ? 'display:none' : '') + '">' + (isFalse ? t('noData') : t('ptsAdded')) + '</div>'
+    + '<div class="odometer-wrap" id="odo-wrap" style="' + (gameMode==='hardcore' ? 'display:none' : '') + '"></div>'
+    + '<div class="reveal-points-label" style="' + (gameMode==='hardcore' ? 'display:none' : '') + '">' + (isFalse ? t('noData') : t('ptsAdded')) + '</div>'
     + '<button class="reveal-skip" id="reveal-skip-btn">' + t('skip') + '</button>'
     + '</div>';
   document.body.appendChild(overlay);
@@ -3882,8 +3870,10 @@ function showEndReveal(onDone) {
   screen.style.justifyContent = 'center';
 
   // i18n labels
-  titleEl.textContent = isHardcoreActive() ? t('revealTitleHC') : t('revealTitle');
-  labelEl.textContent = t('revealScoreLabel');
+  titleEl.textContent = isHardcoreActive()
+    ? (currentLang === 'fr' ? '— RÉVÉLATION —' : currentLang === 'ua' ? '— РОЗКРИТТЯ —' : '— REVEAL —')
+    : (currentLang === 'fr' ? 'Récapitulatif' : currentLang === 'ua' ? 'Підсумок' : 'Summary');
+  labelEl.textContent = currentLang === 'fr' ? 'Score total' : currentLang === 'ua' ? 'Загальний рахунок' : 'Total score';
 
   // Fix: use inline style for opacity, not class (inline wins over class)
   setTimeout(function() { screen.style.opacity = '1'; }, 30);
@@ -3906,9 +3896,10 @@ function showEndReveal(onDone) {
 
     var catLabel;
     if (entry.isHint) {
-      catLabel = entry.hintLevel === 1 ? t('catLabelHint1') : t('catLabelHint2');
+      if (entry.hintLevel === 1) catLabel = currentLang === 'fr' ? '💡 Indice géo (+25 pts)' : currentLang === 'ua' ? '💡 Підказка (+25)' : '💡 Geo hint (+25 pts)';
+      else catLabel = currentLang === 'fr' ? '🔍 Indice stratégique (+50 pts)' : currentLang === 'ua' ? '🔍 Стратегія (+50)' : '🔍 Strategic hint (+50 pts)';
     } else if (entry.isPenalty) {
-      catLabel = t('catLabelTimeUp');
+      catLabel = currentLang === 'fr' ? 'Temps écoulé (+200 pts)' : currentLang === 'ua' ? 'Час вийшов (+200)' : 'Time up (+200 pts)';
     } else {
       catLabel = entry.catObj ? entry.catObj.icon + ' ' + catName(entry.catObj) : '?';
     }
@@ -4021,10 +4012,10 @@ function showOptModal() {
     '<span></span>' +
     '<span></span>' +
     '<span></span>' +
-    '<span style="color:#4fc3f7">' + t('optColOptimal') + '</span>' +
-    '<span class="opt-header-opt">' + t('optColOptimal').slice(0,3) + '</span>' +
-    '<span class="opt-header-mine">' + t('optColMine') + '</span>' +
-    '<span class="opt-header-diff">' + t('optColDiff') + '</span>';
+    '<span style="color:#4fc3f7">Optimal</span>' +
+    '<span class="opt-header-opt">Opt</span>' +
+    '<span class="opt-header-mine">Moi</span>' +
+    '<span class="opt-header-diff">Diff</span>';
   rowsEl.appendChild(header);
 
   // ── Lignes dans l'ordre de jeu — on ignore les hints (isHint:true) ─────────
@@ -4172,12 +4163,12 @@ function _copyToClipboard(text, btn, successMsg) {
 
 function copySeed() {
   var btn = document.getElementById('btn-copy-seed');
-  _copyToClipboard(currentSeed || '', btn, t('copied'));
+  _copyToClipboard(currentSeed || '', btn, '✓ Copié !');
 }
 
 function copyUrl() {
   var btn = document.getElementById('btn-copy-url');
-  _copyToClipboard(getShareUrl(), btn, t('copiedUrl'));
+  _copyToClipboard(getShareUrl(), btn, '✓ Lien copié !');
 }
 
 
@@ -4475,7 +4466,7 @@ function _renderLeaderboard(scores, total) {
 
   rowsEl.innerHTML = html;
   if (totalEl && total > scores.length) {
-    totalEl.textContent = 'Top ' + scores.length + ' / ' + total + ' ' + (total > 1 ? t('lbTotalPlayersP') : t('lbTotalPlayers'));
+    totalEl.textContent = 'Top ' + scores.length + ' / ' + total + ' joueurs';
   }
 }
 
@@ -5103,7 +5094,7 @@ function resetHints() {
   btn2.style.display = 'none';
 
   // Check availability for current country
-  if (currentStep < N_TURNS && gameCountries[currentStep]) {
+  if (currentStep < 8 && gameCountries[currentStep]) {
     if (!getCountryDesc(gameCountries[currentStep])) btn1.style.display = 'none';
   }
 }
@@ -5212,18 +5203,18 @@ function _switchMobTab(prefix, col) {
   var actionDefs;
   if (col === 'excl') {
     actionDefs = [
-      { label: t('mobActToPoss'),    cls: 'act-poss', fn: function() { moveFn('excl','poss',false); } },
-      { label: t('mobActAllToPoss'), cls: 'act-poss', fn: function() { moveFn('excl','poss',true); } },
+      { label: '→ Possible', cls: 'act-poss', fn: function() { moveFn('excl','poss',false); } },
+      { label: '→ Possible (tous)', cls: 'act-poss', fn: function() { moveFn('excl','poss',true); } },
     ];
   } else if (col === 'poss') {
     actionDefs = [
-      { label: t('mobActExcl'),    cls: 'act-excl', fn: function() { moveFn('poss','excl',false); } },
-      { label: t('mobActForce'),   cls: 'act-incl', fn: function() { moveFn('poss','incl',false); } },
-      { label: t('mobActAllExcl'), cls: 'act-excl', fn: function() { moveFn('poss','excl',true); } },
+      { label: '❌ Exclure', cls: 'act-excl', fn: function() { moveFn('poss','excl',false); } },
+      { label: '✅ Forcer', cls: 'act-incl', fn: function() { moveFn('poss','incl',false); } },
+      { label: '❌ Tout exclure', cls: 'act-excl', fn: function() { moveFn('poss','excl',true); } },
     ];
   } else { // incl
     actionDefs = [
-      { label: t('mobActRemove'), cls: 'act-poss', fn: function() { moveFn('incl','poss',false); } },
+      { label: '← Retirer', cls: 'act-poss', fn: function() { moveFn('incl','poss',false); } },
     ];
   }
 

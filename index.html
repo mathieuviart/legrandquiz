@@ -321,7 +321,7 @@
             </button>
             <button class="preset-btn" onclick="applyPreset('islands',this)">
               <span class="p-icon">🏝️</span>
-              <span class="p-name"> data-i18n="presetIslands"></span>
+              <span class="p-name" data-i18n="presetIslands"></span>
             </button>
             <button class="preset-btn" onclick="applyPreset('flag-guesser',this)">
               <span class="p-icon">🚩</span>
@@ -355,7 +355,8 @@
       <div class="reverse-cat-icon" id="reverse-cat-icon">?</div>
       <div class="reverse-cat-name" id="reverse-cat-name">—</div>
       <div class="reverse-cat-info-row">
-        <span class="reverse-info-toggle" onclick="toggleReverseCatInfo()" data-i18n="reverseInfoBtn"></span>
+          <span class="reverse-sort-btn" id="reverse-sort-btn" data-catid="">⇅ <span class="rsq">?</span></span>
+          <span class="reverse-info-toggle" onclick="toggleReverseCatInfo()" data-i18n="reverseInfoBtn"></span>
       </div>
       <div class="reverse-cat-tooltip" id="reverse-cat-tooltip"></div>
     </div>

@@ -12,11 +12,15 @@ function showTooltip(catId, targetEl) {
   var left = Math.max(8, Math.min(rect.left + rect.width/2 - tipWidth/2, window.innerWidth - tipWidth - 8));
   tip.style.width = tipWidth + 'px';
   tip.style.left  = left + 'px';
+  /* Measure height without triggering transition: use offsetHeight with visibility hidden + position off-screen */
   tip.style.visibility = 'hidden';
-  tip.classList.add('visible');
+  tip.style.position = 'fixed';
+  tip.style.top = '-9999px';
+  tip.classList.add('visible'); /* Add class to get full computed size */
   var tipH = tip.offsetHeight;
-  tip.classList.remove('visible');
+  tip.classList.remove('visible'); /* Remove before showing to avoid flash */
   tip.style.visibility = '';
+  /* Now set correct position and show with transition */
   tip.style.top = (rect.top - 8 - tipH < 8) ? (rect.bottom + 8) + 'px' : (rect.top - 8 - tipH) + 'px';
   clearTimeout(tooltipTimeout);
   tip.classList.add('visible');
@@ -24,9 +28,8 @@ function showTooltip(catId, targetEl) {
 
 function hideTooltip() {
   clearTimeout(tooltipTimeout);
-  tooltipTimeout = setTimeout(function() {
-    document.getElementById('cat-tooltip').classList.remove('visible');
-  }, 120);
+  /* Remove visible class immediately to avoid flash on rapid clicks */
+  document.getElementById('cat-tooltip').classList.remove('visible');
 }
 
 document.addEventListener('click', function(e) {

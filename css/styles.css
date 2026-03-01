@@ -158,8 +158,90 @@ h1 { font-size:2.8em; font-weight:800; line-height:1; margin-bottom:6px; }
 .cat-info-btn { display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; border-radius:50%; background:rgba(79,195,255,0.12); border:1px solid rgba(79,195,255,0.3); color:var(--accent3); font-family:'DM Mono',monospace; font-size:0.65em; font-weight:700; cursor:pointer; flex-shrink:0; line-height:1; transition:all 0.15s; user-select:none; }
 .cat-info-btn:hover { background:rgba(79,195,255,0.28); border-color:var(--accent3); transform:scale(1.15); }
 
+/* Groupe des boutons action dans une cat-btn */
+.cat-btn-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+/* Bouton de tri ⇅ */
+.cat-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(79,255,176,0.1);
+  border: 1px solid rgba(79,255,176,0.25);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72em;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: all 0.15s;
+  user-select: none;
+}
+.cat-sort-btn:hover {
+  background: rgba(79,255,176,0.28);
+  border-color: var(--accent);
+  transform: scale(1.15);
+}
+
+/* Bouton sort dans reverse-cat-info-row */
+.reverse-sort-btn {
+  /* Match the visual language of reverse-info-toggle: small rounded pill */
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65em;
+  color: var(--accent3);
+  border: 1px solid rgba(79,195,255,0.35);
+  background: rgba(79,195,255,0.08);
+  border-radius: 99px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.reverse-sort-btn:hover { background: rgba(79,195,255,0.2); }
+
+/* Hardcore */
+body.hardcore .cat-sort-btn {
+  background: rgba(255,61,90,0.1);
+  border-color: rgba(255,61,90,0.25);
+  color: #ff3d5a;
+}
+body.hardcore .cat-sort-btn:hover {
+  background: rgba(255,61,90,0.25);
+  border-color: #ff3d5a;
+}
+
+/* Custom mode */
+body.custom-mode .cat-sort-btn {
+  background: rgba(167,139,250,0.1);
+  border-color: rgba(167,139,250,0.25);
+  color: var(--accent3);
+}
+body.custom-mode .cat-sort-btn:hover {
+  background: rgba(167,139,250,0.28);
+  border-color: var(--accent3);
+}
+
+/* Tooltip sort — variante couleur */
+#cat-tooltip[data-mode="sort"] {
+  border-color: var(--accent);
+}
+#cat-tooltip[data-mode="sort"] .tt-title {
+  color: var(--accent);}
+
 /* tooltip */
-#cat-tooltip { position:fixed; z-index:300; max-width:280px; background:var(--surface); border:1px solid var(--accent3); border-radius:10px; padding:12px 14px; box-shadow:0 8px 32px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transform:translateY(4px) scale(0.97); transition:opacity 0.15s ease,transform 0.15s ease; }
+#cat-tooltip { position:fixed; z-index:300; max-width:280px; background:var(--surface); border:1px solid var(--accent3); border-radius:10px; padding:12px 14px; box-shadow:0 8px 32px rgba(0,0,0,0.5); pointer-events:none; opacity:0; transform:translateY(4px) scale(0.97); transition:opacity 0.08s ease,transform 0.08s ease; }
 #cat-tooltip.visible { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
 .tt-title { font-size:0.8em; font-weight:700; color:var(--accent3); margin-bottom:6px; }
 .tt-body  { font-size:0.78em; color:var(--muted); line-height:1.5; font-family:'DM Mono',monospace; }
@@ -582,13 +664,21 @@ body.reverse-mode .cats-grid { display:none !important; }
   border-radius:99px; padding:3px 10px; cursor:pointer; transition:all 0.15s;
 }
 .reverse-info-toggle:hover { background:rgba(79,195,255,0.2); }
+.reverse-sort-btn .rsq { font-weight:700; margin-left:4px; opacity:0.95; }
 .reverse-cat-tooltip {
   display:none; margin-top:8px; text-align:left;
   font-family:'DM Mono',monospace; font-size:0.68em; color:var(--muted); line-height:1.5;
   background:rgba(79,195,255,0.06); border:1px solid rgba(79,195,255,0.2);
   border-radius:8px; padding:8px 10px;
+  opacity: 0;
+  transform: translateY(4px) scale(0.97);
+  transition: opacity 0.08s ease, transform 0.08s ease;
 }
-.reverse-cat-tooltip.open { display:block; }
+.reverse-cat-tooltip.open { 
+  display:block;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
 
 /* ── Country buttons grid (reverse mode) ── */
 #countries-grid {
@@ -1064,22 +1154,177 @@ body.reverse-mode #countries-grid { display:grid; }
 
 /* ── Appareils tactiles : targets min 44px, no hover ── */
 @media (pointer: coarse) {
-  .cat-btn        { min-height: 46px; }
-  .btn-primary, .btn-hardcore, .btn-reverse,
-  .btn-daily, .btn-custom { min-height: 48px; }
-  .btn-secondary  { min-height: 44px; }
-  .draft-pill, .submode-pill { min-height: 58px; }
-  .lang-btn       { min-height: 30px; min-width: 34px; }
-  .mob-ribbon-action { min-height: 40px; }
-  /* Supprimer les hover-transforms qui "collent" sur touch */
-  .btn-primary:hover, .btn-hardcore:hover,
-  .btn-daily:hover, .btn-reverse:hover { transform: none; }
-  .cat-btn:hover:not(:disabled) { transform: none; }
-  .ribbon-item:hover { background: transparent; color: var(--muted); }
+/* ─── CAT BTN ACTIONS (⇅ + i) ─────────────────────────────────────────────── */
+.cat-btn-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+/* Base style shared by both mini-buttons */
+.cat-sort-btn,
+.cat-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s, opacity 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Larger tap target via padding so finger doesn't miss */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cat-info-btn {
+  background: rgba(79, 255, 176, 0.1);
+  border: 1px solid rgba(79, 255, 176, 0.35);
+  color: var(--accent);
+}
+.cat-info-btn:hover { transform: scale(1.15); background: rgba(79, 255, 176, 0.2); }
+
+.cat-sort-btn {
+  background: rgba(79, 255, 176, 0.08);
+  border: 1px solid rgba(79, 255, 176, 0.28);
+  color: var(--accent);
+}
+.cat-sort-btn:hover { transform: scale(1.15); background: rgba(79, 255, 176, 0.18); }
+
+/* Hardcore */
+body.hardcore .cat-info-btn,
+body.hardcore .cat-sort-btn {
+  border-color: rgba(255, 61, 90, 0.4);
+  color: #ff3d5a;
+  background: rgba(255, 61, 90, 0.08);
+}
+body.hardcore .cat-info-btn:hover,
+body.hardcore .cat-sort-btn:hover {
+  background: rgba(255, 61, 90, 0.18);
+}
+
+/* Custom/reverse accent */
+body.custom-mode .cat-info-btn,
+body.custom-mode .cat-sort-btn,
+body.reverse-mode .cat-info-btn,
+body.reverse-mode .cat-sort-btn {
+  border-color: rgba(var(--accent3-rgb, 180, 100, 255), 0.4);
+  color: var(--accent3, #b464ff);
+  background: rgba(var(--accent3-rgb, 180, 100, 255), 0.08);
+}
+
+/* ─── REVERSE SORT BTN ─────────────────────────────────────────────────────── */
+.reverse-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8em;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(79, 255, 176, 0.08);
+  border: 1px solid rgba(79, 255, 176, 0.3);
+  color: var(--accent);
+  transition: transform 0.15s, background 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.reverse-sort-btn:hover { transform: scale(1.1); background: rgba(79, 255, 176, 0.18); }
+
+/* ─── TOOLTIP ──────────────────────────────────────────────────────────────── */
+#cat-tooltip {
+  pointer-events: none; /* disable pointer by default to avoid blocking taps on mobile */
+  z-index: 9999;
+}
+#cat-tooltip[data-mode="sort"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px rgba(79, 255, 176, 0.2);
+}
+
+/* ─── MOBILE OVERRIDES ─────────────────────────────────────────────────────── */
+@media (max-width: 600px), (pointer: coarse) {
+  /* Bigger tap zones — invisible padding trick */
+  .cat-sort-btn,
+  .cat-info-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85em;
+    /* extend tap area beyond visible circle */
+    padding: 6px;
+    box-sizing: border-box;
+    /* keep layout stable and increase tappable area without negative margins */
+  }
+
+  .cat-btn-actions {
+    gap: 8px;
+  }
+
+  /* Reverse sort pill also bigger */
+  .reverse-sort-btn {
+    padding: 3px 10px;
+    font-size: 0.65em;
+    min-height: auto;
+  }
+
+  /* Tooltip: fixed to bottom of viewport on mobile so it's always readable */
+  #cat-tooltip.visible {
+    position: fixed !important;
+    bottom: 16px !important;
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: calc(100vw - 32px) !important;
+    max-width: 340px;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    pointer-events: auto; /* allow interacting with tooltip content when visible */
+  }
+}
+
+/* Enable tooltip interactions on non-touch devices (hover-capable) */
+@media (hover: hover) and (pointer: fine) {
+  #cat-tooltip { pointer-events: auto; }
+}
+
+/* On mobile in reverse mode, position reverse-cat-tooltip the same as cat-tooltip (bottom fixed) for consistency */
+@media (max-width: 600px), (pointer: coarse) {
+  .reverse-cat-tooltip.open {
+    display: block !important;
+    position: fixed !important;
+    bottom: 16px !important;
+    top: auto !important;
+    left: 50% !important;
+    /* start slightly lower and slide up for a smoother effect */
+    transform: translateX(-50%) translateY(10px);
+    width: calc(100vw - 32px) !important;
+    max-width: 340px;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    margin-top: 0 !important;
+    padding: 12px 14px;
+    z-index: 9999;
+  }
+
+  /* transition for mobile bottom slide */
+  .reverse-cat-tooltip {
+    transition: transform 0.18s cubic-bezier(.2,.9,.2,1), opacity 0.14s ease, max-height 0.18s ease;
+  }
+  .reverse-cat-tooltip.open {
+    transform: translateX(-50%) translateY(0) !important;
+    opacity: 1;
+  }
 }
 
 /* ── Scroll fluide iOS ─────────────────────────────────── */
 #panel-custom, .ribbon-list,
 .daily-modal-box, #daily-lb-overlay .daily-modal-box {
   -webkit-overflow-scrolling: touch;
-}
+}}

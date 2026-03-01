@@ -2,6 +2,15 @@
 var customTimeSelected = 20;
 var customSubMode = 'normal'; // 'normal' | 'hardcore' | 'reverse'
 
+// list of category IDs used by the “Sport Enjoyer” preset; keeps only
+// rugby (men), football men/women and men’s basketball.
+var SPORT_CAT_IDS = [
+  'classement_rugby_H',
+  'classement_fifa_H',
+  'classement_fifa_F',
+  'classement_bball_M'
+];
+
 function selectSubModePill(mode) {
   customSubMode = mode;
   ['normal','hardcore','reverse'].forEach(function(m) {
@@ -77,6 +86,9 @@ function applyPreset(name, btn) {
   if (Object.keys(ribbonState).length === 0)    ribbonInit();
   if (Object.keys(catRibbonState).length === 0) catRibbonInit();
 
+  // make sure preset code lists exist (build once from country data)
+  ensurePresets();
+
   // Helper : set country ribbon by code whitelist
   function setCountryByList(allowedCodes) {
     for (var i = 0; i < countriesDB.length; i++) {
@@ -96,6 +108,70 @@ function applyPreset(name, btn) {
     catRibbonSelected = {};
   }
 
+  // Helper to safely set country list from a global codes array, with a fallback
+  function safeSetCodes(varName) {
+    try {
+      var codes = window[varName];
+      if (codes && Array.isArray(codes)) {
+        setCountryByList(codes);
+      } else {
+        console.warn('Preset codes not found or invalid:', varName);
+        resetCountries();
+      }
+    } catch (e) {
+      console.warn('Error accessing preset codes:', varName, e);
+      resetCountries();
+    }
+    resetCats();
+    setPresetDefaults();
+  }
+
+  // ensurePresets() builds the various *_CODES arrays from the country database
+  var _presetsDone = false;
+  function ensurePresets() {
+    if (_presetsDone) return;
+    if (!countriesDB || countriesDB.length === 0) return; // can't build yet
+    _presetsDone = true;
+
+    // utility for description text (fr preferred)
+    function descText(code) {
+      var d = COUNTRY_DESCRIPTIONS[code];
+      if (!d) return '';
+      return (d.fr || d.en || '').toString().toLowerCase();
+    }
+
+    // initialize empty arrays on window
+    window.EUROPEAN_CODES = [];
+    window.AFRICAN_CODES   = [];
+    window.AMERICAS_CODES  = [];
+    window.ASIAN_CODES     = [];
+    window.OCEANIA_CODES   = [];
+    window.TOP100_PIB_CODES = [];
+    window.SMALL_COUNTRIES_CODES = [];
+    window.FRANCE_NEIGHBORS_CODES = ['BE','LU','DE','CH','IT','ES','AD','MC'];
+    window.LANDLOCKED_CODES = [];
+    window.ISLANDS_CODES = [];
+
+    countriesDB.forEach(function(c) {
+      var code = (c.country_code||'').toUpperCase();
+      var d = descText(code);
+      if (/afrique/.test(d)) window.AFRICAN_CODES.push(code);
+      if (/am[eé]rique/.test(d)) window.AMERICAS_CODES.push(code);
+      if (/asie/.test(d)) window.ASIAN_CODES.push(code);
+      if (/europ/.test(d)) window.EUROPEAN_CODES.push(code);
+      if (/oc[eé]an|pacifique/.test(d) || code==='AU' || code==='NZ') window.OCEANIA_CODES.push(code);
+      if (/île|archipel|island/.test(d)) window.ISLANDS_CODES.push(code);
+      if (/enclav|landlocked/.test(d)) window.LANDLOCKED_CODES.push(code);
+      if (typeof c.pib === 'number' && c.pib <= 100) window.TOP100_PIB_CODES.push(code);
+      if (typeof c.nb_habitant === 'number' && c.nb_habitant >= 200) window.SMALL_COUNTRIES_CODES.push(code);
+    });
+
+    // remove duplicates just in case
+    ['EUROPEAN_CODES','AFRICAN_CODES','AMERICAS_CODES','ASIAN_CODES','OCEANIA_CODES','LANDLOCKED_CODES','ISLANDS_CODES'].forEach(function(varName) {
+      window[varName] = Array.from(new Set(window[varName]));
+    });
+  }
+
   if (name === 'no-russia') {
     resetCountries();
     for (var i = 0; i < countriesDB.length; i++) {
@@ -103,17 +179,16 @@ function applyPreset(name, btn) {
     }
     resetCats();
     setPresetDefaults();
-
-  } else if (name === 'europe')   { setCountryByList(EUROPEAN_CODES);  resetCats(); setPresetDefaults();
-  } else if (name === 'africa')   { setCountryByList(AFRICAN_CODES);   resetCats(); setPresetDefaults();
-  } else if (name === 'americas') { setCountryByList(AMERICAS_CODES);  resetCats(); setPresetDefaults();
-  } else if (name === 'asia')     { setCountryByList(ASIAN_CODES);     resetCats(); setPresetDefaults();
-  } else if (name === 'oceania')  { setCountryByList(OCEANIA_CODES);   resetCats(); setPresetDefaults();
-  } else if (name === 'top100pib'){ setCountryByList(TOP100_PIB_CODES);resetCats(); setPresetDefaults();
-  } else if (name === 'small')    { setCountryByList(SMALL_COUNTRIES_CODES); resetCats(); setPresetDefaults();
-  } else if (name === 'france-neighbors') { setCountryByList(FRANCE_NEIGHBORS_CODES); resetCats(); setPresetDefaults();
-  } else if (name === 'landlocked') { setCountryByList(LANDLOCKED_CODES); resetCats(); setPresetDefaults();
-  } else if (name === 'islands')    { setCountryByList(ISLANDS_CODES);    resetCats(); setPresetDefaults();
+  } else if (name === 'africa')   { safeSetCodes('AFRICAN_CODES');
+  } else if (name === 'americas') { safeSetCodes('AMERICAS_CODES');
+  } else if (name === 'asia')     { safeSetCodes('ASIAN_CODES');
+  } else if (name === 'europe')   { safeSetCodes('EUROPEAN_CODES');
+  } else if (name === 'oceania')  { safeSetCodes('OCEANIA_CODES');
+  } else if (name === 'top100pib'){ safeSetCodes('TOP100_PIB_CODES');
+  } else if (name === 'small')    { safeSetCodes('SMALL_COUNTRIES_CODES');
+  } else if (name === 'france-neighbors') { safeSetCodes('FRANCE_NEIGHBORS_CODES');
+  } else if (name === 'landlocked') { safeSetCodes('LANDLOCKED_CODES');
+  } else if (name === 'islands')    { safeSetCodes('ISLANDS_CODES');
 
   } else if (name === 'flag-guesser') {
     resetCountries(); resetCats();
@@ -130,7 +205,7 @@ function applyPreset(name, btn) {
   } else if (name === 'sport') {
     resetCountries();
     for (var i = 0; i < ALL_CATEGORIES.length; i++) {
-      catRibbonState[i] = (SPORT_CAT_IDS.indexOf(ALL_CATEGORIES[i].id) !== -1) ? 'incl' : 'poss';
+      catRibbonState[i] = (SPORT_CAT_IDS.indexOf(ALL_CATEGORIES[i].id) !== -1) ? 'incl' : 'excl';
     }
     catRibbonSelected = {};
     setPresetDefaults();

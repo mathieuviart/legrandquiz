@@ -68,7 +68,6 @@ function showCountdown(onDone) {
     numEl.className = 'countdown-num';
     void numEl.offsetWidth;
     numEl.textContent = counts[i];
-    // On GO: show draft emoji as subtitle
     if (i === counts.length - 1) {
       subEl.textContent = lastDraftUsed === 'countries' ? '🌍' : '📊';
     } else {
@@ -102,7 +101,6 @@ function startGame(modeOrSeed, seedOverride) {
     seedOverride = modeOrSeed;
   }
 
-  // Apply N_TURNS and time per mode
   document.body.classList.remove('hardcore', 'custom-mode', 'reverse-mode');
   if (gameMode === 'custom') {
     if (!seedOverride) {
@@ -112,7 +110,6 @@ function startGame(modeOrSeed, seedOverride) {
     document.body.classList.add('custom-mode');
     document.getElementById('panel-custom').classList.add('hidden');
     document.getElementById('panel-setup').classList.add('hidden');
-    // Apply sub-mode
     if (customSubMode === 'hardcore') {
       document.body.classList.add('hardcore');
     } else if (customSubMode === 'reverse') {
@@ -134,7 +131,6 @@ function startGame(modeOrSeed, seedOverride) {
 
   var seed = seedOverride || generateSeed();
   if (!applyGameFromSeed(seed)) return;
-  // Sync N_TURNS to actual game size (important when loading a seed)
   N_TURNS = gameCountries.length;
   currentSeed    = seed;
   currentStep    = 0;
@@ -144,11 +140,9 @@ function startGame(modeOrSeed, seedOverride) {
   isRevealing    = false;
   if (typeof resetHints === 'function') resetHints();
 
-  // Show countdown, then launch
   showCountdown(function() {
     document.getElementById('panel-game').classList.remove('hidden');
     document.getElementById('game-seed-display').textContent = currentSeed;
-    // Mettre à jour le hash URL pour permettre le partage
     history.replaceState(null, '', '#seed=' + encodeURIComponent(currentSeed));
     renderCategoryButtons();
     showTurn();
@@ -158,10 +152,7 @@ function startGame(modeOrSeed, seedOverride) {
 function startWithSeedInput() {
   var raw = document.getElementById('seed-input').value.trim();
   if (!raw) { alert(t('enterSeed')); return; }
-  // Support ancien format legacy (12-45_0-5) et nouveau format Base62
-  var seed = raw;
-  // Si l'utilisateur a collé du texte avec une seed entourée d'espaces, on nettoie
-  seed = seed.replace(/\s+/g, '');
+  var seed = raw.replace(/\s+/g, '');
   startGame('custom', seed);
 }
 
@@ -169,7 +160,10 @@ function startWithSeedInput() {
 function makeCatBtnHTML(cat) {
   return '<div class="cat-btn-top">'
        + '<span class="cat-icon">' + cat.icon + '</span>'
+       + '<span class="cat-btn-actions">'
+       + '<span class="cat-sort-btn" data-catid="' + cat.id + '">⇅</span>'
        + '<span class="cat-info-btn" data-catid="' + cat.id + '">i</span>'
+       + '</span>'
        + '</div>'
        + '<span class="cat-label-text">' + catName(cat) + '</span>';
 }
@@ -184,6 +178,7 @@ function renderCategoryButtons() {
     btn.innerHTML = makeCatBtnHTML(cat);
     btn.addEventListener('click', function(e) {
       if (e.target.closest('.cat-info-btn')) return;
+      if (e.target.closest('.cat-sort-btn')) return;
       handleChoice(cat.id);
     });
     grid.appendChild(btn);
@@ -191,10 +186,7 @@ function renderCategoryButtons() {
   attachInfoListeners();
 }
 
-
 // ─── RERENDER CURRENT TURN ON LANG CHANGE ─────────────────────────────────────
-// Appelé par setLang() pour mettre à jour immédiatement le tour en cours
-// sans attendre le prochain tour.
 function rerenderCurrentTurn() {
   var inGame = (document.getElementById('panel-game') &&
                 !document.getElementById('panel-game').classList.contains('hidden'));
@@ -205,7 +197,6 @@ function rerenderCurrentTurn() {
                    (gameMode === 'custom' && customSubMode === 'reverse'));
 
   if (isReverse) {
-    // ── Reverse : mettre à jour la catégorie affichée ─────────────────────
     if (currentStep < gameCategories.length) {
       var cat = gameCategories[currentStep];
       document.getElementById('reverse-cat-name').textContent    = catName(cat);
@@ -214,14 +205,12 @@ function rerenderCurrentTurn() {
         t('reverseTurn') + ' ' + (currentStep + 1) + ' ' + t('of') + ' ' + gameCategories.length;
     }
   } else {
-    // ── Normal / Hardcore / Custom ─────────────────────────────────────────
     if (currentStep < gameCountries.length) {
       var c = gameCountries[currentStep];
       document.getElementById('country-name').textContent = getCountryName(c);
       document.getElementById('turn-label').textContent =
         t('turn') + ' ' + (currentStep + 1) + ' ' + t('of') + ' ' + gameCountries.length;
 
-      // Hint buttons : état selon s'ils ont été révélés ou non
       var btn1 = document.getElementById('hint-btn-1');
       var btn2 = document.getElementById('hint-btn-2');
       if (btn1 && !btn1.classList.contains('revealed')) {
@@ -231,7 +220,6 @@ function rerenderCurrentTurn() {
         btn2.innerHTML = '\uD83D\uDD0D ' + t('hint2btn');
       }
 
-      // Labels des hints déjà révélés (titre de section)
       if (hintState.hint1Revealed) {
         var lbl1 = document.getElementById('hint-label-1');
         if (lbl1) lbl1.innerHTML = t('hintLabel1') + ' <span class="cost-badge cost-badge-1">-25 pts</span>';
@@ -258,19 +246,279 @@ function rerenderCategoryButtonNames() {
   attachInfoListeners();
 }
 
-function attachInfoListeners() {
-  document.querySelectorAll('.cat-info-btn').forEach(function(el) {
-    var clone = el.cloneNode(true);
-    el.parentNode.replaceChild(clone, el);
-    clone.addEventListener('mouseenter', function() { showTooltip(clone.dataset.catid, clone); });
-    clone.addEventListener('mouseleave', hideTooltip);
+// ─── TOOLTIP SYSTEM ──────────────────────────────────────────────────────────
+// Desktop  : mouseenter shows, mouseleave schedules hide (counter-based to
+//            survive rapid i→⇅ transitions without flicker).
+// Mobile   : purely tap-to-toggle. mouseenter/mouseleave are IGNORED on touch
+//            devices because they fire unreliably after touchend and cause the
+//            flash-then-close bug. A global touchstart listener on the document
+//            closes any open tooltip when the user taps outside it.
+
+var _tooltipHideTimer   = null;
+var _mouseOverTooltipUI = 0;  // counter for desktop hover zone
+
+// after hiding, suppress any re-opening for a short window to avoid ghost flashes
+var _tooltipSuppressUntil = 0;
+
+// Detect touch device once (re-evaluated each call is fine too)
+function _isTouchDevice() {
+  return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+}
+
+function _tooltipUIEnter() {
+  _mouseOverTooltipUI++;
+  _cancelTooltipHide();
+}
+
+function _tooltipUILeave() {
+  _mouseOverTooltipUI--;
+  _cancelTooltipHide();
+  _tooltipHideTimer = setTimeout(function() {
+    if (_mouseOverTooltipUI <= 0) {
+      _mouseOverTooltipUI = 0;
+      hideTooltip();
+    }
+  }, 60);
+}
+
+function _cancelTooltipHide() {
+  if (_tooltipHideTimer) { clearTimeout(_tooltipHideTimer); _tooltipHideTimer = null; }
+}
+
+function hideTooltip() {
+  _cancelTooltipHide();
+  _mouseOverTooltipUI = 0;
+  var tip = document.getElementById('cat-tooltip');
+  if (!tip) return;
+  tip.classList.remove('visible');
+  tip.dataset.openedBy = '';
+  tip.dataset.mode = '';
+  // Also close reverse info tooltip for consistency
+  var reverseTt = document.getElementById('reverse-cat-tooltip');
+  if (reverseTt) reverseTt.classList.remove('open');
+  // blur any focused element to clear :active styling on buttons
+  if (document.activeElement && document.activeElement.classList.contains('reverse-sort-btn')) {
+    document.activeElement.blur();
+  }
+  // suppress immediate reopening (e.g. synthetic click) for 400ms
+  _tooltipSuppressUntil = Date.now() + 400;
+}
+
+
+function _positionTooltip(tip, anchor) {
+  // On mobile: center horizontally on screen, appear above the button
+  // so it's not hidden under the finger.
+  var rect = anchor.getBoundingClientRect();
+  var tw   = Math.min(280, window.innerWidth - 16);
+  var left, top;
+  if (_isTouchDevice()) {
+    left = (window.innerWidth - tw) / 2;
+    // prefer above; fall back to below if not enough room
+    top = rect.top - 8 + window.scrollY;
+    if (top - 120 < window.scrollY) {
+      top = rect.bottom + 8 + window.scrollY;
+    } else {
+      top = rect.top - 8 + window.scrollY;  // will be shifted up by CSS transform
+    }
+  } else {
+    left = rect.left + rect.width / 2 - tw / 2;
+    top  = rect.bottom + 8 + window.scrollY;
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  }
+  tip.style.left  = left + 'px';
+  tip.style.top   = top  + 'px';
+  tip.style.width = tw   + 'px';
+}
+
+// Helper to show the shared cat-tooltip; we keep the old positioning logic but
+// ensure the bubble is hidden while we measure its height/width so that the CSS
+// transition never fires prematurely (this was causing the "ghost" flash on mobile).
+function _showCatTooltip(catId, anchor, mode) {
+  // suppress reopening if it was just hidden a moment ago
+  if (Date.now() < _tooltipSuppressUntil) return;
+
+  var cat = gameCategories.find(function(c) { return c.id === catId; });
+  if (!cat) return;
+  var tip = document.getElementById('cat-tooltip');
+  _cancelTooltipHide();
+  tip.dataset.mode     = mode;
+  tip.dataset.openedBy = mode + '-' + catId;
+
+  if (mode === 'info') {
+    document.getElementById('tt-title').textContent = cat.icon + ' ' + catName(cat);
+    document.getElementById('tt-body').textContent  = catDesc(cat);
+  } else {
+    document.getElementById('tt-title').innerHTML  = '⇅ ' + catName(cat);
+    document.getElementById('tt-body').textContent = catSort(cat);
+  }
+
+  // temporarily hide the tip off-screen while we compute its size so the
+  // CSS transition can't flash; this mirrors the logic added to hints.js.
+  tip.style.visibility = 'hidden';
+  tip.style.position = 'fixed';
+  tip.style.top = '-9999px';
+  tip.classList.add('visible');
+  var tipH = tip.offsetHeight;
+  tip.classList.remove('visible');
+  tip.style.visibility = '';
+  // Only position on desktop; on mobile, CSS .visible handles all positioning
+  if (!_isTouchDevice()) {
+    _positionTooltip(tip, anchor);
+  }
+  tip.classList.add('visible');
+}
+
+
+function showTooltip(catId, anchor) {
+  _showCatTooltip(catId, anchor, 'info');
+}
+
+function showSortTooltip(catId, anchor) {
+  // If we're in reverse mode, show the info-style dropdown (reverse-cat-tooltip)
+  var isReverse = (gameMode === 'reverse' || (gameMode === 'custom' && customSubMode === 'reverse'));
+  if (isReverse) {
+    // close floating cat-tooltip if present
+    var floating = document.getElementById('cat-tooltip');
+    if (floating) { floating.classList.remove('visible'); floating.dataset.openedBy = ''; floating.dataset.mode = ''; }
+    var el = document.getElementById('reverse-cat-tooltip');
+    var cat = gameCategories.find(function(c) { return c.id === catId; });
+    if (!el || !cat) return;
+    // toggle behavior: if already open for this sort, close it
+    if (el.classList.contains('open') && el.dataset.openedBy === 'sort-' + catId) {
+      el.classList.remove('open'); el.dataset.openedBy = '';
+    } else {
+      el.dataset.openedBy = 'sort-' + catId;
+      el.textContent = catSort(cat);
+      el.classList.add('open');
+    }
+    return;
+  }
+  _showCatTooltip(catId, anchor, 'sort');
+}
+
+// Close tooltip when tapping outside on mobile
+function _initGlobalTouchClose() {
+  if (document._tooltipTouchCloseAttached) return;
+  document._tooltipTouchCloseAttached = true;
+ 
+    // Close tooltips when tapping outside on mobile
+  document.addEventListener('touchstart', function(e) {
+    var tip = document.getElementById('cat-tooltip');
+     if (tip && tip.classList.contains('visible')) {
+    // If touch is on the tooltip itself → do nothing (let it stay open)
+       if (tip.contains(e.target)) return;
+    // If touch is on a tooltip-trigger button → the button handler will deal with it
+       if (e.target.closest('.cat-info-btn') || e.target.closest('.cat-sort-btn') ||
+           e.target.closest('.reverse-sort-btn')) return;
+       hideTooltip();
+     }
+  }, { passive: true });
+ 
+    // Also close reverse info tooltip when clicking outside in reverse mode
+    document.addEventListener('click', function(e) {
+      var reverseTt = document.getElementById('reverse-cat-tooltip');
+      if (!reverseTt || !reverseTt.classList.contains('open')) return;
+      // If click is on the tooltip itself → do nothing (let it stay open)
+      if (reverseTt.contains(e.target)) return;
+      // If click is on the info button → the button handler will deal with it
+      if (e.target.closest('.reverse-info-toggle')) return;
+      reverseTt.classList.remove('open');
+    }, { passive: true });
+}
+
+// Helper: attach touch-and-click to a tooltip trigger button
+// showFn(catId, anchor) — the function that populates + shows the tooltip
+// openedByKey — the string stored in tip.dataset.openedBy when this btn is active
+function _attachTooltipTrigger(clone, openedByKey, showFn) {
+  var touch = _isTouchDevice();
+
+  if (touch) {
+    // ── MOBILE: tap-to-toggle only ────────────────────────────────────────
+    clone.addEventListener('touchend', function(e) {
+      e.preventDefault();   // prevent ghost click + page scroll
+      e.stopPropagation();
+      var tip = document.getElementById('cat-tooltip');
+      if (tip.classList.contains('visible') && tip.dataset.openedBy === openedByKey) {
+        hideTooltip();
+      } else {
+        showFn(clone.dataset.catid, clone);
+      }
+    });
+  } else {
+    // ── DESKTOP: hover + click-to-toggle ─────────────────────────────────
+    clone.addEventListener('mouseenter', function() {
+      _tooltipUIEnter();
+      showFn(clone.dataset.catid, clone);
+    });
+    clone.addEventListener('mouseleave', _tooltipUILeave);
     clone.addEventListener('click', function(e) {
       e.stopPropagation();
       var tip = document.getElementById('cat-tooltip');
-      if (tip.classList.contains('visible')) hideTooltip();
-      else showTooltip(clone.dataset.catid, clone);
+      if (tip.classList.contains('visible') && tip.dataset.openedBy === openedByKey) {
+        hideTooltip();
+      } else {
+        showFn(clone.dataset.catid, clone);
+      }
     });
+  }
+}
+
+// Variant that only responds to explicit clicks/taps – no hover logic.
+// Used for reverse mode: click on desktop, tap on mobile (same as normal mode on mobile, but no hover on desktop).
+function _attachTooltipClickOnly(el, openedByKey, showFn) {
+  if (_isTouchDevice()) {
+    // ── MOBILE: exactly like normal mode (tap-to-toggle) ────────────────
+    el.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var tip = document.getElementById('cat-tooltip');
+      if (tip.classList.contains('visible') && tip.dataset.openedBy === openedByKey) {
+        hideTooltip();
+      } else {
+        showFn(el.dataset.catid, el);
+      }
+    });
+  } else {
+    // ── DESKTOP: click-only, no hover ──────────────────────────────────
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var tip = document.getElementById('cat-tooltip');
+      if (tip.classList.contains('visible') && tip.dataset.openedBy === openedByKey) {
+        hideTooltip();
+      } else {
+        showFn(el.dataset.catid, el);
+      }
+    });
+  }
+}
+
+function attachInfoListeners() {
+  _initGlobalTouchClose();
+
+  // ── Info buttons (i) ──────────────────────────────────────────────────────
+  document.querySelectorAll('.cat-info-btn').forEach(function(el) {
+    var clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    _attachTooltipTrigger(clone, 'info-' + clone.dataset.catid, showTooltip);
   });
+
+  // ── Sort buttons (⇅) ─────────────────────────────────────────────────────
+  document.querySelectorAll('.cat-sort-btn').forEach(function(el) {
+    var clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    _attachTooltipTrigger(clone, 'sort-' + clone.dataset.catid, showSortTooltip);
+  });
+
+  // ── Tooltip bubble: keep open while hovered (desktop only) ───────────────
+  var tip = document.getElementById('cat-tooltip');
+  if (!tip.dataset.listenerAttached) {
+    tip.dataset.listenerAttached = '1';
+    if (!_isTouchDevice()) {
+      tip.addEventListener('mouseenter', _tooltipUIEnter);
+      tip.addEventListener('mouseleave', _tooltipUILeave);
+    }
+    // On touch: tapping inside the tooltip does nothing (global handler ignores it)
+  }
 }
 
 // ─── TURN DISPLAY ─────────────────────────────────────────────────────────────
@@ -304,12 +552,12 @@ function showTurn() {
       btn.innerHTML = makeCatBtnHTML(cat);
       btn.style.borderColor = '';
       btn.style.color = '';
-      // re-bind click
       var newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       (function(catId) {
         newBtn.addEventListener('click', function(e) {
           if (e.target.closest('.cat-info-btn')) return;
+          if (e.target.closest('.cat-sort-btn')) return;
           handleChoice(catId);
         });
       })(cat.id);
@@ -326,18 +574,31 @@ function showTurn() {
 
 // ─── REVERSE MODE TURN ────────────────────────────────────────────────────────
 function showTurnReverse() {
-  // In reverse: currentStep = which category is active
-  // All countries shown as buttons; user picks which country gets this category
+  // make sure any open cat-tooltip from normal mode is shut, removing ghost flashes
+  hideTooltip();
   var cat = gameCategories[currentStep];
   document.getElementById('turn-label').textContent = t('reverseTurn') + ' ' + (currentStep+1) + ' ' + t('of') + ' ' + gameCategories.length;
   document.getElementById('total-score').textContent = totalScore;
 
-  // Show the active category
   document.getElementById('reverse-cat-icon').textContent = cat.icon;
   applyEmoji(document.getElementById('reverse-cat-icon'));
   document.getElementById('reverse-cat-name').textContent = catName(cat);
   document.getElementById('reverse-cat-tooltip').textContent = catDesc(cat);
   document.getElementById('reverse-cat-tooltip').classList.remove('open');
+
+  // Update reverse sort button
+  var sortBtn = document.getElementById('reverse-sort-btn');
+  if (sortBtn) {
+    sortBtn.dataset.catid = cat.id;
+    var newSortBtn = sortBtn.cloneNode(true);
+    sortBtn.parentNode.replaceChild(newSortBtn, sortBtn);
+    // reverse mode should use click-only tooltips to avoid hover activation
+    if (gameMode === 'reverse') {
+      _attachTooltipClickOnly(newSortBtn, 'sort-' + cat.id, showSortTooltip);
+    } else {
+      _attachTooltipTrigger(newSortBtn, 'sort-' + cat.id, showSortTooltip);
+    }
+  }
 
   renderCountryButtons();
   clearFeedback();
@@ -345,11 +606,25 @@ function showTurnReverse() {
 }
 
 function toggleReverseCatInfo() {
+  // Close the sort tooltip before toggling info
+  var sortTt = document.getElementById('cat-tooltip');
+  if (sortTt && sortTt.classList.contains('visible')) {
+    sortTt.classList.remove('visible');
+    sortTt.dataset.openedBy = '';
+    sortTt.dataset.mode = '';
+  }
+  // Now toggle the info tooltip
   var el = document.getElementById('reverse-cat-tooltip');
-  el.classList.toggle('open');
-  // refresh text in case lang changed
   var cat = gameCategories[currentStep];
-  if (cat) el.textContent = catDesc(cat);
+  if (!el) return;
+  if (el.classList.contains('open') && el.dataset.openedBy === 'info-' + (cat ? cat.id : '')) {
+    el.classList.remove('open');
+    el.dataset.openedBy = '';
+  } else {
+    el.dataset.openedBy = 'info-' + (cat ? cat.id : '');
+    el.textContent = cat ? catDesc(cat) : '';
+    el.classList.add('open');
+  }
 }
 
 function renderCountryButtons() {
@@ -402,7 +677,6 @@ function handleCountryChoice(countryIdx) {
   reverseAssignments[countryIdx] = cat.id;
   isRevealing = true;
 
-  // Mark chosen button
   document.querySelectorAll('.country-btn').forEach(function(b) { b.disabled = true; });
   btn.style.borderColor = '#f5c842';
   btn.style.boxShadow = '0 0 14px rgba(245,200,66,0.35)';
@@ -423,7 +697,6 @@ function handleCountryChoice(countryIdx) {
 }
 
 function autoPick_reverse() {
-  // Timeout in reverse: penalty, assign to first available country
   var firstFree = -1;
   for (var i = 0; i < gameCountries.length; i++) {
     if (!reverseAssignments[i]) { firstFree = i; break; }
@@ -471,7 +744,6 @@ function autoPick_reverse() {
 function startTimer() {
   if (timerInterval && timerInterval._raf) timerInterval._raf(); timerInterval = null;
 
-  // Infinite time: show ∞, no countdown, no autopick
   if (TIME_PER_TURN === 0) {
     var numEl2 = document.getElementById('timer-num');
     var fillEl2 = document.getElementById('progress-fill');
@@ -513,7 +785,6 @@ function startTimer() {
 function updateTimerUI(remaining) {
   var numEl  = document.getElementById('timer-num');
   var fillEl = document.getElementById('progress-fill');
-  // remaining can be undefined on first call
   var pct = (remaining !== undefined)
     ? (remaining / TIME_PER_TURN * 100)
     : 100;
@@ -523,7 +794,6 @@ function updateTimerUI(remaining) {
   var urgent = displayNum <= (isHardcoreActive() ? 4 : 8);
   numEl.classList.toggle('urgent',  urgent);
   fillEl.classList.toggle('urgent', urgent);
-  // Hardcore danger pulse
   if (isHardcoreActive()) {
     numEl.classList.toggle('danger', displayNum <= 4);
   } else {
@@ -546,13 +816,11 @@ function autoPick() {
   var flag    = country.flag || country.emoji || '🌍';
   gameLog.push({flag:flag, name:cName, catObj:null, points:PENALTY, isPenalty:true, country:country});
 
-  // HC: no overlay, advance silently
   if (isHardcoreActive()) {
     setTimeout(function() { isRevealing = false; currentStep++; showTurn(); }, 350);
     return;
   }
 
-  // Normal mode: show penalty overlay
   document.getElementById('total-score').textContent = totalScore;
   var overlay = document.createElement('div');
   overlay.id = 'reveal-overlay';
@@ -637,11 +905,9 @@ function disableAllCatButtons() {
 
 // ─── STAR RATING HELPERS ─────────────────────────────────────────────────────
 function computeStarData(country, chosenCatId) {
-  // Le jeu = MINIMISER le score : etoile = valeur la plus BASSE choisie
   var chosenRaw = country[chosenCatId];
   var chosenVal = (chosenRaw === false || chosenRaw === null || chosenRaw === undefined || isNaN(Number(chosenRaw))) ? null : Number(chosenRaw);
   if (chosenVal === null) return { chosenVal:0, gameBest:0, globalBest:0, isGameBest:false, isGlobalBest:false };
-  // gameBest = valeur minimale parmi les categories disponibles pour ce pays
   var gb = Infinity;
   gameCategories.forEach(function(cat) {
     var v = country[cat.id];
@@ -649,7 +915,6 @@ function computeStarData(country, chosenCatId) {
       var n = Number(v); if (n < gb) gb = n;
     }
   });
-  // globalBest = valeur minimale sur TOUTES les categories connues
   var ab = Infinity;
   ALL_CATEGORIES.forEach(function(cat) {
     var v = country[cat.id];
@@ -663,8 +928,8 @@ function computeStarData(country, chosenCatId) {
   var isGlobalBest = (chosenVal > 0 && chosenVal <= ab);
   return { chosenVal:chosenVal, gameBest:gb, globalBest:ab, isGameBest:isGameBest, isGlobalBest:isGlobalBest };
 }
+
 function computeStarDataReverse(cat, chosenIdx) {
-  // Mode reverse : etoile = pays avec la valeur la plus BASSE pour cette categorie
   var country = gameCountries[chosenIdx];
   var chosenRaw = country[cat.id];
   var chosenVal = (chosenRaw===false||chosenRaw===null||chosenRaw===undefined||isNaN(Number(chosenRaw))) ? null : Number(chosenRaw);
@@ -689,7 +954,7 @@ function computeStarDataReverse(cat, chosenIdx) {
   var isGlobalBest = (chosenVal > 0 && chosenVal <= ab);
   return { chosenVal:chosenVal, gameBest:gb, globalBest:ab, isGameBest:isGameBest, isGlobalBest:isGlobalBest };
 }
-// Panneau 'meilleurs choix' : trier par valeur ASCENDANTE (bas = meilleur score)
+
 function buildBestCatsPanel(country, chosenCatId) {
   var rows=[];
   gameCategories.forEach(function(cat){var v=country[cat.id];if(v!==false&&v!==null&&v!==undefined&&!isNaN(Number(v)))rows.push({cat:cat,val:Number(v)});});
@@ -699,6 +964,7 @@ function buildBestCatsPanel(country, chosenCatId) {
     return '<div class="reveal-best-row"><span class="rbr-cat">'+r.cat.icon+' '+catName(r.cat)+mark+'</span><span class="rbr-val">'+r.val+'</span></div>';
   }).join('');
 }
+
 function buildBestCountriesPanel(cat, chosenIdx) {
   var rows=[];
   gameCountries.forEach(function(c,i){var v=c[cat.id];if(v!==false&&v!==null&&v!==undefined&&!isNaN(Number(v)))rows.push({c:c,i:i,val:Number(v)});});
@@ -709,6 +975,7 @@ function buildBestCountriesPanel(cat, chosenIdx) {
     return '<div class="reveal-best-row"><span class="rbr-cat">'+flag+' '+getCountryName(r.c)+mark+'</span><span class="rbr-val">'+r.val+'</span></div>';
   }).join('');
 }
+
 function showReveal(flag, cName, catObj, finalValue, onDone, starData, bestPanelHtml) {
   var overlay = document.createElement('div');
   overlay.id = 'reveal-overlay';
@@ -835,4 +1102,3 @@ function clearFeedback() {
   var el = document.getElementById('feedback');
   el.textContent = ''; el.className = 'feedback';
 }
-

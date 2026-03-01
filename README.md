@@ -1,5 +1,13 @@
 # LeGrandGeoQuiz
 
+> Presets for custom mode are now automatically computed at runtime from the
+> country descriptions. Previously a set of hard-coded arrays (e.g.
+> `EUROPEAN_CODES`, `ISLANDS_CODES`) were required; they have been regenerated
+> dynamically using keywords in `js/hints.js`. This ensures all buttons work even
+> after data updates.
+
+LeGrandGeoQuiz
+
 A strategic geography quiz game — 8 countries, 8 categories, the lowest score wins.
 
 **Languages:** FR | EN | UA | DE

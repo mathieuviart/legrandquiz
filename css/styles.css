@@ -71,10 +71,36 @@ body.hardcore .timer-num.danger {
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  /* Prevent zoom and text resize */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   font-family: 'Syne', sans-serif;
   background: var(--bg); color: var(--text);
-  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  /* respect iOS top inset so header isn't hidden under dynamic island */
+  padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
+  /* Prevent zoom but allow scrolling */
+  touch-action: manipulation;
+  -webkit-user-scalable: no;
+  -webkit-touch-callout: none;
+}
+
+/* tiny easter‑egg hidden near notch */
+body::after {
+  content: "LeGrandGeoQuiz";
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6em;
+  color: var(--muted);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 100;
 }
 body::before {
   content: ''; position: fixed; inset: 0;
@@ -82,17 +108,60 @@ body::before {
   background-size: 40px 40px; pointer-events: none; z-index: 0;
 }
 #app { position: relative; z-index: 1; width: 100%; max-width: 640px; }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; animation: fadeIn 0.4s ease; }
+.panel { 
+  background: var(--surface); 
+  border: 1px solid var(--border); 
+  border-radius: 16px; 
+  padding: 36px; 
+  animation: fadeIn 0.4s ease;
+}
+/* Prevent double-tap zoom on all interactive elements */
+button, a, input, textarea, select {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
 /* Custom panel scrollable for larger content */
-#panel-custom { padding: 24px 28px; max-height: 92vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#panel-custom { 
+  padding: 24px 28px; 
+  max-height: 92vh; 
+  overflow-y: auto; 
+  scrollbar-width: thin; 
+  scrollbar-color: var(--border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
 #panel-custom::-webkit-scrollbar { width: 4px; }
 #panel-custom::-webkit-scrollbar-track { background: transparent; }
 #panel-custom::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
 /* lang switcher */
-#lang-switcher { position:fixed; top:16px; right:16px; z-index:200; display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:99px; padding:4px; }
-.lang-btn { padding:5px 12px; border-radius:99px; border:none; background:transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:0.75em; font-weight:500; cursor:pointer; transition:all 0.15s; }
+#lang-switcher { 
+  position:fixed; 
+  top: calc(env(safe-area-inset-top) + 10px); 
+  right:16px; 
+  z-index:200; 
+  display:flex; 
+  gap:4px; 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:99px; 
+  padding:4px;
+  touch-action: manipulation;
+}
+.lang-btn { 
+  padding:5px 12px; 
+  border-radius:99px; 
+  border:none; 
+  background:transparent; 
+  color:var(--muted); 
+  font-family:'DM Mono',monospace; 
+  font-size:0.75em; 
+  font-weight:500; 
+  cursor:pointer; 
+  transition:all 0.15s;
+  touch-action: manipulation;
+}
 .lang-btn:hover { color:var(--text); }
 .lang-btn.active { background:var(--accent); color:#000; font-weight:700; }
 
@@ -261,7 +330,15 @@ body.custom-mode .cat-sort-btn:hover {
 
 /* reveal overlay */
 #reveal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(6px); z-index:100; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.25s ease; }
-.reveal-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:40px 48px; text-align:center; max-width:420px; width:90%; }
+.reveal-card { 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:20px; 
+  padding:40px 48px; 
+  text-align:center; 
+  max-width:420px; 
+  width:90%;
+}
 .reveal-cat-label { font-family:'DM Mono',monospace; font-size:0.75em; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .reveal-cat-name  { font-size:1.1em; font-weight:700; color:var(--accent3); margin-bottom:20px; }
 .reveal-country   { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:28px; }
@@ -1003,7 +1080,8 @@ body.reverse-mode #countries-grid { display:grid; }
   body { padding: 8px; align-items: flex-start; }
   #app  { max-width: 100%; }
   .panel { padding: 18px 14px; border-radius: 12px; }
-  #panel-custom { padding: 14px 12px; max-height: 100svh; }
+  /* allow page scrolling instead of inner scroll on custom panel */
+  #panel-custom { padding: 14px 12px; max-height: none; overflow-y: visible; }
 
   /* Lang switcher : plus compact, ne déborde pas */
   #lang-switcher { top: 8px; right: 8px; padding: 3px; }
@@ -1327,4 +1405,42 @@ body.reverse-mode .cat-sort-btn {
 #panel-custom, .ribbon-list,
 .daily-modal-box, #daily-lb-overlay .daily-modal-box {
   -webkit-overflow-scrolling: touch;
-}}
+}
+
+/* ── iOS-specific enhancements ───────────────────────────── */
+@supports (padding: max(0px)) {
+  /* Safe area support for notched devices */
+  body {
+    /* Ensure smooth rendering on iOS */
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve input/button rendering on iOS */
+  input, button, select, textarea {
+    font-size: 16px; /* Prevents auto-zoom on iOS input focus */
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+  
+  /* Ensure buttons don't have default iOS styling */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+}
+
+/* Disable text selection feedback on iOS */
+*::-webkit-selection {
+  background: transparent;
+  color: inherit;
+}
+
+*::selection {
+  background: transparent;
+  color: inherit;
+}

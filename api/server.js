@@ -104,6 +104,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   // GET /api/played
+  // NOTE: the endpoint simply remembers a hashed IP for the day. this is
+  // trivially circumventable by using a different IP/proxy or by clearing
+  // cookies. no server‑side score validation is performed either; the leaderboard
+  // is for fun only. if this service ever becomes competitive it should be
+  // hardened (rate‑limit, score sanity checks, CAPTCHAs, etc.).
   if (path === '/api/played' && req.method === 'GET') {
     const date = todayUTC();
     const ipHash = hashIP(getIP(req));

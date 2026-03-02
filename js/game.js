@@ -574,6 +574,12 @@ function showTurn() {
 
 // ─── REVERSE MODE TURN ────────────────────────────────────────────────────────
 function showTurnReverse() {
+  // guard against malformed seed: we must check against the *categories*
+  // array rather than gameCountries (which is what showTurn checks).  the
+  // two lengths normally match, but diverging lengths used to allow the game
+  // to continue one turn too many when there was a generation bug.
+  if (currentStep >= gameCategories.length) { endGame(); return; }
+
   // make sure any open cat-tooltip from normal mode is shut, removing ghost flashes
   hideTooltip();
   var cat = gameCategories[currentStep];
@@ -699,7 +705,9 @@ function handleCountryChoice(countryIdx) {
 function autoPick_reverse() {
   var firstFree = -1;
   for (var i = 0; i < gameCountries.length; i++) {
-    if (!reverseAssignments[i]) { firstFree = i; break; }
+    // only treat a slot as free if it hasn't been assigned at all; falsy
+    // category ids (0, "", etc.) should not trigger the fallback.
+    if (reverseAssignments[i] === undefined) { firstFree = i; break; }
   }
   if (firstFree === -1) { currentStep++; showTurn(); return; }
 
@@ -783,19 +791,35 @@ function startTimer() {
 }
 
 function updateTimerUI(remaining) {
+  // TIME_PER_TURN may be 0 when the timer is "infinite"; bail out early
+  // to avoid dividing by zero or producing NaN widths.  startTimer already
+  // handles this case, but other callers (tests, manual tweaks) might
+  // invoke the helper directly so we guard defensively here.
+  if (!TIME_PER_TURN) return;
+
   var numEl  = document.getElementById('timer-num');
   var fillEl = document.getElementById('progress-fill');
+
   var pct = (remaining !== undefined)
     ? (remaining / TIME_PER_TURN * 100)
     : 100;
   var displayNum = (remaining !== undefined) ? Math.ceil(remaining) : TIME_PER_TURN;
   numEl.textContent   = displayNum;
   fillEl.style.width  = pct + '%';
-  var urgent = displayNum <= (isHardcoreActive() ? 4 : 8);
+
+  // urgency threshold is now relative to the total turn length instead of a
+  // hard‑coded 4/8 seconds.  this makes custom timers (30s, 60s, …) feel
+  // sensible: the bar turns amber when ~25% time remains, regardless of mode.
+  var ratio = (remaining !== undefined) ? (remaining / TIME_PER_TURN) : 1;
+  var urgent = ratio < 0.25;
   numEl.classList.toggle('urgent',  urgent);
   fillEl.classList.toggle('urgent', urgent);
+
+  // In hardcore mode we also add a red "danger" state; keep it tied to the
+  // same relative threshold so that longer custom hardcore games still go
+  // red when only a small fraction of turns remains.
   if (isHardcoreActive()) {
-    numEl.classList.toggle('danger', displayNum <= 4);
+    numEl.classList.toggle('danger', ratio < 0.25);
   } else {
     numEl.classList.remove('danger');
   }
@@ -810,6 +834,7 @@ function autoPick() {
   disableAllCatButtons();
   var PENALTY = 200;
   totalScore += PENALTY;
+  document.getElementById('total-score').textContent = totalScore; // keep UI in sync immediately
 
   var country = gameCountries[currentStep];
   var cName   = getCountryName(country);

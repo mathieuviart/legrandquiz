@@ -90,12 +90,18 @@ function generateSeed() {
 function applyGameFromSeed(str) {
   var decoded = decodeSeed(str);
   if (!decoded) { alert(t('invalidSeed')); return false; }
+
+  // extract indices early so we can validate before touching any global state
   var ci = decoded.countryIndices, ki = decoded.catIndices;
   if (ci.some(function(i){return i<0||i>=countriesDB.length;}))  { alert(t('invalidSeedIdx')); return false; }
   if (ki.some(function(i){return i<0||i>=ALL_CATEGORIES.length;})) { alert(t('invalidSeedIdx')); return false; }
+
+  // At this point the seed is syntactically correct *and* the indices refer to
+  // existing entries; safe to mutate globals.
   gameCountries  = ci.map(function(i){return countriesDB[i];});
   gameCategories = ki.map(function(i){return ALL_CATEGORIES[i];});
   currentSeed    = str;
+
   if (!decoded.legacy) {
     var m = decoded.mode;
     document.body.classList.remove('hardcore','reverse-mode');

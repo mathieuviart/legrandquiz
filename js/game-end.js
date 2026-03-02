@@ -227,13 +227,25 @@ function animateCounter(el, from, to, duration, onStep) {
 
 function showEndPanel() {
   document.getElementById('panel-end').classList.remove('hidden');
-  // Recompute from gameLog to be bulletproof against any NaN accumulation
+  // Recompute from gameLog to be bulletproof against any NaN accumulation.
+  //
+  // WARNING / INVARIANT: entries logged for hint penalties carry a positive
+  // `points` value and are added to totalScore during play. we therefore
+  // _also_ include them in this recomputation; the computed score must match
+  // the running total exactly. if the hint logic ever changes (e.g. storing
+  // negative penalties, separating the entries, or removing the recompute
+  // entirely) this loop needs to be updated accordingly.  leaving the code as
+  // it is protects us from the classic "score doubled after refactor" bug.
   var computedScore = 0;
   gameLog.forEach(function(e) {
     var v = Number(e.points);
     if (!isNaN(v)) computedScore += v;
   });
+  if (computedScore !== totalScore) {
+    console.warn('score mismatch in showEndPanel', computedScore, totalScore);
+  }
   var safeScore = computedScore;
+  // overwrite global in case some consumer reads it later (daily, replay, ...)
   totalScore = safeScore;
   document.getElementById('final-score').textContent = safeScore;
   var tl  = t('taglines');

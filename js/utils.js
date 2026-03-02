@@ -70,6 +70,11 @@ function encodeSeed(countryIdxs, catIdxs, mode, timeSecs) {
 }
 
 function decodeSeed(str) {
+  // Remember: this helper only converts the opaque base62 string back into
+  // numeric fields. it does **not** know anything about the current
+  // countriesDB/ALL_CATEGORIES arrays, so it cannot verify that the indices it
+  // returns are in-bounds. callers (e.g. applyGameFromSeed) must perform a
+  // separate sanity check before using the results.
   if (!str || typeof str !== 'string') return null;
   str = str.trim();
 

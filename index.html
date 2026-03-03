@@ -1,4 +1,31 @@
 <!DOCTYPE html>
+
+<script>
+// Affiche le bouton uniquement sur iOS Safari hors standalone
+(function() {
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
+  var isStandalone = navigator.standalone === true;
+  if (isIOS && isSafari && !isStandalone) {
+    var btn = document.getElementById('btn-ios-install');
+    if (btn) btn.style.display = 'inline-flex';
+  }
+})();
+
+function openIosInstallModal() {
+  var m = document.getElementById('ios-install-modal');
+  if (m) { m.style.display = 'flex'; applyTranslations(); }
+}
+function closeIosInstallModal() {
+  var m = document.getElementById('ios-install-modal');
+  if (m) m.style.display = 'none';
+}
+// Fermer en cliquant sur le fond
+document.getElementById('ios-install-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeIosInstallModal();
+});
+</script>
+
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -112,6 +139,43 @@
           </svg>
           github.com/mathieuviart/legrandgeoquiz
         </a>
+        <div style="margin-top:10px;text-align:center;">
+        <button id="btn-ios-install"
+          onclick="openIosInstallModal()"
+          style="display:none;background:none;border:1px solid rgba(245,200,66,0.35);border-radius:8px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:0.68em;color:#f5c842;cursor:pointer;transition:all 0.15s;gap:6px;align-items:center;"
+          onmouseover="this.style.background='rgba(245,200,66,0.08)'"
+          onmouseout="this.style.background='none'">
+          📲 <span data-i18n="iosInstallBtn"></span>
+        </button>
+      </div>
+
+      <!-- Modal instructions iOS -->
+      <div id="ios-install-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
+        <div style="width:100%;max-width:480px;background:var(--surface);border:1px solid rgba(245,200,66,0.4);border-radius:20px 20px 0 0;padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 24px);position:relative;">
+          <button onclick="closeIosInstallModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:1.3em;cursor:pointer;">✕</button>
+          <div style="font-family:'Syne',sans-serif;font-size:1em;font-weight:800;color:#f5c842;margin-bottom:16px;">📲 <span data-i18n="iosInstallTitle"></span></div>
+
+          <!-- Étape 1 -->
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:rgba(245,200,66,0.15);border:1px solid rgba(245,200,66,0.4);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.75em;color:#f5c842;font-weight:700;">1</div>
+            <div style="font-family:'DM Mono',monospace;font-size:0.78em;color:var(--text);line-height:1.5;">
+              <span data-i18n="iosInstallStep1"></span><br>
+              <span style="font-size:1.8em;line-height:1.4;">⎋</span>
+            </div>
+          </div>
+
+          <!-- Étape 2 -->
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
+            <div style="min-width:28px;height:28px;border-radius:50%;background:rgba(245,200,66,0.15);border:1px solid rgba(245,200,66,0.4);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.75em;color:#f5c842;font-weight:700;">2</div>
+            <div style="font-family:'DM Mono',monospace;font-size:0.78em;color:var(--text);line-height:1.5;">
+              <span data-i18n="iosInstallStep2"></span><br>
+              <span style="color:#f5c842;font-weight:700;" data-i18n="iosInstallAdd"></span>
+            </div>
+          </div>
+
+          <div style="font-family:'DM Mono',monospace;font-size:0.68em;color:var(--muted);text-align:center;" data-i18n="iosInstallNote"></div>
+        </div>
+      </div>
       </div>
 
     </div>

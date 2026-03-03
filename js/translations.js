@@ -173,6 +173,12 @@ var TRANSLATIONS = {
     presetLandlocked:       'Enclavés',
     presetIslands:          'Îles seulement',
     presetFlagGuesser:      'Flag Guesser',
+    iosInstallTitle: 'Ajouter à l\'écran d\'accueil',
+    iosInstallBtn:    'Installer l\'app',         
+    iosInstallStep1:  'Appuie sur le bouton Partager en bas de Safari', 
+    iosInstallStep2:  'Puis sélectionne',
+    iosInstallAdd:    '« Sur l\'écran d\'accueil »',
+    iosInstallNote:   'Profite du jeu hors connexion 🎮',
   },
 
   en: {
@@ -342,6 +348,12 @@ var TRANSLATIONS = {
     presetLandlocked:       'Landlocked',
     presetIslands:          'Islands only',
     presetFlagGuesser:      'Flag Guesser',
+    iosInstallTitle: 'Add to Home Screen',
+    iosInstallBtn:   'Install the app',
+    iosInstallStep1: 'Tap the Share button at the bottom of Safari',
+    iosInstallStep2: 'Then select',
+    iosInstallAdd:   '"Add to Home Screen"',
+    iosInstallNote:  'Play offline anytime 🎮',
   },
 
   ua: {
@@ -511,6 +523,13 @@ var TRANSLATIONS = {
     presetLandlocked:       'Без виходу до моря',
     presetIslands:          'Лише острови',
     presetFlagGuesser:      'Вгадай прапор',
+    iosInstallTitle: 'Додати на головний екран',
+    iosInstallBtn:   'Встановити додаток',
+    iosInstallStep1: 'Натисни кнопку Поділитися внизу Safari',
+    iosInstallStep2: 'Потім обери',
+    iosInstallAdd:   '«На головний екран»',
+    iosInstallNote:  'Грай офлайн коли завгодно 🎮',
+
   },
 
   de: {
@@ -680,6 +699,12 @@ var TRANSLATIONS = {
     presetLandlocked:       'Binnenstaaten',
     presetIslands:          'Nur Inseln',
     presetFlagGuesser:      'Flaggen-Raten',
+    iosInstallTitle: 'Zum Home-Bildschirm',
+    iosInstallBtn:   'App installieren',
+    iosInstallStep1: 'Tippe auf Teilen unten in Safari',
+    iosInstallStep2: 'Dann wähle',
+    iosInstallAdd:   '„Zum Home-Bildschirm"',
+    iosInstallNote:  'Spiele jederzeit offline 🎮',
   },
 };
 

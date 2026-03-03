@@ -2,7 +2,7 @@
 // Stratégie : Cache First pour les assets statiques, Network First pour l'API Daily.
 // iOS Safari (standalone) nécessite un SW pour fonctionner offline.
 
-var CACHE_NAME = 'geoquiz-v1';
+var CACHE_NAME = 'geoquiz-v2';
 
 // Assets à précacher au moment de l'installation
 var PRECACHE_URLS = [

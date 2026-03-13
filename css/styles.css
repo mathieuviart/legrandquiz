@@ -801,6 +801,7 @@ body.reverse-mode #countries-grid { display:grid; }
   color:var(--text); font-family:'Syne',sans-serif;
   font-size:0.88em; font-weight:600; cursor:pointer;
   transition:all 0.15s; text-align:left;
+  overflow: hidden;
 }
 .country-btn:hover:not(:disabled) {
   border-color:#f5c842;
@@ -819,7 +820,6 @@ body.reverse-mode #countries-grid { display:grid; }
 .country-btn .cb-info { display:flex; flex-direction:column; min-width:0; }
 .country-btn .cb-name { font-size:0.82em; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .country-btn .cb-cat-badge { font-size:0.62em; color:var(--muted); font-family:'DM Mono',monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
 /* Btn reverse */
 .btn-reverse {
   display:block; width:100%; padding:14px 20px; border-radius:10px;
@@ -1102,7 +1102,6 @@ body.reverse-mode #countries-grid { display:grid; }
    MOBILE RESPONSIVE  (max-width: 540px)
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 540px) {
-
   /* ── Layout global ────────────────────────────────── */
   body {
   padding: calc(env(safe-area-inset-top, 8px) + 8px) 8px calc(env(safe-area-inset-bottom, 8px) + 8px) 8px;

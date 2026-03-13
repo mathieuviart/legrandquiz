@@ -719,6 +719,7 @@ function t(key) {
 
 function setLang(lang) {
   currentLang = lang;
+  //console.log('setLang', lang, 'gameCategories.length=', gameCategories.length);
   document.querySelectorAll('.lang-btn').forEach(function(b) {
     b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase());
   });

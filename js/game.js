@@ -203,6 +203,10 @@ function rerenderCurrentTurn() {
       document.getElementById('reverse-cat-tooltip').textContent = catDesc(cat);
       document.getElementById('turn-label').textContent =
         t('reverseTurn') + ' ' + (currentStep + 1) + ' ' + t('of') + ' ' + gameCategories.length;
+
+      //FIX : re-render la grille pays (noms + badges de catégories assignées)
+      renderCountryButtons();
+      applyEmoji(document.getElementById('countries-grid'));
     }
   } else {
     if (currentStep < gameCountries.length) {
@@ -599,7 +603,8 @@ function showTurnReverse() {
     var newSortBtn = sortBtn.cloneNode(true);
     sortBtn.parentNode.replaceChild(newSortBtn, sortBtn);
     // reverse mode should use click-only tooltips to avoid hover activation
-    if (gameMode === 'reverse') {
+    var isReverseMode = (gameMode === 'reverse' || (gameMode === 'custom' && customSubMode === 'reverse'));
+    if (isReverseMode) {
       _attachTooltipClickOnly(newSortBtn, 'sort-' + cat.id, showSortTooltip);
     } else {
       _attachTooltipTrigger(newSortBtn, 'sort-' + cat.id, showSortTooltip);
